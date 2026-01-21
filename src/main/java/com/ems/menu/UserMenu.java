@@ -1,146 +1,197 @@
 package com.ems.menu;
 
-import java.util.List;
-import java.util.Scanner;
 
-import com.ems.dao.*;
-import com.ems.dao.impl.*;
-import com.ems.model.Event;
-import com.ems.model.Ticket;
 import com.ems.model.User;
-import com.ems.service.UserService;
-import com.ems.util.DateTimeUtil;
+import com.ems.service.EventService;
+import com.ems.service.NotificationService;
 import com.ems.util.InputValidationUtil;
+import com.ems.util.ScannerUtil;
 
 public class UserMenu {
-	Scanner scanner;
 	User loggedInUser;
 	
-	public UserMenu(Scanner scanner, User user) {
-		this.scanner = scanner;
+	public UserMenu( User user) {
 		this.loggedInUser = user;
 		this.start();
 	}
 
 	private void start() {
-		UserDao userDao = new UserDaoImpl();
-		EventDao eventDao = new EventDaoImpl();
-		VenueDao venueDao = new VenueDaoImpl();
-		CategoryDao categoryDao = new CategoryDaoImpl();
-		TicketDao ticketDao = new TicketDaoImpl();
-		while(true) {
-			System.out.println("\nUser Menu"
-					+ "\n\nEnter your choice:\n"
-			        + "1. Browse available events\r\n"
-			        + "2. Search and filter events\r\n"
-			        + "3. View my registrations\r\n"
-			        + "4. View my notifications\r\n"
-			        + "5. Register for an event\r\n"
-			        + "6. Logout"
-			        + "\n>");
-			int input = InputValidationUtil.readInt(scanner, "");
-			switch(input) {
-				case 1:
-					printAllAvailableEvents(eventDao, venueDao, categoryDao, ticketDao);
-					break;
-				case 2:
-					while(true) {
-						System.out.println("\nEnter your choice:\n"
-								+ "1. Search by category\r\n"
-								+ "2. Search by date\r\n"
-								+ "3. Search by city\r\n"
-								+ "4. Filter by price\r\n"
-								+ "5. Filter by availability\r\n"
-								+ "6. Exit to user menu"
-						        + "\n>");
-						int filterChoice = InputValidationUtil.readInt(scanner, "");
-						switch(filterChoice) {
-							case 1:
-								searchBycategory(categoryDao);
-								break;
-							case 2:
-								break;
-							case 3:
-								break;
-								
-							case 4:
-								break;
-							case 5:
-								printAllAvailableEvents(eventDao, venueDao, categoryDao, ticketDao);
-								break;
-							case 6:
-								return;
-							default:
-								return;
-						}
-					}
-				case 3:
-					break;
-				case 4:
-					break;
-				case 5:
-					break;
-				case 6:
-					System.out.println("Going back to main menu");
-					return;
-				default:
-					return;
-			}
-			
-		}
-	}
 
-	private void searchBycategory(CategoryDao categoryDao) {
-		categoryDao.listAllCategory();
-		
-	}
+	    NotificationService.displayUnreadNotifications(
+	        loggedInUser.getUserId()
+	    );
 
-	private void printAllAvailableEvents(EventDao eventDao, VenueDao venueDao, CategoryDao categoryDao, TicketDao ticketDao) {
-		List<Event> events = eventDao.listAvailableEvents();
-		for (Event event : events) {
+	    while (true) {
+	        System.out.println(
+	            "\nUser Menu\n" +
+	            "1. Browse Events\n" +
+	            "2. Search & Filter Events\n" +
+	            "3. My Registrations\n" +
+	            "4. Notifications\n" +
+	            "5. Feedback\n" +
+	            "6. Logout\n"
+	            + ">"
+	        );
 
-	        String category = categoryDao.getCategory(event.getCategoryId());
-	        String venueName = venueDao.getVenueName(event.getVenueId());
-	        String venueAddress = venueDao.getVenueAddress(event.getVenueId());
-	        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
-	        List<Ticket> tickets = ticketDao.getTicketTypes(event.getEventId());
+	        int choice = InputValidationUtil.readInt(
+	            ScannerUtil.getScanner(), ""
+	        );
 
-	        System.out.println("\n==============================================");
-	        System.out.println("Event ID        : " + event.getEventId());
-	        System.out.println("Title           : " + event.getTitle());
-
-	        if (event.getDescription() != null) {
-	            System.out.println("Description     : " + event.getDescription());
+	        switch (choice) {
+	            case 1:
+	                browseEventsMenu();
+	                break;
+	            case 2:
+	                EventService.searchEvents();
+	                break;
+	            case 3:
+	                registrationMenu();
+	                break;
+	            case 4:
+	                NotificationService.displayAllNotifications(
+	                    loggedInUser.getUserId()
+	                );
+	                break;
+	            case 5:
+	                feedbackMenu();
+	                break;
+	            case 6:
+	                if (confirmLogout()) {
+	                    return;
+	                }
+	                break;
+	            default:
+	                System.out.println("Invalid option");
 	        }
-
-	        System.out.println("Category        : " + category);
-	        System.out.println("Duration        : "
-	                + DateTimeUtil.formatDateTime(event.getStartDateTime())
-	                + " to "
-	                + DateTimeUtil.formatDateTime(event.getEndDateTime()));
-
-	        System.out.println("Total Tickets   : " + totalAvailable);
-
-	        System.out.println("\nTicket Types");
-	        System.out.println("----------------------------------------------");
-
-	        for (Ticket ticket : tickets) {
-	            System.out.println("• "
-	                    + ticket.getTicketType()
-	                    + " | Price: ₹"
-	                    + ticket.getPrice()
-	                    + " | Available: "
-	                    + ticket.getAvailableQuantity());
-	        }
-
-	        System.out.println("\nVenue");
-	        System.out.println("----------------------------------------------");
-	        System.out.println("Name            : " + venueName);
-	        System.out.println("Address         : " + venueAddress);
-
-	        System.out.println("==============================================");
 	    }
 	}
+	
+	private void browseEventsMenu() {
+
+	    while (true) {
+	        System.out.println(
+	            "\nBrowse Events\n" +
+	            "1. View all available events\n" +
+	            "2. View event details\n" +
+	            "3. View ticket options\n" +
+	            "4. Register for event\n" +
+	            "5. Back"
+	            + "\n>"
+	        );
+
+	        int choice = InputValidationUtil.readInt(
+	            ScannerUtil.getScanner(), ""
+	        );
+
+	        switch (choice) {
+	            case 1:
+	                EventService.printAllAvailableEvents();
+	                break;
+	            case 2:
+	                EventService.viewEventDetails();
+	                break;
+	            case 3:
+	                EventService.viewTicketOptions();
+	                break;
+	            case 4:
+	                EventService.registerForEvent(
+	                    loggedInUser.getUserId()
+	                );
+	                break;
+	            case 5:
+	                return;
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+	
+	private void registrationMenu() {
+
+	    while (true) {
+	        System.out.println(
+	            "\nMy Registrations\n" +
+	            "1. View upcoming events\n" +
+	            "2. View past events\n" +
+	            "3. View booking details\n" +
+	            "4. Back\n"
+	            + ">"
+	        );
+
+	        int choice = InputValidationUtil.readInt(
+	            ScannerUtil.getScanner(), ""
+	        );
+
+	        switch (choice) {
+	            case 1:
+	            	EventService.viewUpcomingEvents(
+	                    loggedInUser.getUserId()
+	                );
+	                break;
+	            case 2:
+	            	EventService.viewPastEvents(
+	                    loggedInUser.getUserId()
+	                );
+	                break;
+	            case 3:
+	            	EventService.viewBookingDetails(
+	                    loggedInUser.getUserId()
+	                );
+	                break;
+	            case 4:
+	                return;
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+	
+	private void feedbackMenu() {
+
+	    while (true) {
+	        System.out.println(
+	            "\nFeedback\n" +
+	            "1. Submit rating\n" +
+	            "2. Submit review\n" +
+	            "3. Back\n"
+	            + ">"
+	        );
+
+	        int choice = InputValidationUtil.readInt(
+	            ScannerUtil.getScanner(), ""
+	        );
+
+	        switch (choice) {
+	            case 1:
+	            	EventService.submitRating(
+	                    loggedInUser.getUserId()
+	                );
+	                break;
+	            case 2:
+	            	EventService.submitReview(
+	                    loggedInUser.getUserId()
+	                );
+	                break;
+	            case 3:
+	                return;
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+	private boolean confirmLogout() {
+	    char choice = InputValidationUtil.readChar(
+	        ScannerUtil.getScanner(),
+	        "Are you sure to logout (Y/N): "
+	    );
+	    return Character.toUpperCase(choice) == 'Y';
+	}
+
+
+
+	
+
+	
 
 	
 }

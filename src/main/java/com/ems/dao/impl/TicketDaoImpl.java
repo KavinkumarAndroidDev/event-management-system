@@ -12,7 +12,8 @@ import com.ems.model.Ticket;
 import com.ems.util.DBConnectionUtil;
 
 public class TicketDaoImpl implements  TicketDao{
-
+	
+	//used as helper function of event, used to get the available tickets of the event
 	@Override
 	public int getAvailableTickets(int eventId) {
 		String sql = "SELECT SUM(available_quantity) AS total_available\n"
@@ -27,18 +28,19 @@ public class TicketDaoImpl implements  TicketDao{
 	            }
 	        }
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+			System.out.println("Unexpected error occured: " + e.getMessage());
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			System.out.println("Unexpected error occured: " + e.getMessage());
 		}
 		return 0;
 	}
-
+	
+	//helps to get the ticket type of a event
 	@Override
 	public List<Ticket> getTicketTypes(int eventId) {
 		String sql = "select * from tickets where event_id = ? and available_quantity > 0";
 		List<Ticket> tickets = new ArrayList<>();
-		try(Connection con = new DBConnectionUtil().getConnection();
+		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setInt(1, eventId);
 			try(ResultSet rs = ps.executeQuery()){
@@ -55,9 +57,9 @@ public class TicketDaoImpl implements  TicketDao{
 			}
 	        
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+			System.out.println("Unexpected error occured: " + e.getMessage());
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			System.out.println("Unexpected error occured: " + e.getMessage());
 		}
 		return tickets;
 	}

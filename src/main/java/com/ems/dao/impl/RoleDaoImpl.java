@@ -12,7 +12,9 @@ import com.ems.model.Role;
 import com.ems.util.DBConnectionUtil;
 
 public class RoleDaoImpl implements RoleDao{
+
 	
+	//get the list of available roles and its id
 	@Override
 	public List<Role> getRoles() {
 		List<Role> roles = new ArrayList<>();

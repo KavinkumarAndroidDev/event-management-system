@@ -9,7 +9,7 @@ import com.ems.dao.VenueDao;
 import com.ems.util.DBConnectionUtil;
 
 public class VenueDaoImpl implements VenueDao {
-
+	//helps to get the venue name of the event
 	@Override
 	public String getVenueName(int venueId) {
 		String sql = "select name from venues where venue_id=?";
@@ -28,7 +28,7 @@ public class VenueDaoImpl implements VenueDao {
 		}
 		return null;
 	}
-
+	//helps to get the venue address of the event
 	@Override
 	public String getVenueAddress(int venueId) {
 		String sql = "select * from venues where venue_id=?";

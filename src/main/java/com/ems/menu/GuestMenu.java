@@ -1,41 +1,38 @@
 package com.ems.menu;
 
-import java.util.Scanner;
-
+import com.ems.service.EventService;
+import com.ems.service.UserService;
 import com.ems.util.InputValidationUtil;
+import com.ems.util.ScannerUtil;
 
 public class GuestMenu {
-	Scanner scanner;
-	public GuestMenu(Scanner scanner) {
-		this.scanner = scanner;
+	public GuestMenu() {
 		this.start();
 	}
 	
 	private void start() {
 		while(true) {
 			System.out.println("\nGuest menu"
-					+ "\n\nPlease select an option:\r\n"
-			        + "1. View published events\r\n"
-			        + "2. Search and Filter events\r\n"
-			        + "3. Register account\r\n"
+					+ "\n\nPlease select an option\n"
+					+ "1. Browse Events\n" 
+		            + "2. Search & Filter Events\n"
+			        + "3. Register account\n"
 			        + "4. Exit Guest Mode\n"
 			        + "Guest accounts have limited access.\n"
 			        + "Please register or log in to use all features.\n"
 			        + "\n>");
-			int input = InputValidationUtil.readInt(scanner, "");
+			int input = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 			switch(input) {
 			case 1:
-				
-				break;
-			case 2:
-				break;
+                browseEventsMenu();
+                break;
+            case 2:
+                EventService.searchEvents();
+                break;
 			case 3:
+				UserService.createAccount(1);
 				break;
 			case 4:
-				break;
-			case 5:
-				break;
-			case 6:
 			    System.out.println("Exiting Guest Mode...");
 			    return;   
 			default:
@@ -45,14 +42,36 @@ public class GuestMenu {
 			
 		}
 	}
-	
+	private void browseEventsMenu() {
 
+	    while (true) {
+	        System.out.println(
+	            "\nBrowse Events\n" +
+	            "1. View all available events\n" +
+	            "2. View event details\n" +
+	            "3. View ticket options\n" +
+	            "4. Back\n>"
+	        );
+
+	        int choice = InputValidationUtil.readInt(
+	            ScannerUtil.getScanner(), ""
+	        );
+
+	        switch (choice) {
+	            case 1:
+	                EventService.printAllAvailableEvents();
+	                break;
+	            case 2:
+	                EventService.viewEventDetails();
+	                break;
+	            case 3:
+	                EventService.viewTicketOptions();
+	                break;
+	            case 4:
+	                return;
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
 }
-//
-//Payment payment = new Payment();
-//payment.setRegistrationId(regId);
-//payment.setAmount(amount);
-//payment.setPaymentMethod(method);
-//
-//paymentService.processPayment(payment);
-//System.out.println("Payment successful");

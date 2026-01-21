@@ -2,6 +2,8 @@ package com.ems.model;
 
 import java.time.LocalDateTime;
 
+import com.ems.util.DateTimeUtil;
+
 public class Notification {
 	private int notificationId;
 	private int userId;
@@ -25,6 +27,9 @@ public class Notification {
 		this.type = type;
 		this.createdAt = createdAt;
 		this.readStatus = readStatus;
+	}
+	public Notification() {
+		// TODO Auto-generated constructor stub
 	}
 	public int getNotificationId() {
 		return notificationId;
@@ -62,6 +67,11 @@ public class Notification {
 	public void setReadStatus(boolean readStatus) {
 		this.readStatus = readStatus;
 	}
+	@Override
+	public String toString() {
+	    return "[" + type + "] " + message + " (" + DateTimeUtil.formatDateTime(createdAt) + ")";
+	}
+
 	
 	
 }

@@ -14,11 +14,3 @@ public class PasswordUtil {
         return BCrypt.checkpw(plainPassword, hashedPassword);
     }
 }
-
-//hashPassword()
-//verifyPassword()
-//^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$
-
-//String hashed = PasswordUtil.hashPassword("mySecret123");
-//
-//boolean match = PasswordUtil.verifyPassword("mySecret123", hashed);

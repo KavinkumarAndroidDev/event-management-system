@@ -8,8 +8,13 @@ import java.sql.SQLException;
 import com.ems.dao.CategoryDao;
 import com.ems.util.DBConnectionUtil;
 
+/**
+ * Implements Category DAO. Methods used to create, read, update and delete categories
+ */
 public class CategoryDaoImpl implements CategoryDao{
-
+	
+	
+	//to get the category using the category id
 	@Override
 	public String getCategory(int categoryId) {
 		String sql = "select name from categories where category_id=?";
@@ -28,7 +33,8 @@ public class CategoryDaoImpl implements CategoryDao{
 		}
 		return null;
 	}
-
+	
+	//get all catgeories
 	@Override
 	public void listAllCategory() {
 		

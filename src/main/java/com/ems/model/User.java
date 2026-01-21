@@ -12,6 +12,7 @@ public class User {
 	private String status;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private String gender;
 	/**
 	 * @param userId
 	 * @param fullName
@@ -24,7 +25,7 @@ public class User {
 	 * @param updatedAt
 	 */
 	public User(String fullName, String email, String phone, String passwordHash, int roleId, String status,
-			LocalDateTime createdAt, LocalDateTime updatedAt) {
+			LocalDateTime createdAt, LocalDateTime updatedAt, String gender) {
 		this.fullName = fullName;
 		this.email = email;
 		this.phone = phone;
@@ -33,6 +34,7 @@ public class User {
 		this.status = status;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+		this.gender = gender;
 	}
 	
 	/**
@@ -46,7 +48,7 @@ public class User {
 	 * @param updatedAt
 	 */
 	public User(String fullName, String email, String passwordHash, int roleId, String status,
-			LocalDateTime createdAt, LocalDateTime updatedAt) {
+			LocalDateTime createdAt, LocalDateTime updatedAt, String gender) {
 		this.fullName = fullName;
 		this.email = email;
 		this.phone = null;
@@ -55,6 +57,7 @@ public class User {
 		this.status = status;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+		this.gender = gender;
 	}
 
 	public User() {
@@ -115,13 +118,27 @@ public class User {
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
 	}
+	
+	public String getGender() {
+		return gender;
+	}
+
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
 
 	@Override
 	public String toString() {
-		return "User [userId=" + userId + ", fullName=" + fullName + ", email=" + email + ", phone=" + phone
-				+ ", passwordHash=" + passwordHash + ", roleId=" + roleId + ", status=" + status + ", createdAt="
-				+ createdAt + ", updatedAt=" + updatedAt + "]";
+	    return "User{" +
+	            "id=" + userId +
+	            ", name='" + fullName + '\'' +
+	            ", gender='" + gender + '\'' +
+	            ", email='" + email + '\'' +
+	            ", phone='" + phone + '\'' +
+	            ", status='" + status + '\'' +
+	            '}';
 	}
+
 	
 	
 }
