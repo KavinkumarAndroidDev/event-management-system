@@ -83,12 +83,24 @@ public class UserDaoImpl implements UserDao{
 	//Used to set the user as Active or suspended
 	@Override
 	public void updateUserStatus(int userId, String status) {
+		String adminCheck = "select r.role_name from roles r inner join users u on r.role_id = u.role_id where u.user_id = ?";
 		String sql = "update users set status = ? where user_id = ?";
 		try(Connection con = DBConnectionUtil.getConnection();
-				PreparedStatement ps = con.prepareStatement(sql)){
+				PreparedStatement ps = con.prepareStatement(sql);
+				PreparedStatement ps1 = con.prepareStatement(adminCheck)){
+			
+			ps1.setInt(1, userId);
+			ResultSet rs = ps1.executeQuery();
+			String role = "";
+			if(rs.next()) {
+				role = rs.getString("role_name");
+			}
+			if(role.trim().equalsIgnoreCase("admin")) {
+				throw new Exception("Admin accounts cannot be suspended!");
+			}
+			
 	        ps.setString(1, status);
 	        ps.setInt(2, userId);
-
 	        int rowsUpdated = ps.executeUpdate();
 
 	        if (rowsUpdated == 0) {
@@ -173,5 +185,42 @@ public class UserDaoImpl implements UserDao{
 	    	return 3;
 	    }
 	    return 0;
+	}
+
+	@Override
+	public List<User> findAllUsers() {
+		String sql = "select * from users order by role_id";
+		List<User> users= new ArrayList<>();
+		try(Connection con = DBConnectionUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)){
+		ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				User user = new User(
+					    rs.getInt("user_id"),
+					    rs.getString("full_name"),
+					    rs.getString("email"),
+					    rs.getString("phone"),
+					    rs.getString("password_hash"),
+					    rs.getInt("role_id"),
+					    rs.getString("status"),
+					    DateTimeUtil.convertUtcToLocal(
+					        rs.getTimestamp("created_at").toInstant()
+					    ).toLocalDateTime(),
+					    rs.getTimestamp("updated_at") == null
+					        ? null
+					        : rs.getTimestamp("updated_at").toLocalDateTime(),
+					    rs.getString("gender")
+					);
+
+	            
+	            users.add(user); 
+	        }
+            
+		} catch (SQLException e) {	
+			System.out.println("Unexpected error occured: " + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("Unexpected error occured: " + e.getMessage());
+		}
+		return users;
 	}
 }

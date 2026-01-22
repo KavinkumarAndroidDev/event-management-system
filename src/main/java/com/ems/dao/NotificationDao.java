@@ -12,4 +12,5 @@ public interface NotificationDao {
 	void markAllAsRead(int userId);
 	void sendNotification(int userId, String message, String notificationType);
 	void sendSystemWideNotification(String message, String notificationType);
+	void sendNotificationByRole(String message, String notificationType, String role);
 }

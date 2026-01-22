@@ -3,6 +3,8 @@ package com.ems.service;
 public interface AdminService {
 
     void getUsersList(String userType);
+    
+    void getAllUsers();
 
     void changeStatus(String status);
 
@@ -19,4 +21,8 @@ public interface AdminService {
     void getOrganizerWisePerformance();
 
     void markCompletedEvents();
+
+	void sendNotificationByRole();
+
+	void sendNotificationToUser();
 }

@@ -84,6 +84,8 @@ public class UserServiceImpl implements UserService {
                     password, user.getPasswordHash())) {
 
                 throw new AuthenticationException("Invalid credentials");
+            }else if(user.getStatus().toString().equalsIgnoreCase("suspended")) {
+            	throw new AuthorizationException("\nYour account has been suspended!\ncontact admin@ems.com for more info");
             }
 
             System.out.println("Logged in as: " + emailId);

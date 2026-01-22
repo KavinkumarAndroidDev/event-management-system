@@ -13,6 +13,7 @@ public interface UserDao {
 	User findByEmail(String email);
 	void updateUserStatus(int userId, String status);
 	List<User> findAllUsers(String userType);
+	List<User> findAllUsers();
 	int getRole(User user);
 }
 //

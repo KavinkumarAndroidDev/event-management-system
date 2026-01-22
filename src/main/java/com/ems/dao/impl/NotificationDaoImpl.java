@@ -151,6 +151,28 @@ public class NotificationDaoImpl implements NotificationDao {
 			ps.setString(3, notificationType);
 			ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
 			ps.setBoolean(5, false);
+			int affectedRows = ps.executeUpdate();
+			if(affectedRows == 0) {
+				System.out.println("No user found with the user id: " + userId);
+			}
+		} catch (SQLException e) {
+		        System.out.println("Database error while sending system notification: " + e.getMessage());
+		} catch (Exception e) {
+		        System.out.println("Unexpected error while sending system notification: " + e.getMessage());
+		}
+	}
+
+	@Override
+	public void sendNotificationByRole(String message, String notificationType, String role) {
+		String sql = "insert into notifications (user_id, message, type,created_at, read_status) "
+				+ "select u.user_id, ? , ?, NOW(), false from users u "
+				+ "inner join roles r on u.role_id = r.role_id "
+				+ "where u.status = 'ACTIVE' and role_name = ?";
+		try (Connection con = DBConnectionUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setString(1, message);
+			ps.setString(2, notificationType);
+			ps.setString(3, role.toUpperCase());
 			ps.executeUpdate();
 		} catch (SQLException e) {
 		        System.out.println("Database error while sending system notification: " + e.getMessage());
@@ -158,6 +180,8 @@ public class NotificationDaoImpl implements NotificationDao {
 		        System.out.println("Unexpected error while sending system notification: " + e.getMessage());
 		}
 	}
+
+	
 	
 
 }

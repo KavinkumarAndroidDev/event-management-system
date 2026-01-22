@@ -3,6 +3,7 @@ package com.ems.service.impl;
 import java.util.List;
 
 import com.ems.dao.*;
+import com.ems.enums.NotificationType;
 import com.ems.model.Event;
 import com.ems.model.User;
 import com.ems.service.AdminService;
@@ -39,8 +40,34 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public void getUsersList(String userType) {
         List<User> users = userDao.findAllUsers(userType);
-        users.forEach(System.out::println);
+
+        if (users == null || users.isEmpty()) {
+            System.out.println("No users found.");
+            return;
+        }
+
+        System.out.println("\n==============================================================");
+        System.out.printf(
+            "%-5s %-20s %-10s %-25s %-15s %-10s%n",
+            "ID", "Name", "Gender", "Email", "Phone", "Status"
+        );
+        System.out.println("==============================================================");
+
+        users.forEach(user -> {
+            System.out.printf(
+                "%-5d %-20s %-10s %-25s %-15s %-10s%n",
+                user.getUserId(),
+                user.getFullName(),
+                user.getGender(),
+                user.getEmail(),
+                user.getPhone() == null ? "-" : user.getPhone(),
+                user.getStatus()
+            );
+        });
+
+        System.out.println("==============================================================");
     }
+
 
     @Override
     public void changeStatus(String status) {
@@ -109,14 +136,117 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public void getRevenueReport() {
+    	System.out.println("Yet to be done!");
     }
 
     @Override
     public void getOrganizerWisePerformance() {
+    	System.out.println("Yet to be done!");
     }
 
     @Override
     public void markCompletedEvents() {
         eventService.completeEvents();
     }
+
+	@Override
+	public void sendNotificationByRole() {
+		System.out.println("\nAvailable roles:\n1. Users,\n2. Organizers,\n3. Admins");
+		int roleId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the role id: ");
+		while(roleId <1 || roleId > 3) {
+			roleId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the valid role id: ");
+		}
+		String role;
+		if(roleId == 1) role = "ATTENDEE";
+		else if(roleId == 2) role ="ORGANIZER";
+		else role ="ADMIN";
+		System.out.println("available payment method:");
+		NotificationType[] methods = NotificationType.values();
+
+        for (int i = 0; i < methods.length; i++) {
+            System.out.println(
+                (i + 1) + ". " + methods[i].name().replace("_", " ")
+            );
+        }
+
+        int choice = InputValidationUtil.readInt(
+            ScannerUtil.getScanner(),
+            "Enter choice (1-" + methods.length + "): "
+        );
+
+        while (choice < 1 || choice > methods.length) {
+            System.out.println("Invalid notification type selected");
+            choice = InputValidationUtil.readInt(
+                ScannerUtil.getScanner(),
+                "Enter choice (1-" + methods.length + "): "
+            );
+        }
+
+        NotificationType selectedType = methods[choice - 1];
+        
+        String message = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the notification message: ");
+        notificationDao.sendNotificationByRole(message, selectedType.toString(), role);
+	}
+
+	@Override
+	public void sendNotificationToUser() {
+		int userId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the user id: ");
+		NotificationType[] methods = NotificationType.values();
+
+        for (int i = 0; i < methods.length; i++) {
+            System.out.println(
+                (i + 1) + ". " + methods[i].name().replace("_", " ")
+            );
+        }
+
+        int choice = InputValidationUtil.readInt(
+            ScannerUtil.getScanner(),
+            "Enter choice (1-" + methods.length + "): "
+        );
+
+        while (choice < 1 || choice > methods.length) {
+            System.out.println("Invalid notification type selected");
+            choice = InputValidationUtil.readInt(
+                ScannerUtil.getScanner(),
+                "Enter choice (1-" + methods.length + "): "
+            );
+        }
+
+        NotificationType selectedType = methods[choice - 1];
+        
+        String message = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the notification message: ");
+        notificationDao.sendNotification(userId,message,selectedType.toString());
+	}
+
+	@Override
+	public void getAllUsers() {
+		List<User> users = userDao.findAllUsers();
+
+        if (users == null || users.isEmpty()) {
+            System.out.println("No users found.");
+            return;
+        }
+
+        System.out.println("\n==============================================================");
+        System.out.printf(
+            "%-5s %-20s %-10s %-25s %-15s %-10s%n",
+            "ID", "Name", "Gender", "Email", "Phone", "Status"
+        );
+        System.out.println("==============================================================");
+
+        users.forEach(user -> {
+            System.out.printf(
+                "%-5d %-20s %-10s %-25s %-15s %-10s%n",
+                user.getUserId(),
+                user.getFullName(),
+                user.getGender(),
+                user.getEmail(),
+                user.getPhone() == null ? "-" : user.getPhone(),
+                user.getStatus()
+            );
+        });
+
+        System.out.println("==============================================================");
+		
+	}
 }
