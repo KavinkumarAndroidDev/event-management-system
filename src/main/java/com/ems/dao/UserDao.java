@@ -1,20 +1,25 @@
 package com.ems.dao;
 
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.ems.exception.DataAccessException;
 import com.ems.model.User;
 
 public interface UserDao {
 	void createUser(String fullName,String email,String phone,String passwordHash,int roleId,String status,
-            LocalDateTime createdAt,LocalDateTime updatedAt,String gender) throws SQLException, Exception;
-	User findByEmail(String email);
-	void updateUserStatus(int userId, String status);
-	List<User> findAllUsers(String userType);
-	List<User> findAllUsers();
-	int getRole(User user);
+            LocalDateTime createdAt,LocalDateTime updatedAt,String gender)  throws DataAccessException;
+	
+	User findByEmail(String email)  throws DataAccessException;
+	
+	void updateUserStatus(int userId, String status)  throws DataAccessException;
+	
+	List<User> findAllUsers(String userType)  throws DataAccessException;
+	
+	List<User> findAllUsers()  throws DataAccessException;
+	
+	int getRole(User user)  throws DataAccessException;
 }
 //
 //public interface UserDao {

@@ -1,10 +1,14 @@
 package com.ems.service.impl;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import com.ems.dao.*;
 import com.ems.enums.NotificationType;
+import com.ems.exception.DataAccessException;
 import com.ems.model.Event;
+import com.ems.model.EventRegistrationReport;
 import com.ems.model.User;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
@@ -39,7 +43,12 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public void getUsersList(String userType) {
-        List<User> users = userDao.findAllUsers(userType);
+        List<User> users = new ArrayList<>();
+		try {
+			users = userDao.findAllUsers(userType);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
 
         if (users == null || users.isEmpty()) {
             System.out.println("No users found.");
@@ -73,7 +82,11 @@ public class AdminServiceImpl implements AdminService {
     public void changeStatus(String status) {
         int userId = InputValidationUtil.readInt(
                 ScannerUtil.getScanner(), "Enter the user id: ");
-        userDao.updateUserStatus(userId, status);
+        try {
+			userDao.updateUserStatus(userId, status);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
     }
 
     @Override
@@ -90,10 +103,20 @@ public class AdminServiceImpl implements AdminService {
 
         eventService.printEventSummaries(events);
 
-        int eventId = InputValidationUtil.readInt(
-                ScannerUtil.getScanner(),
-                "\n(Note: Future events only can be approved!)\nEnter the event id of the event to be approved: "
-        );
+        int choice = InputValidationUtil.readInt(
+        	    ScannerUtil.getScanner(),
+        	    "Select an event (1-" + events.size() + "): "
+        	);
+
+        	while (choice < 1 || choice > events.size()) {
+        	    choice = InputValidationUtil.readInt(
+        	        ScannerUtil.getScanner(),
+        	        "Enter a valid choice: "
+        	    );
+        	}
+
+        	Event selectedEvent = events.get(choice - 1);
+        	int eventId = selectedEvent.getEventId();
 
         boolean isApproved = eventDao.approveEvent(eventId, userId);
         if (isApproved) {
@@ -114,10 +137,20 @@ public class AdminServiceImpl implements AdminService {
 
         eventService.printEventSummaries(events);
 
-        int eventId = InputValidationUtil.readInt(
-                ScannerUtil.getScanner(),
-                "\n(Note: Future events only can be cancelled!)\nEnter the event id of the event to be cancelled: "
-        );
+        int choice = InputValidationUtil.readInt(
+        	    ScannerUtil.getScanner(),
+        	    "Select an event (1-" + events.size() + "): "
+        	);
+
+        	while (choice < 1 || choice > events.size()) {
+        	    choice = InputValidationUtil.readInt(
+        	        ScannerUtil.getScanner(),
+        	        "Enter a valid choice: "
+        	    );
+        	}
+
+        	Event selectedEvent = events.get(choice - 1);
+        	int eventId = selectedEvent.getEventId();
 
         boolean isCancelled = eventDao.cancelEvent(eventId);
         if (isCancelled) {
@@ -130,9 +163,46 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void getEventWiseRegistrations(int eventId) {
-        registrationDao.getEventWiseRegistrations(eventId);
+    public void getEventWiseRegistrations() {
+        try {
+        	List<Event> events = eventDao.listAllEvents();
+        	eventService.printEventSummaries(events);
+        	int choice = InputValidationUtil.readInt(
+    	    	    ScannerUtil.getScanner(),
+    	    	    "Select an event (1-" + events.size() + "): "
+    	    	    
+        	);
+        	while (choice < 1 || choice > events.size()) {
+        	    choice = InputValidationUtil.readInt(
+        	        ScannerUtil.getScanner(),
+        	        "Enter a valid choice: "
+        	    );
+        	}
+        	Event selectedEvent = events.get(choice - 1);
+            List<EventRegistrationReport> reports =
+                registrationDao.getEventWiseRegistrations(selectedEvent.getEventId());
+
+            if (reports.isEmpty()) {
+                System.out.println("No registrations found for this event");
+                return;
+            }
+
+            reports.sort(
+                Comparator.comparing(EventRegistrationReport::getRegistrationDate)
+                          .reversed()
+            );
+            if(!reports.isEmpty()) {
+            	System.out.println("Event Wise Registration");
+            	reports.forEach(System.out::println);
+            }else {
+            	System.out.println("No registrations for the given event!");
+            }
+
+        } catch (DataAccessException e) {
+            System.out.println(e.getMessage());
+        }
     }
+
 
     @Override
     public void getRevenueReport() {
@@ -185,7 +255,11 @@ public class AdminServiceImpl implements AdminService {
         NotificationType selectedType = methods[choice - 1];
         
         String message = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the notification message: ");
-        notificationDao.sendNotificationByRole(message, selectedType.toString(), role);
+        try {
+			notificationDao.sendNotificationByRole(message, selectedType.toString(), role);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
 	}
 
 	@Override
@@ -215,12 +289,21 @@ public class AdminServiceImpl implements AdminService {
         NotificationType selectedType = methods[choice - 1];
         
         String message = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the notification message: ");
-        notificationDao.sendNotification(userId,message,selectedType.toString());
+        try {
+			notificationDao.sendNotification(userId,message,selectedType.toString());
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
 	}
 
 	@Override
 	public void getAllUsers() {
-		List<User> users = userDao.findAllUsers();
+		List<User> users = new ArrayList<>();
+		try {
+			users = userDao.findAllUsers();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
 
         if (users == null || users.isEmpty()) {
             System.out.println("No users found.");

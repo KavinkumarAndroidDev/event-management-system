@@ -48,6 +48,7 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             Ticket ticket = ticketDao.getTicketById(ticketId);
             if (ticket.getAvailableQuantity() < quantity) {
+            	System.out.println("\nQuantity is more than available tickets");
                 return false;
             }
 
@@ -98,8 +99,7 @@ public class PaymentServiceImpl implements PaymentService {
             String notificationMessage =
                 "your registration for "
               + eventDao.getEventName(eventId)
-              + " is confirmed. "
-              + DateTimeUtil.formatDateTime(LocalDateTime.now());
+              + " is confirmed. ";
 
             notificationDao.sendNotification(
                 userId,

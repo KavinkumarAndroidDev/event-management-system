@@ -14,7 +14,7 @@ public interface AdminService {
 
     void cancelEvents() throws Exception;
 
-    void getEventWiseRegistrations(int eventId);
+    void getEventWiseRegistrations();
 
     void getRevenueReport();
 

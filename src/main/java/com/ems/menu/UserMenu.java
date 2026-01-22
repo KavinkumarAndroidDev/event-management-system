@@ -89,7 +89,6 @@ public class UserMenu extends BaseMenu {
 	            	userService.printAllAvailableEvents();
 	                break;
 	            case 2:
-	            	userService.printAllAvailableEvents();
 	            	userService.viewEventDetails();
 	                break;
 	            case 3:
@@ -181,15 +180,7 @@ public class UserMenu extends BaseMenu {
 	        "Are you sure to logout (Y/N): "
 	    );
 	    return Character.toUpperCase(choice) == 'Y';
-	}
-
-
-
-	
-
-	
-
-	
+	}	
 }
 
 //

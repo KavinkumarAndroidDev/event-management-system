@@ -4,8 +4,6 @@ import com.ems.model.User;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
-import com.ems.service.OrganizerService;
-import com.ems.service.impl.OrganizerServiceImpl;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
 import com.ems.util.ApplicationUtil;
@@ -146,10 +144,7 @@ public class AdminMenu extends BaseMenu {
 
 	        switch (choice) {
 	            case 1 :
-	                int eventId = InputValidationUtil.readInt(
-	                    ScannerUtil.getScanner(), "Enter event id: "
-	                );
-	                adminService.getEventWiseRegistrations(eventId);
+	                adminService.getEventWiseRegistrations();
 	                break;
 	            case 2 :
 	            	adminService.getOrganizerWisePerformance();

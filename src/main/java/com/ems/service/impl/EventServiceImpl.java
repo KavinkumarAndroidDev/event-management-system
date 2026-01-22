@@ -1,15 +1,16 @@
 package com.ems.service.impl;
 
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.ems.dao.*;
 import com.ems.exception.DataAccessException;
+import com.ems.model.BookingDetail;
 import com.ems.model.Event;
 import com.ems.model.Ticket;
 import com.ems.service.EventService;
@@ -45,24 +46,30 @@ public class EventServiceImpl implements EventService {
     @Override
 	public void viewEventDetails() {
 
-	    int eventId = InputValidationUtil.readInt(
-	        ScannerUtil.getScanner(),
-	        "Enter Event ID: "
-	    );
-
-	    Event event = new Event();
+    	List<Event> events = new ArrayList<>();
 		try {
-			event = eventDao.getEventById(eventId);
-		} catch (Exception e) {
-			e.printStackTrace();
+			events = eventDao.listAvailableEvents();
+			if (events.isEmpty()) {
+			    System.out.println("There are no available events!");
+			    return;
+			}
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
 		}
-
-	    if (event == null) {
-	        System.out.println("Event not found!");
-	        return;
-	    }
-
-	    printEventDetails(event);
+    	printEventSummaries(events);
+    	int choice = InputValidationUtil.readInt(
+	    	    ScannerUtil.getScanner(),
+	    	    "Select an event (1-" + events.size() + "): "
+	    	    
+    	);
+    	while (choice < 1 || choice > events.size()) {
+    	    choice = InputValidationUtil.readInt(
+    	        ScannerUtil.getScanner(),
+    	        "Enter a valid choice: "
+    	    );
+    	}
+    	Event selectedEvent = events.get(choice - 1);
+    	printEventDetails(selectedEvent);
 	}
     @Override
 	public  void viewTicketOptions() {
@@ -77,8 +84,22 @@ public class EventServiceImpl implements EventService {
 			return;
 		}
 		printEventSummaries(events);
-		int eventId = InputValidationUtil.readInt(ScannerUtil.getScanner(),"Enter the event id: ");
-		List<Ticket> tickets = ticketDao.getTicketTypes(eventId);
+		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Select event number: ");
+		while (choice < 1 || choice > events.size()) {
+		    choice = InputValidationUtil.readInt(
+		        ScannerUtil.getScanner(),
+		        "Enter a valid choice: "
+		    );
+		}
+		Event selectedEvent = events.get(choice - 1);
+		int eventId = selectedEvent.getEventId();
+
+		List<Ticket> tickets = new ArrayList<>();
+		try {
+			tickets = ticketDao.getTicketTypes(eventId);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
 		if(!tickets.isEmpty()) {
 			System.out.println("\nAvailable ticekt types: ");
 			tickets.forEach(t -> System.out.println(t));
@@ -98,7 +119,12 @@ public class EventServiceImpl implements EventService {
 
 	        List<Event> filteredEvents = allEvents.stream()
 	            .filter(event -> {
-	                List<Ticket> tickets = ticketDao.getTicketTypes(event.getEventId());
+	                List<Ticket> tickets = new ArrayList<>();
+					try {
+						tickets = ticketDao.getTicketTypes(event.getEventId());
+					} catch (DataAccessException e) {
+						System.out.println(e.getMessage());
+					}
 	                
 	                return tickets.stream()
 	                    .anyMatch(t -> t.getPrice() >= minPrice && 
@@ -119,7 +145,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
 	public  void searchByCity() {
-		Map<Integer, String> cities = venueDao.getAllCities();
+		Map<Integer, String> cities = new HashMap<>();
+		try {
+			cities = venueDao.getAllCities();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
 		if(!cities.isEmpty()) {
 			cities.forEach((key, value) -> System.out.println(key + ". " + value));
 		}else {
@@ -200,7 +231,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
 	public void searchBycategory() {
-		Map<Integer, String> categories = categoryDao.getAllCategories();
+		Map<Integer, String> categories = new HashMap<>();
+		try {
+			categories = categoryDao.getAllCategories();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
 		if(!categories.isEmpty()) {
 			categories.forEach((key, value) -> System.out.println(key + ". " + value));
 		}else {
@@ -241,7 +277,17 @@ public class EventServiceImpl implements EventService {
 	        }
 
 	        printEventSummaries(events);
-	        int eventId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the event id: ");
+	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),"Select an event (1-" + events.size() + "): ");
+	        while (choice < 1 || choice > events.size()) {
+	        	choice = InputValidationUtil.readInt(
+	        			ScannerUtil.getScanner(),
+	        	        "Enter a valid choice: "
+	        	    );
+	        	}
+
+	       Event selectedEvent = events.get(choice - 1);
+	       int eventId = selectedEvent.getEventId();
+
 
 	        // Validate Event Selection
 	        List<Ticket> tickets = ticketDao.getTicketTypes(eventId);
@@ -297,12 +343,8 @@ public class EventServiceImpl implements EventService {
 			}
 			System.out.println("--- Events found: " + upcomingEvents.size() + " ---");
 			upcomingEvents.stream().forEach(e -> printEventSummaries(e));
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch(DataAccessException e) {
+			System.out.println(e.getMessage());
 		}
 		
 	}
@@ -319,29 +361,36 @@ public class EventServiceImpl implements EventService {
 			System.out.println("--- Events found: " + pastEvents.size() + " ---");
 			pastEvents.stream().forEach(e -> printEventSummaries(e));
 			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
 		}
 		
 	}
     @Override
 	public void viewBookingDetails(int userId) {
-		try {
-			
-			eventDao.viewBookingDetails(userId);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	try {
+            List<BookingDetail> bookings = eventDao.viewBookingDetails(userId);
+
+            if (bookings.isEmpty()) {
+                System.out.println("No bookings found");
+                return;
+            }
+
+            for (BookingDetail b : bookings) {
+                System.out.println("------------------------------------------");
+                System.out.println("Event  : " + b.getEventName());
+                System.out.println("Venue : " + b.getVenueName() + " (" + b.getCity() + ")");
+                System.out.println("Tickets: " + b.getTicketType() + " x" + b.getQuantity());
+                System.out.println("Total : ₹" + b.getTotalCost());
+                System.out.println("------------------------------------------");
+            }
+
+        } catch (DataAccessException e) {
+            System.out.println(e.getMessage());
+        }
 		
 	}
+
     
     @Override
 	//Rating features
@@ -358,8 +407,23 @@ public class EventServiceImpl implements EventService {
 				System.out.println("No past events available to rate!");
 				return;
 			}
-			pastEvents.stream().forEach(e -> printEventSummaries(pastEvents));
-			int eventId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the event id: ");
+			printEventSummaries(pastEvents);
+
+			int choice = InputValidationUtil.readInt(
+			    ScannerUtil.getScanner(),
+			    "Select an event (1-" + pastEvents.size() + "): "
+			);
+
+			while (choice < 1 || choice > pastEvents.size()) {
+			    choice = InputValidationUtil.readInt(
+			        ScannerUtil.getScanner(),
+			        "Enter a valid choice: "
+			    );
+			}
+
+			Event selectedEvent = pastEvents.get(choice - 1);
+			int eventId = selectedEvent.getEventId();
+
 			int rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the rating (1-5): ");
 			while(rating >5 || rating <1) {
 				rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the rating (1-5): ");
@@ -370,11 +434,8 @@ public class EventServiceImpl implements EventService {
 			}
 			eventDao.submitRating(eventId,  userId, rating, comments);
 			return;
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
 		}
 		
 	}
@@ -437,12 +498,8 @@ public class EventServiceImpl implements EventService {
 	public  void completeEvents() {
 		try {
 			eventDao.completeEvents();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
 		}
 	}
 	
@@ -480,34 +537,112 @@ public class EventServiceImpl implements EventService {
 
     @Override
 	public void printEventDetails(List<Event> events) {
-		// TODO: Use the Stream API for more concise iteration.
 		events.stream().forEach(event -> {
+			try {
+				
 
-	        String category = categoryDao.getCategory(event.getCategoryId());
+		        String category = categoryDao.getCategory(event.getCategoryId());
+		        String venueName = venueDao.getVenueName(event.getVenueId());
+		        String venueAddress = venueDao.getVenueAddress(event.getVenueId());
+		        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
+		        List<Ticket> tickets = ticketDao.getTicketTypes(event.getEventId());
+			
+
+		        System.out.println("\n==============================================");
+		        System.out.println("Event ID        : " + event.getEventId());
+		        System.out.println("Title           : " + event.getTitle());
+	
+		        if (event.getDescription() != null) {
+		            System.out.println("Description     : " + event.getDescription());
+		        }
+	
+		        System.out.println("Category        : " + category);
+		        System.out.println("Duration        : "
+		                + DateTimeUtil.formatDateTime(event.getStartDateTime())
+		                + " to "
+		                + DateTimeUtil.formatDateTime(event.getEndDateTime()));
+	
+		        System.out.println("Total Tickets   : " + totalAvailable);
+	
+		        System.out.println("\nTicket Types");
+		        System.out.println("----------------------------------------------");
+	
+		        for (Ticket ticket : tickets) {
+		            System.out.println("• "
+		                    + ticket.getTicketType()
+		                    + " | Price: ₹"
+		                    + ticket.getPrice()
+		                    + " | Available: "
+		                    + ticket.getAvailableQuantity());
+		        }
+	
+		        System.out.println("\nVenue");
+		        System.out.println("----------------------------------------------");
+		        System.out.println("Name            : " + venueName);
+		        System.out.println("Address         : " + venueAddress);
+	
+		        System.out.println("==============================================");
+			}catch(DataAccessException e) {
+				System.out.println(e.getMessage());
+			}
+	    });
+		
+	}
+    @Override
+    public void printEventSummaries(List<Event> events) {
+        System.out.println("\nAvailable Events");
+        System.out.println("----------------------------------------------");
+        
+        int displayIndex = 1;
+        for (Event event : events) {
+            try {
+                String category = categoryDao.getCategory(event.getCategoryId());
+                int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
+
+                System.out.println(
+                    displayIndex + " | " +
+                    event.getTitle() + " | " +
+                    category + " | " +
+                    DateTimeUtil.formatDateTime(event.getStartDateTime()) +
+                    " | Tickets: " + totalAvailable
+                );
+
+                displayIndex++;
+            } catch (DataAccessException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+        System.out.println("----------------------------------------------");
+    }
+
+    private void printEventDetails(Event event) {
+    	try {
+			String category = categoryDao.getCategory(event.getCategoryId());
 	        String venueName = venueDao.getVenueName(event.getVenueId());
 	        String venueAddress = venueDao.getVenueAddress(event.getVenueId());
 	        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
 	        List<Ticket> tickets = ticketDao.getTicketTypes(event.getEventId());
-
+	
 	        System.out.println("\n==============================================");
 	        System.out.println("Event ID        : " + event.getEventId());
 	        System.out.println("Title           : " + event.getTitle());
-
+	
 	        if (event.getDescription() != null) {
 	            System.out.println("Description     : " + event.getDescription());
 	        }
-
+	
 	        System.out.println("Category        : " + category);
 	        System.out.println("Duration        : "
 	                + DateTimeUtil.formatDateTime(event.getStartDateTime())
 	                + " to "
 	                + DateTimeUtil.formatDateTime(event.getEndDateTime()));
-
+	
 	        System.out.println("Total Tickets   : " + totalAvailable);
-
+	
 	        System.out.println("\nTicket Types");
 	        System.out.println("----------------------------------------------");
-
+	
 	        for (Ticket ticket : tickets) {
 	            System.out.println("• "
 	                    + ticket.getTicketType()
@@ -516,25 +651,26 @@ public class EventServiceImpl implements EventService {
 	                    + " | Available: "
 	                    + ticket.getAvailableQuantity());
 	        }
-
+	
 	        System.out.println("\nVenue");
 	        System.out.println("----------------------------------------------");
 	        System.out.println("Name            : " + venueName);
 	        System.out.println("Address         : " + venueAddress);
-
+	
 	        System.out.println("==============================================");
-	    });
+	    
+    	}catch(Exception e) {
+    		System.out.println(e.getMessage());
+    	}
 	}
-    @Override
-	public void printEventSummaries(List<Event> events) {
-
-	    System.out.println("\nAvailable Events");
-	    System.out.println("----------------------------------------------");
-	    events.stream().forEach(event -> {
-
-	        String category = categoryDao.getCategory(event.getCategoryId());
+	
+    private void printEventSummaries(Event event) {
+    	try {
+    		
+    	
+			String category = categoryDao.getCategory(event.getCategoryId());
 	        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
-
+	
 	        System.out.println(
 	            event.getEventId()
 	            + " | "
@@ -546,154 +682,12 @@ public class EventServiceImpl implements EventService {
 	            + " | Tickets: "
 	            + totalAvailable
 	        );
-	    });
-
-	    System.out.println("----------------------------------------------");
-	}
-    private void printEventDetails(Event event) {
-		String category = categoryDao.getCategory(event.getCategoryId());
-        String venueName = venueDao.getVenueName(event.getVenueId());
-        String venueAddress = venueDao.getVenueAddress(event.getVenueId());
-        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
-        List<Ticket> tickets = ticketDao.getTicketTypes(event.getEventId());
-
-        System.out.println("\n==============================================");
-        System.out.println("Event ID        : " + event.getEventId());
-        System.out.println("Title           : " + event.getTitle());
-
-        if (event.getDescription() != null) {
-            System.out.println("Description     : " + event.getDescription());
-        }
-
-        System.out.println("Category        : " + category);
-        System.out.println("Duration        : "
-                + DateTimeUtil.formatDateTime(event.getStartDateTime())
-                + " to "
-                + DateTimeUtil.formatDateTime(event.getEndDateTime()));
-
-        System.out.println("Total Tickets   : " + totalAvailable);
-
-        System.out.println("\nTicket Types");
-        System.out.println("----------------------------------------------");
-
-        for (Ticket ticket : tickets) {
-            System.out.println("• "
-                    + ticket.getTicketType()
-                    + " | Price: ₹"
-                    + ticket.getPrice()
-                    + " | Available: "
-                    + ticket.getAvailableQuantity());
-        }
-
-        System.out.println("\nVenue");
-        System.out.println("----------------------------------------------");
-        System.out.println("Name            : " + venueName);
-        System.out.println("Address         : " + venueAddress);
-
-        System.out.println("==============================================");
-    
-		
-	}
+	    
 	
-    private Object printEventSummaries(Event event) {
-		String category = categoryDao.getCategory(event.getCategoryId());
-        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
-
-        System.out.println(
-            event.getEventId()
-            + " | "
-            + event.getTitle()
-            + " | "
-            + category
-            + " | "
-            + DateTimeUtil.formatDateTime(event.getStartDateTime())
-            + " | Tickets: "
-            + totalAvailable
-        );
-    
-
-    System.out.println("----------------------------------------------");
-
-		return null;
-	}
+	        System.out.println("----------------------------------------------");
+		}catch(DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+    }
 	
 }
-
-
-//
-//package com.ems.service.impl;
-//
-//import java.util.List;
-//
-//import com.ems.dao.*;
-//import com.ems.dao.impl.*;
-//import com.ems.model.Event;
-//import com.ems.model.User;
-//import com.ems.util.InputValidationUtil;
-//import com.ems.util.ScannerUtil;
-//
-//public class AdminService {
-//	
-//	private static UserDao userDao = new UserDaoImpl();
-//	private static EventDao eventDao = new EventDaoImpl();
-//	private static NotificationDao notificationDao = new NotificationDaoImpl();
-//	private static RegistrationDao registrationDao = new RegistrationDaoImpl();
-//	
-//	public static void getUsersList(String userType) {
-//		List<User> users = userDao.findAllUsers(userType);
-//		users.stream().forEach(u -> System.out.println(u));
-//	}
-//	public static void changeStatus(String status) {
-//		int userId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the user id: ");
-//		userDao.updateUserStatus(userId, status);
-//	}
-//	
-//	public static void sendSystemWideNotification(String message, String notificationType) {
-//		NotificationService.sendSystemWideNotification(message, notificationType);
-//	}
-//	public static void approveEvents(int userId) throws Exception {
-//		List<Event> events = eventDao.listEventsYetToApprove();
-//		if(events.isEmpty()) {
-//			throw new Exception("There are no events yet to be approved!");
-//		}
-//		EventService.printEventSummaries(events);
-//		int eventId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "\n(Note: Future events only can be approved!)\nEnter the event id of the event to be approved: ");
-//		boolean isApproved = eventDao.approveEvent(eventId, userId);
-//		if(isApproved) {
-//			notificationDao.sendNotification(eventDao.getOrganizerId(eventId), "Your event: " + eventId + " has been approved!", "EVENT");
-//		}
-//		
-//	}
-//	public static void cancelEvents() throws Exception {
-//		List<Event> events = eventDao.listAvailableAndDraftEvents();
-//		if(events.isEmpty()) {
-//			throw new Exception("There are no approved events!");
-//		}
-//		EventService.printEventSummaries(events);
-//		int eventId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "\n(Note: Future events only can be cancelled!)"
-//				+ "\nEnter the event id of the event to be cancelled: ");
-//		boolean isCancelled = eventDao.cancelEvent(eventId);
-//		if(isCancelled) {
-//			notificationDao.sendNotification(eventDao.getOrganizerId(eventId), "Your event: " + eventId + " has been cancelled!", "EVENT");
-//		}
-//		
-//
-//		//TODO: cancellation must have refunds if any tickets have been booked!
-//	}
-//	public static void getEventWiseRegistrations(int eventId) {
-//		registrationDao.getEventWiseRegistrations(eventId);
-//	}
-//	public static void getRevenueReport() {
-//		// TODO Auto-generated method stub
-//		
-//	}
-//	public static void getOrganizerWisePerformance() {
-//		// TODO Auto-generated method stub
-//		
-//	}
-//	public static void markCompletedEvents() {
-//		EventService.completeEvents();
-//	}
-//	
-//}
-

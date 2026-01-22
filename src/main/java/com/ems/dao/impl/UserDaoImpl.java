@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ems.dao.UserDao;
+import com.ems.exception.DataAccessException;
 import com.ems.model.User;
 import com.ems.util.DBConnectionUtil;
 import com.ems.util.DateTimeUtil;
@@ -20,7 +21,7 @@ public class UserDaoImpl implements UserDao{
 	//Used to create a new user account
 	@Override
 	public void createUser(String fullName, String email, String phone, String passwordHash, int roleId, String status,
-			LocalDateTime createdAt, LocalDateTime updatedAt, String gender) throws SQLException, Exception {
+			LocalDateTime createdAt, LocalDateTime updatedAt, String gender) throws DataAccessException {
 		String sql = "insert into users(full_name"
 				+ ", email, phone, password_hash, role_id, created_at, status, "
 				+ "updated_at, gender) values (?,?,?,?,?,?,?,?,?)";
@@ -38,6 +39,8 @@ public class UserDaoImpl implements UserDao{
 			ps.setString(9, gender);
 			ps.executeUpdate();
 
+		}catch (SQLException e) {
+			throw new DataAccessException("Error while creating user account: " + e.getMessage());
 		}
 
 
@@ -45,7 +48,7 @@ public class UserDaoImpl implements UserDao{
 	
 	//gets the user details using the email id
 	@Override
-	public User findByEmail(String email) {
+	public User findByEmail(String email) throws DataAccessException{
 		User user = null;
 		String sql = "select * from users where email = ?";
 		try (Connection con = DBConnectionUtil.getConnection();
@@ -73,16 +76,14 @@ public class UserDaoImpl implements UserDao{
 	            	}
 	            }
 		} catch (SQLException e) {
-			System.out.println("Unexpected error occured: " + e.getMessage());
-		} catch (Exception e) {
-			System.out.println("Unexpected error occured: " + e.getMessage());
+			throw new DataAccessException("Error while fetching user: " + e.getMessage());
 		}
 		return user;
 	}
 	
 	//Used to set the user as Active or suspended
 	@Override
-	public void updateUserStatus(int userId, String status) {
+	public void updateUserStatus(int userId, String status) throws DataAccessException{
 		String adminCheck = "select r.role_name from roles r inner join users u on r.role_id = u.role_id where u.user_id = ?";
 		String sql = "update users set status = ? where user_id = ?";
 		try(Connection con = DBConnectionUtil.getConnection();
@@ -96,7 +97,7 @@ public class UserDaoImpl implements UserDao{
 				role = rs.getString("role_name");
 			}
 			if(role.trim().equalsIgnoreCase("admin")) {
-				throw new Exception("Admin accounts cannot be suspended!");
+				throw new DataAccessException("Admin accounts cannot be suspended!");
 			}
 			
 	        ps.setString(1, status);
@@ -108,15 +109,13 @@ public class UserDaoImpl implements UserDao{
 	        }else {
 	        	System.out.println("Status of the User account: " + userId + " has been changed to: " + status);
 	        }
-	    } catch (SQLException e) {
-	        System.out.println("Database error: " + e.getMessage());
-	    } catch (Exception e) {
-	        System.out.println("Unexpected error: " + e.getMessage());
-	    }
+	    }catch (SQLException e) {
+			throw new DataAccessException("Error while updating the user status: " + e.getMessage());
+		}
 	}
 
 	@Override
-	public List<User> findAllUsers(String userType) {
+	public List<User> findAllUsers(String userType) throws DataAccessException{
 		String sql = "select u.* from users u inner join roles r on u.role_id = r.role_id"
 				+ " where r.role_name = ?";
 		List<User> users= new ArrayList<>();
@@ -146,17 +145,15 @@ public class UserDaoImpl implements UserDao{
 	            users.add(user); 
 	        }
             
-		} catch (SQLException e) {	
-			System.out.println("Unexpected error occured: " + e.getMessage());
-		} catch (Exception e) {
-			System.out.println("Unexpected error occured: " + e.getMessage());
+		} catch (SQLException e) {
+			throw new DataAccessException("Error while fetching users: " + e.getMessage());
 		}
 		return users;
 	}
 	
 	//Helps to get the role of the user
 	@Override
-	public int getRole(User user) {
+	public int getRole(User user) throws DataAccessException{
 	    String query = "SELECT role_name FROM Roles WHERE role_id = ?";
 	    String roleName = "";
 
@@ -171,10 +168,7 @@ public class UserDaoImpl implements UserDao{
 	            }
 	        }
 	    } catch (SQLException e) {
-	        System.err.println("Error fetching role: " + e.getMessage());
-	        return 0; 
-	    } catch (Exception e1) {
-			System.out.println("Unexpected error occured: " + e1.getMessage());
+			throw new DataAccessException("Error while fetching role of user: " + e.getMessage());
 		}
 	    
 	    if(roleName.equals("ADMIN")) {
@@ -188,7 +182,7 @@ public class UserDaoImpl implements UserDao{
 	}
 
 	@Override
-	public List<User> findAllUsers() {
+	public List<User> findAllUsers() throws DataAccessException{
 		String sql = "select * from users order by role_id";
 		List<User> users= new ArrayList<>();
 		try(Connection con = DBConnectionUtil.getConnection();
@@ -216,10 +210,8 @@ public class UserDaoImpl implements UserDao{
 	            users.add(user); 
 	        }
             
-		} catch (SQLException e) {	
-			System.out.println("Unexpected error occured: " + e.getMessage());
-		} catch (Exception e) {
-			System.out.println("Unexpected error occured: " + e.getMessage());
+		} catch (SQLException e) {
+			throw new DataAccessException("Error while fetching users: " + e.getMessage());
 		}
 		return users;
 	}

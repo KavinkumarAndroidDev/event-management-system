@@ -7,6 +7,8 @@ import java.util.logging.Logger;
 import com.ems.dao.RoleDao;
 import com.ems.dao.UserDao;
 import com.ems.exception.AuthorizationException;
+import com.ems.exception.DataAccessException;
+import com.ems.exception.InvalidPasswordFormatException;
 import com.ems.exception.AuthenticationException;
 import com.ems.menu.AdminMenu;
 import com.ems.menu.OrganizerMenu;
@@ -72,14 +74,12 @@ public class UserServiceImpl implements UserService {
                     "Enter the password in the valid format: "
                 );
         }
-
-        User user = userDao.findByEmail(emailId.toLowerCase());
-
-        if (user == null) {
-            throw new AuthorizationException("Invalid email address!");
-        }
-
         try {
+	        User user = userDao.findByEmail(emailId.toLowerCase());
+	
+	        if (user == null) {
+	            throw new AuthorizationException("Invalid email address!");
+	        }
             if (!PasswordUtil.verifyPassword(
                     password, user.getPasswordHash())) {
 
@@ -183,9 +183,11 @@ public class UserServiceImpl implements UserService {
                 : (genderChoice == 2)
                     ? "Female"
                     : "Prefer not to say";
-
+        try {
         List<Role> roles = roleDao.getRoles();
-
+        roles.sort(
+        	    (r1, r2) -> r1.getRoleName().compareToIgnoreCase(r2.getRoleName())
+        	);
         String targetRoleName =
             (i == 1) ? "ATTENDEE" : "ORGANIZER";
 
@@ -197,7 +199,7 @@ public class UserServiceImpl implements UserService {
                 .orElse(null);
 
         if (selectedRole != null) {
-            try {
+            
                 String hashedPassword =
                     PasswordUtil.hashPassword(password);
 
@@ -219,20 +221,26 @@ public class UserServiceImpl implements UserService {
                     + " for: "
                     + fullName
                 );
-
-            } catch (Exception e) {
-                System.err.println("Database Error: " + e.getMessage());
-            }
         } else {
             System.err.println(
                 "Error: The role '" + targetRoleName + "' was not found in the database."
             );
         }
+        }catch(DataAccessException e) {
+        	System.out.println(e.getMessage());
+        } catch (InvalidPasswordFormatException e) {
+        	System.out.println(e.getMessage());
+		}
     }
 
     @Override
     public int getRole(User user) {
-        return userDao.getRole(user);
+        try {
+			return userDao.getRole(user);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+        return 0;
     }
 
     @Override

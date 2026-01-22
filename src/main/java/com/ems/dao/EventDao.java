@@ -1,9 +1,9 @@
 package com.ems.dao;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import com.ems.exception.DataAccessException;
+import com.ems.model.BookingDetail;
 import com.ems.model.Event;
 
 public interface EventDao {
@@ -17,20 +17,20 @@ public interface EventDao {
 
 	boolean cancelEvent(int eventId) throws DataAccessException;
 
-	int getOrganizerId(int eventId) throws DataAccessException, Exception;
+	int getOrganizerId(int eventId) throws DataAccessException;
 
 	List<Event> listAvailableAndDraftEvents() throws DataAccessException;
 
-	Event getEventById(int eventId) throws SQLException, Exception;
+	Event getEventById(int eventId) throws DataAccessException;
 
-	String getEventName(int eventId) throws SQLException, Exception;
+	String getEventName(int eventId) throws DataAccessException;
 
-	void completeEvents() throws SQLException, Exception;
+	void completeEvents() throws DataAccessException;
 
-	List<Event> getUserEvents(int userId) throws SQLException, Exception;
+	List<Event> getUserEvents(int userId) throws DataAccessException;
 
-	void viewBookingDetails(int userId) throws SQLException, Exception;
+	List<BookingDetail> viewBookingDetails(int userId) throws DataAccessException;
 
-	void submitRating(int eventId, int userId, int rating, String comments) throws SQLException, Exception;
+	void submitRating(int eventId, int userId, int rating, String comments) throws DataAccessException;
 
 }
