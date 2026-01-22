@@ -1,15 +1,26 @@
 package com.ems.util;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.List;
 
-public class DateTimeUtil {
+public final class DateTimeUtil {
+	private DateTimeUtil() {
+		
+	}
 	public static String formatDateTime(LocalDateTime localDateTime) {
 		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 		return "Date: " + localDateTime.toLocalDate().format(dateTimeFormatter).toString() + " Time: "+ localDateTime.toLocalTime();
+	}
+	public static LocalDate formatDate(String date) {
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+		return LocalDate.parse(date, dateTimeFormatter);
 	}
 	public static Instant getCurrentUtc() {
         return Instant.now();
@@ -24,5 +35,28 @@ public class DateTimeUtil {
     
     public static Instant convertLocalDefaultToUtc(LocalDateTime localDateTime) {
         return localDateTime.atZone(ZoneId.systemDefault()).toInstant();
+    }
+    public static LocalDate getLocalDate(String message) {
+        List<String> formats = Arrays.asList("yyyy-MM-dd", "dd-MM-yyyy", "dd/MM/yyyy");
+        LocalDate localDate = null;
+
+        while (localDate == null) {
+            String dateString = InputValidationUtil.readString(ScannerUtil.getScanner(), message);
+            
+            for (String format : formats) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+                    localDate = LocalDate.parse(dateString, formatter);
+                    break;
+                } catch (DateTimeParseException ignored) {
+
+                }
+            }
+
+            if (localDate == null) {
+                System.out.println("Invalid date. Please use one of: " + formats);
+            }
+        }
+        return localDate;
     }
 }

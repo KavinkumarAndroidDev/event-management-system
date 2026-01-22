@@ -2,12 +2,14 @@ package com.ems.dao;
 
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.ems.model.User;
 
 public interface UserDao {
-	void createUser(User user) throws SQLException, Exception;
+	void createUser(String fullName,String email,String phone,String passwordHash,int roleId,String status,
+            LocalDateTime createdAt,LocalDateTime updatedAt,String gender) throws SQLException, Exception;
 	User findByEmail(String email);
 	void updateUserStatus(int userId, String status);
 	List<User> findAllUsers(String userType);

@@ -3,16 +3,17 @@ package com.ems.menu;
 import com.ems.exception.AuthenticationException;
 import com.ems.exception.AuthorizationException;
 import com.ems.service.UserService;
+import com.ems.util.ApplicationUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
 
 public class MainMenu {
+	private final UserService userService;
 
 	public MainMenu() {
-		start();
+	    this.userService = ApplicationUtil.userService();
 	}
-
-	private void start() {
+	public void start() {
 		while(true) {
 			System.out.println("\nMain Menu"
 					+ "\n\nEnter your choice:"
@@ -26,7 +27,7 @@ public class MainMenu {
 			switch(input) {
 				case 1:
 					try {
-						UserService.login();
+						userService.login();
 					} catch (AuthorizationException e) {
 						System.out.println(e.getMessage());
 					} catch (AuthenticationException e) {
@@ -34,20 +35,32 @@ public class MainMenu {
 					}
 					break;
 				case 2:
-					UserService.createAccount(1);
+					userService.createAccount(1);
 					break;
 				case 3:
-					UserService.createAccount(2);
+					userService.createAccount(2);
 					break;
 				case 4:
-					new GuestMenu();
+					GuestMenu guestMenu = new GuestMenu();
+					guestMenu.start();
 					break;
 				default:
-					System.out.println("Thank you for using our event management system");
-					return;
+					if (confirmLogout()) {
+						System.out.println("Exiting the app...");
+	                    return;
+	                }
+	                break;
 			}
 			
 		}
+		
+	}
+	private boolean confirmLogout() {
+	    char choice = InputValidationUtil.readChar(
+	        ScannerUtil.getScanner(),
+	        "Are you sure to leave the application (Y/N): "
+	    );
+	    return Character.toUpperCase(choice) == 'Y';
 	}
 
 }

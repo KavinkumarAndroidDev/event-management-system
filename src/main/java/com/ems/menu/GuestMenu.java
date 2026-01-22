@@ -1,16 +1,22 @@
 package com.ems.menu;
 
-import com.ems.service.EventService;
-import com.ems.service.UserService;
+import com.ems.service.GuestService;
+import com.ems.service.impl.GuestServiceImpl;
+import com.ems.util.ApplicationUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
 
-public class GuestMenu {
+public class GuestMenu extends BaseMenu {
+	private final GuestService guestService;
 	public GuestMenu() {
-		this.start();
+		super(null);
+		this.guestService =
+			    new GuestServiceImpl(
+			        ApplicationUtil.userService(),
+			        ApplicationUtil.eventService()
+			    );
 	}
-	
-	private void start() {
+	public void start() {
 		while(true) {
 			System.out.println("\nGuest menu"
 					+ "\n\nPlease select an option\n"
@@ -27,10 +33,10 @@ public class GuestMenu {
                 browseEventsMenu();
                 break;
             case 2:
-                EventService.searchEvents();
+                guestService.searchEvents();
                 break;
 			case 3:
-				UserService.createAccount(1);
+				guestService.createAccount();
 				break;
 			case 4:
 			    System.out.println("Exiting Guest Mode...");
@@ -59,13 +65,13 @@ public class GuestMenu {
 
 	        switch (choice) {
 	            case 1:
-	                EventService.printAllAvailableEvents();
+	            	guestService.printAllAvailableEvents();
 	                break;
 	            case 2:
-	                EventService.viewEventDetails();
+	            	guestService.viewEventDetails();
 	                break;
 	            case 3:
-	                EventService.viewTicketOptions();
+	            	guestService.viewTicketOptions();
 	                break;
 	            case 4:
 	                return;

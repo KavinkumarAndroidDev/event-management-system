@@ -4,19 +4,25 @@ import com.ems.model.User;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
 import com.ems.service.OrganizerService;
+import com.ems.service.impl.OrganizerServiceImpl;
+import com.ems.util.ApplicationUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
 
-public class OrganizerMenu {
-	User loggedInUser;
+public class OrganizerMenu extends BaseMenu {
+	private final OrganizerService organizerService;
+	private final NotificationService notificationService;
+	private final EventService eventService;
 	
 	public OrganizerMenu(User user){
-		this.loggedInUser = user;
-		this.start();
+		super(user);
+		this.organizerService = new OrganizerServiceImpl();
+		this.notificationService = ApplicationUtil.notificationService();
+	    this.eventService = ApplicationUtil.eventService();
 	}
-	private void start() {
+	public void start() {
 
-	    NotificationService.displayUnreadNotifications(loggedInUser.getUserId());
+	    notificationService.displayUnreadNotifications(loggedInUser.getUserId());
 	
 	    while (true) {
 	        System.out.println(
@@ -52,6 +58,7 @@ public class OrganizerMenu {
 	                break;
 	            case 6:
 	                if (confirmLogout()) {
+	                	System.out.println("Logging out...");
 	                    return;
 	                }
 	                break;
@@ -81,22 +88,22 @@ public class OrganizerMenu {
 
 	        switch (choice) {
 	            case 1:
-	                EventService.createEvent();
+	            	eventService.createEvent();
 	                break;
 	            case 2:
-	                EventService.updateEventDetails();
+	            	eventService.updateEventDetails();
 	                break;
 	            case 3:
-	                EventService.updateEventSchedule();
+	            	eventService.updateEventSchedule();
 	                break;
 	            case 4:
-	                EventService.updateEventCapacity();
+	            	eventService.updateEventCapacity();
 	                break;
 	            case 5:
-	                EventService.publishEvent();
+	            	eventService.publishEvent();
 	                break;
 	            case 6:
-	                EventService.cancelEvent();
+	            	eventService.cancelEvent();
 	                break;
 	            case 7:
 	                return;
@@ -125,16 +132,16 @@ public class OrganizerMenu {
 
 	        switch (choice) {
 	            case 1:
-	                EventService.createTicket();
+	            	eventService.createTicket();
 	                break;
 	            case 2:
-	            	EventService.updateTicketPrice();
+	            	eventService.updateTicketPrice();
 	                break;
 	            case 3:
-	            	EventService.updateTicketQuantity();
+	            	eventService.updateTicketQuantity();
 	                break;
 	            case 4:
-	            	EventService.viewTicketAvailability();
+	            	eventService.viewTicketAvailability();
 	                break;
 	            case 5:
 	                return;
@@ -161,10 +168,10 @@ public class OrganizerMenu {
 
 	        switch (choice) {
 	            case 1:
-	                OrganizerService.viewEventRegistrations();
+	                organizerService.viewEventRegistrations();
 	                break;
 	            case 2:
-	                OrganizerService.viewRegisteredUsers();
+	                organizerService.viewRegisteredUsers();
 	                break;
 	            case 3:
 	                return;
@@ -192,13 +199,13 @@ public class OrganizerMenu {
 
 	        switch (choice) {
 	            case 1:
-	                OrganizerService.getEventWiseRegistrations();
+	                organizerService.getEventWiseRegistrations();
 	                break;
 	            case 2:
-	                OrganizerService.getTicketSales();
+	                organizerService.getTicketSales();
 	                break;
 	            case 3:
-	                OrganizerService.getRevenueSummary();
+	                organizerService.getRevenueSummary();
 	                break;
 	            case 4:
 	                return;
@@ -226,13 +233,13 @@ public class OrganizerMenu {
 
 	        switch (choice) {
 	            case 1:
-	                OrganizerService.sendEventUpdate();
+	                organizerService.sendEventUpdate();
 	                break;
 	            case 2:
-	                OrganizerService.sendScheduleChange();
+	                organizerService.sendScheduleChange();
 	                break;
 	            case 3:
-	                NotificationService.displayAllNotifications(
+	                notificationService.displayAllNotifications(
 	                    loggedInUser.getUserId()
 	                );
 	                break;

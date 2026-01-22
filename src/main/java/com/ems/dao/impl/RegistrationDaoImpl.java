@@ -13,14 +13,14 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	//Gets the details of registration with the event id
 	@Override
 	public void getEventWiseRegistrations(int eventId) {
-		String sql = "SELECT e.title AS event_title, u.full_name, t.ticket_type, rt.quantity, r.registration_date " +
-	             "FROM registrations r " + // Added 'r' alias
-	             "INNER JOIN users u ON r.user_id = u.user_id " + // Added 'u' alias
-	             "INNER JOIN registration_tickets rt ON r.registration_id = rt.registration_id " +
-	             "INNER JOIN tickets t ON rt.ticket_id = t.ticket_id " + // Added 't' alias
-	             "INNER JOIN events e ON r.event_id = e.event_id " + // Added 'e' alias
-	             "WHERE r.event_id = ? " +
-	             "ORDER BY r.registration_date DESC;";
+		String sql = "select e.title as event_title, u.full_name, t.ticket_type, rt.quantity, r.registration_date " +
+	             "from registrations r " + 
+	             "inner join users u on r.user_id = u.user_id " +
+	             "inner join registration_tickets rt on r.registration_id = rt.registration_id " +
+	             "inner join tickets t on rt.ticket_id = t.ticket_id " + 
+	             "inner join events e on r.event_id = e.event_id " + 
+	             "where r.event_id = ? " +
+	             "order by r.registration_date desc;";
 
 		 try (Connection con = DBConnectionUtil.getConnection();
 		         PreparedStatement ps = con.prepareStatement(sql)) {
@@ -37,6 +37,61 @@ public class RegistrationDaoImpl implements RegistrationDao {
 		} catch (Exception e) {
 			System.out.println("Unexpected error occured: " + e.getMessage());
 		}
+		
+	}
+
+	@Override
+	public int createRegistration(int userId, int eventId) throws SQLException, Exception {
+		String sql = "insert into registrations (user_id, event_id, registration_date, status) values (?,?,now(),'CONFIRMED')";
+		try (Connection con = DBConnectionUtil.getConnection();
+		         PreparedStatement ps = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+			ps.setInt(1, userId);
+			ps.setInt(2, eventId);
+			int affectedRows = ps.executeUpdate();
+			if(affectedRows > 0) {
+				try(ResultSet rs = ps.getGeneratedKeys()){
+					if(rs.next()) {
+						return rs.getInt(1);
+					}
+				}
+			}
+		}
+		return 0;
+	}
+
+	@Override
+	public void addRegistrationTickets(int regId, int ticketId, int quantity) throws SQLException, Exception {
+		String sql = "insert into registration_tickets (registration_id, ticket_id, quantity) values (?,?,?)";
+		try (Connection con = DBConnectionUtil.getConnection();
+		         PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setInt(1, regId);
+			ps.setInt(2, ticketId);
+			ps.setInt(3, quantity);
+			ps.executeUpdate();
+		} 
+	}
+
+	@Override
+	public void removeRegistrations(int regId) throws SQLException, Exception {
+		String sql = "delete from registrations where registration_id = ?";
+		try (Connection con = DBConnectionUtil.getConnection();
+		         PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setInt(1, regId);
+			ps.executeUpdate();
+
+		} 
+	}
+
+	@Override
+	public void removeRegistrationTickets(int regId, int ticketId) throws SQLException, Exception {
+		String sql = "delete from registrations_tickets where registration_id = ? and ticket_id = ?";
+		try (Connection con = DBConnectionUtil.getConnection();
+		         PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setInt(1, regId);
+			ps.setInt(2, ticketId);
+			ps.executeUpdate();
+
+		} 
 		
 	}
 	

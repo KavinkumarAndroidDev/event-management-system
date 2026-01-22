@@ -1,5 +1,5 @@
 package com.ems.service;
 
-public class ReportService {
+public interface ReportService {
 
 }

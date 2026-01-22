@@ -19,7 +19,7 @@ public class TicketDaoImpl implements  TicketDao{
 		String sql = "SELECT SUM(available_quantity) AS total_available\n"
 				+ "FROM tickets\n"
 				+ "WHERE event_id = ?\n";
-		try(Connection con = new DBConnectionUtil().getConnection();
+		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setInt(1, eventId);
 			try (ResultSet rs = ps.executeQuery()) {
@@ -62,6 +62,52 @@ public class TicketDaoImpl implements  TicketDao{
 			System.out.println("Unexpected error occured: " + e.getMessage());
 		}
 		return tickets;
+	}
+
+	@Override
+	public Ticket getTicketById(int ticketId) {
+		String sql = "select * from tickets where ticket_id = ?";
+		Ticket ticket = new Ticket();
+		try(Connection con = DBConnectionUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)){
+			ps.setInt(1, ticketId);
+			try(ResultSet rs = ps.executeQuery()){
+				if(rs.next()) {
+					ticket.setAvailableQuantity(rs.getInt("available_quantity"));
+					ticket.setEventId(rs.getInt("event_id"));
+					ticket.setPrice(rs.getDouble("price"));
+					ticket.setTicketId(rs.getInt("ticket_id"));
+					ticket.setTicketType(rs.getString("ticket_type"));
+					ticket.setTotalQuantity(rs.getInt("total_quantity"));
+					return ticket;
+				}
+			}
+	        
+		} catch (SQLException e) {
+			System.out.println("Unexpected error occured: " + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("Unexpected error occured: " + e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public void updateAvailableQuantity(int ticketId, int i) {
+		String sql = "update tickets set available_quantity = available_quantity + ?"
+				+ " where ticket_id = ?";
+		try(Connection con = DBConnectionUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)){
+			ps.setInt(1, i);
+			ps.setInt(2, ticketId);
+			int rowsAffected = ps.executeUpdate();
+			if(rowsAffected == 0) {
+				System.out.println("Payment process failed, during registration ticket generation");
+			}
+		} catch (SQLException e) {
+			System.out.println("Unexpected error occured: " + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("Unexpected error occured: " + e.getMessage());
+		}
 	}
 	
 }

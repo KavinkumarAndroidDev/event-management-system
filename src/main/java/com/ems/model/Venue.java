@@ -35,6 +35,9 @@ public class Venue {
 		this.createdAt = createdAt;
 		this.updateAt = updateAt;
 	}
+	public Venue() {
+		// TODO Auto-generated constructor stub
+	}
 	public int getVenueId() {
 		return venueId;
 	}

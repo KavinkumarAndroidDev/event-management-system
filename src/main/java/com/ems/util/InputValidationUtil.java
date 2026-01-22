@@ -2,8 +2,13 @@ package com.ems.util;
 
 import java.util.Scanner;
 
-public class InputValidationUtil {
-
+// TODO: This is a utility class with only static methods.
+// It should be declared 'final' and have a private constructor to prevent instantiation.
+public final class InputValidationUtil {
+	
+	private InputValidationUtil() {
+		
+	}
     public static int readInt(Scanner scanner, String message) {
         while (true) {
             System.out.print(message);

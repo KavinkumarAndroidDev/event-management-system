@@ -1,0 +1,118 @@
+package com.ems.service.impl;
+
+import java.time.LocalDateTime;
+
+import com.ems.dao.EventDao;
+import com.ems.dao.NotificationDao;
+import com.ems.dao.PaymentDao;
+import com.ems.dao.RegistrationDao;
+import com.ems.dao.TicketDao;
+import com.ems.enums.NotificationType;
+import com.ems.enums.PaymentMethod;
+import com.ems.model.Ticket;
+import com.ems.service.PaymentService;
+import com.ems.util.DateTimeUtil;
+import com.ems.util.InputValidationUtil;
+import com.ems.util.ScannerUtil;
+
+public class PaymentServiceImpl implements PaymentService {
+
+    private final RegistrationDao registrationDao;
+    private final TicketDao ticketDao;
+    private final PaymentDao paymentDao;
+    private final NotificationDao notificationDao;
+    private final EventDao eventDao;
+
+    public PaymentServiceImpl(
+            RegistrationDao registrationDao,
+            TicketDao ticketDao,
+            PaymentDao paymentDao,
+            NotificationDao notificationDao,
+            EventDao eventDao
+    ) {
+        this.registrationDao = registrationDao;
+        this.ticketDao = ticketDao;
+        this.paymentDao = paymentDao;
+        this.notificationDao = notificationDao;
+        this.eventDao = eventDao;
+    }
+
+    @Override
+    public boolean processRegistration(
+            int userId,
+            int eventId,
+            int ticketId,
+            int quantity,
+            double price
+    ) {
+        try {
+            Ticket ticket = ticketDao.getTicketById(ticketId);
+            if (ticket.getAvailableQuantity() < quantity) {
+                return false;
+            }
+
+            int regId = registrationDao.createRegistration(userId, eventId);
+            registrationDao.addRegistrationTickets(regId, ticketId, quantity);
+
+            double totalAmount = price * quantity;
+
+            System.out.println("available payment method:");
+            PaymentMethod[] methods = PaymentMethod.values();
+
+            for (int i = 0; i < methods.length; i++) {
+                System.out.println(
+                    (i + 1) + ". " + methods[i].name().replace("_", " ")
+                );
+            }
+
+            int choice = InputValidationUtil.readInt(
+                ScannerUtil.getScanner(),
+                "Enter choice (1-" + methods.length + "): "
+            );
+
+            while (choice < 1 || choice > methods.length) {
+                System.out.println("Invalid payment method selected");
+                choice = InputValidationUtil.readInt(
+                    ScannerUtil.getScanner(),
+                    "Enter choice (1-" + methods.length + "): "
+                );
+            }
+
+            PaymentMethod selectedMethod = methods[choice - 1];
+
+            boolean paymentSuccess =
+                paymentDao.processPayment(
+                    regId,
+                    totalAmount,
+                    selectedMethod.toString()
+                );
+
+            if (!paymentSuccess) {
+                registrationDao.removeRegistrations(regId);
+                registrationDao.removeRegistrationTickets(regId, ticketId);
+                return false;
+            }
+
+            ticketDao.updateAvailableQuantity(ticketId, -quantity);
+
+            String notificationMessage =
+                "your registration for "
+              + eventDao.getEventName(eventId)
+              + " is confirmed. "
+              + DateTimeUtil.formatDateTime(LocalDateTime.now());
+
+            notificationDao.sendNotification(
+                userId,
+                notificationMessage,
+                NotificationType.EVENT.toString()
+            );
+
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Transaction failed: " + e.getMessage());
+            return false;
+        }
+    }
+}

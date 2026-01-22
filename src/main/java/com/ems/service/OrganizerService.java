@@ -1,41 +1,18 @@
 package com.ems.service;
 
-public class OrganizerService {
+public interface OrganizerService {
 
-	public static void sendEventUpdate() {
-		// TODO Auto-generated method stub
-		
-	}
+    void sendEventUpdate();
 
-	public static void sendScheduleChange() {
-		// TODO Auto-generated method stub
-		
-	}
+    void sendScheduleChange();
 
-	public static void getRevenueSummary() {
-		// TODO Auto-generated method stub
-		
-	}
+    void getRevenueSummary();
 
-	public static void getTicketSales() {
-		// TODO Auto-generated method stub
-		
-	}
+    void getTicketSales();
 
-	public static void getEventWiseRegistrations() {
-		// TODO Auto-generated method stub
-		
-	}
+    void getEventWiseRegistrations();
 
-	public static void viewEventRegistrations() {
-		// TODO Auto-generated method stub
-		
-	}
+    void viewEventRegistrations();
 
-	public static void viewRegisteredUsers() {
-		// TODO Auto-generated method stub
-		
-	}
-
+    void viewRegisteredUsers();
 }
-

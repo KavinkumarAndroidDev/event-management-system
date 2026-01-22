@@ -10,6 +10,6 @@ public interface NotificationDao {
 	void markAsRead(int notificationId);
 	List<Notification> getAllNotifications(int userId);
 	void markAllAsRead(int userId);
-	void sendNotification(int organizerId, String message, String notificationType);
+	void sendNotification(int userId, String message, String notificationType);
 	void sendSystemWideNotification(String message, String notificationType);
 }

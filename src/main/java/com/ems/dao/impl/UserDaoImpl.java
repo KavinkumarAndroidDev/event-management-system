@@ -16,26 +16,28 @@ import com.ems.util.DBConnectionUtil;
 import com.ems.util.DateTimeUtil;
 
 public class UserDaoImpl implements UserDao{
-
+	
 	//Used to create a new user account
 	@Override
-	public void createUser(User user) throws SQLException, Exception{
+	public void createUser(String fullName, String email, String phone, String passwordHash, int roleId, String status,
+			LocalDateTime createdAt, LocalDateTime updatedAt, String gender) throws SQLException, Exception {
 		String sql = "insert into users(full_name"
 				+ ", email, phone, password_hash, role_id, created_at, status, "
 				+ "updated_at, gender) values (?,?,?,?,?,?,?,?,?)";
 		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
-			ps.setString(1, user.getFullName());
-			ps.setString(2, user.getEmail().toLowerCase());
-			ps.setString(3, user.getPhone());
-			ps.setString(4, user.getPasswordHash());
-			ps.setInt(5, user.getRoleId());
-			Instant utcInstant = DateTimeUtil.convertLocalDefaultToUtc(user.getCreatedAt());
+			ps.setString(1, fullName);
+			ps.setString(2, email.toLowerCase());
+			ps.setString(3, phone);
+			ps.setString(4, passwordHash);
+			ps.setInt(5, roleId);
+			Instant utcInstant = DateTimeUtil.convertLocalDefaultToUtc(createdAt);
 			ps.setTimestamp(6, Timestamp.from(utcInstant));
 			ps.setString(7, "ACTIVE");
 			ps.setTimestamp(8, null);
-			ps.setString(9, user.getGender());
-			ps.execute();
+			ps.setString(9, gender);
+			ps.executeUpdate();
+
 		}
 
 
@@ -51,25 +53,23 @@ public class UserDaoImpl implements UserDao{
 	            ps.setString(1, email.toLowerCase());
 	            try(ResultSet rs = ps.executeQuery()){
 	            	if(rs.next()) {
-	            		 user = new User();
-	                     user.setUserId(rs.getInt("user_id"));
-	                     user.setFullName(rs.getString("full_name"));
-	                     user.setEmail(rs.getString("email"));
-	                     user.setPhone(rs.getString("phone"));
-	                     user.setPasswordHash(rs.getString("password_hash"));
-	                     user.setRoleId(rs.getInt("role_id"));
-	                     Instant utcInstant = rs.getTimestamp("created_at").toInstant();
-	                     LocalDateTime localTime =
-	                             DateTimeUtil.convertUtcToLocal(utcInstant).toLocalDateTime();
-	                     user.setCreatedAt(localTime);
-	                     //user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-	                     user.setStatus(rs.getString("status"));
-	                     user.setGender(rs.getString("gender"));
-	                     if(rs.getTimestamp("updated_at") != null) {
-	                    	 user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
-	                     }else {
-	                    	 user.setUpdatedAt(null); 
-	                     }
+	            		user = new User(
+	            			    rs.getInt("user_id"),
+	            			    rs.getString("full_name"),
+	            			    rs.getString("email"),
+	            			    rs.getString("phone"),
+	            			    rs.getString("password_hash"),
+	            			    rs.getInt("role_id"),
+	            			    rs.getString("status"),
+	            			    DateTimeUtil.convertUtcToLocal(
+	            			        rs.getTimestamp("created_at").toInstant()
+	            			    ).toLocalDateTime(),
+	            			    rs.getTimestamp("updated_at") == null
+	            			        ? null
+	            			        : rs.getTimestamp("updated_at").toLocalDateTime(),
+	            			    rs.getString("gender")
+	            			);
+
 	            	}
 	            }
 		} catch (SQLException e) {
@@ -102,8 +102,7 @@ public class UserDaoImpl implements UserDao{
 	        System.out.println("Unexpected error: " + e.getMessage());
 	    }
 	}
-	
-	//It gives all the user of the give usertype
+
 	@Override
 	public List<User> findAllUsers(String userType) {
 		String sql = "select u.* from users u inner join roles r on u.role_id = r.role_id"
@@ -114,32 +113,30 @@ public class UserDaoImpl implements UserDao{
 			ps.setString(1, userType);
 		ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-	            User user = new User();
-	            user.setUserId(rs.getInt("user_id"));
-	            user.setFullName(rs.getString("full_name"));
-	            user.setEmail(rs.getString("email"));
-	            user.setPhone(rs.getString("phone"));
-	            user.setPasswordHash(rs.getString("password_hash"));
-	            user.setRoleId(rs.getInt("role_id"));
-	            user.setStatus(rs.getString("status"));
-	            user.setGender(rs.getString("gender"));
-	            if (rs.getTimestamp("created_at") != null) {
-	                user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-	            }
-	            if (rs.getTimestamp("updated_at") != null) {
-	                user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
-	            } else {
-	                user.setUpdatedAt(null);
-	            }
+				User user = new User(
+					    rs.getInt("user_id"),
+					    rs.getString("full_name"),
+					    rs.getString("email"),
+					    rs.getString("phone"),
+					    rs.getString("password_hash"),
+					    rs.getInt("role_id"),
+					    rs.getString("status"),
+					    DateTimeUtil.convertUtcToLocal(
+					        rs.getTimestamp("created_at").toInstant()
+					    ).toLocalDateTime(),
+					    rs.getTimestamp("updated_at") == null
+					        ? null
+					        : rs.getTimestamp("updated_at").toLocalDateTime(),
+					    rs.getString("gender")
+					);
+
 	            
 	            users.add(user); 
 	        }
             
 		} catch (SQLException e) {	
-			e.printStackTrace();
 			System.out.println("Unexpected error occured: " + e.getMessage());
 		} catch (Exception e) {
-			e.printStackTrace();
 			System.out.println("Unexpected error occured: " + e.getMessage());
 		}
 		return users;

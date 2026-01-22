@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +41,7 @@ public class NotificationDaoImpl implements NotificationDao {
 	@Override
 	public List<Notification> getUnreadNotifications(int userId) {
 		List<Notification> notifications = new ArrayList<>();
-		String sql = "select * from notifications where user_id = ? and read_status = 0 order by created_at desc";
+		String sql = "select * from notifications where user_id = ? and read_status = FALSE order by created_at desc";
 		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setInt(1, userId);
@@ -138,15 +140,17 @@ public class NotificationDaoImpl implements NotificationDao {
 	
 	//helps to send the notification to particular user
 	@Override
-	public void sendNotification(int organizerId, String message, String notificationType) {
+	public void sendNotification(int userId, String message, String notificationType) {
 		String sql = "insert into notifications (user_id, message, type,"
-				+ " created_at, read_status) ?"
-				+ ", ? , ?, NOW(), false";
+				+ " created_at, read_status) values (?"
+				+ ", ? , ?, ?, ?)";
 		try (Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)) {
-			ps.setInt(1, organizerId);
-			ps.setString(1, message);
+			ps.setInt(1, userId);
+			ps.setString(2, message);
 			ps.setString(3, notificationType);
+			ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+			ps.setBoolean(5, false);
 			ps.executeUpdate();
 		} catch (SQLException e) {
 		        System.out.println("Database error while sending system notification: " + e.getMessage());

@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.ems.dao.VenueDao;
 import com.ems.util.DBConnectionUtil;
@@ -13,7 +16,7 @@ public class VenueDaoImpl implements VenueDao {
 	@Override
 	public String getVenueName(int venueId) {
 		String sql = "select name from venues where venue_id=?";
-		try(Connection con = new DBConnectionUtil().getConnection();
+		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setInt(1, venueId);
 			try (ResultSet rs = ps.executeQuery()) {
@@ -31,8 +34,8 @@ public class VenueDaoImpl implements VenueDao {
 	//helps to get the venue address of the event
 	@Override
 	public String getVenueAddress(int venueId) {
-		String sql = "select * from venues where venue_id=?";
-		try(Connection con = new DBConnectionUtil().getConnection();
+		String sql = "select street, city, state, pincode from venues where venue_id=?";
+		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setInt(1, venueId);
 			try (ResultSet rs = ps.executeQuery()) {
@@ -51,5 +54,22 @@ public class VenueDaoImpl implements VenueDao {
 		}
 		return null;
 	}
-
+	
+	@Override
+	public Map<Integer, String> getAllCities(){
+		String sql = "select venue_id, city from venues order by city";
+		Map<Integer, String> cities = new HashMap<>();
+		try(Connection con = DBConnectionUtil.getConnection();
+				Statement ps = con.createStatement()){
+			ResultSet rs = ps.executeQuery(sql);
+			while(rs.next()) {
+				cities.put(rs.getInt("venue_id"), rs.getString("city"));
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return cities;
+	}
 }

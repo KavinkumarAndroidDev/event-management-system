@@ -1,23 +1,23 @@
 package com.ems.menu;
 
-
 import com.ems.model.User;
-import com.ems.service.EventService;
 import com.ems.service.NotificationService;
+import com.ems.service.UserService;
+import com.ems.util.ApplicationUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
 
-public class UserMenu {
-	User loggedInUser;
-	
+public class UserMenu extends BaseMenu {
+	private final NotificationService notificationService;
+	private final UserService userService;
 	public UserMenu( User user) {
-		this.loggedInUser = user;
-		this.start();
+		super(user);
+		this.notificationService = ApplicationUtil.notificationService();
+	    this.userService = ApplicationUtil.userService();
 	}
+	public void start() {
 
-	private void start() {
-
-	    NotificationService.displayUnreadNotifications(
+		notificationService.displayUnreadNotifications(
 	        loggedInUser.getUserId()
 	    );
 
@@ -42,13 +42,13 @@ public class UserMenu {
 	                browseEventsMenu();
 	                break;
 	            case 2:
-	                EventService.searchEvents();
+	                userService.searchEvents();
 	                break;
 	            case 3:
 	                registrationMenu();
 	                break;
 	            case 4:
-	                NotificationService.displayAllNotifications(
+	            	notificationService.displayAllNotifications(
 	                    loggedInUser.getUserId()
 	                );
 	                break;
@@ -57,6 +57,7 @@ public class UserMenu {
 	                break;
 	            case 6:
 	                if (confirmLogout()) {
+	                	System.out.println("Logging out...");
 	                    return;
 	                }
 	                break;
@@ -85,16 +86,17 @@ public class UserMenu {
 
 	        switch (choice) {
 	            case 1:
-	                EventService.printAllAvailableEvents();
+	            	userService.printAllAvailableEvents();
 	                break;
 	            case 2:
-	                EventService.viewEventDetails();
+	            	userService.printAllAvailableEvents();
+	            	userService.viewEventDetails();
 	                break;
 	            case 3:
-	                EventService.viewTicketOptions();
+	            	userService.viewTicketOptions();
 	                break;
 	            case 4:
-	                EventService.registerForEvent(
+	            	userService.registerForEvent(
 	                    loggedInUser.getUserId()
 	                );
 	                break;
@@ -124,22 +126,22 @@ public class UserMenu {
 
 	        switch (choice) {
 	            case 1:
-	            	EventService.viewUpcomingEvents(
+	            	userService.viewUpcomingEvents(
 	                    loggedInUser.getUserId()
 	                );
 	                break;
 	            case 2:
-	            	EventService.viewPastEvents(
+	            	userService.viewPastEvents(
 	                    loggedInUser.getUserId()
 	                );
 	                break;
 	            case 3:
-	            	EventService.viewBookingDetails(
+	            	userService.viewBookingDetails(
 	                    loggedInUser.getUserId()
 	                );
 	                break;
 	            case 4:
-	                return;
+	            	return;
 	            default:
 	                System.out.println("Invalid option");
 	        }
@@ -152,8 +154,7 @@ public class UserMenu {
 	        System.out.println(
 	            "\nFeedback\n" +
 	            "1. Submit rating\n" +
-	            "2. Submit review\n" +
-	            "3. Back\n"
+	            "2. Back\n"
 	            + ">"
 	        );
 
@@ -163,16 +164,11 @@ public class UserMenu {
 
 	        switch (choice) {
 	            case 1:
-	            	EventService.submitRating(
+	            	userService.submitRating(
 	                    loggedInUser.getUserId()
 	                );
 	                break;
 	            case 2:
-	            	EventService.submitReview(
-	                    loggedInUser.getUserId()
-	                );
-	                break;
-	            case 3:
 	                return;
 	            default:
 	                System.out.println("Invalid option");
