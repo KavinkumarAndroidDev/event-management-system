@@ -6,6 +6,7 @@ import java.util.Map;
 import com.ems.exception.DataAccessException;
 import com.ems.model.BookingDetail;
 import com.ems.model.Event;
+import com.ems.model.UserEventRegistration;
 
 public interface EventDao {
 	List<Event> listAvailableEvents() throws DataAccessException;
@@ -28,7 +29,7 @@ public interface EventDao {
 
 	 void completeEvents() throws DataAccessException;
 
-	 List<Event> getUserEvents(int userId) throws DataAccessException;
+	 List<UserEventRegistration> getUserRegistrations(int userId) throws DataAccessException;
 
 	 List<BookingDetail> viewBookingDetails(int userId) throws DataAccessException;
 	

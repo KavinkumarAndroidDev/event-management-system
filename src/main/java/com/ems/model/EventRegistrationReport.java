@@ -8,6 +8,7 @@ public class EventRegistrationReport {
     private String ticketType;
     private int quantity;
     private LocalDateTime registrationDate;
+    
 	public String getEventTitle() {
 		return eventTitle;
 	}

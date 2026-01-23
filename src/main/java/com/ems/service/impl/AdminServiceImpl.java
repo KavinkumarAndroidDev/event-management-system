@@ -415,7 +415,7 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	public void printAllEvents() {
 		List<Event> events = eventService.getAllEvents();
-		if(events != null || !events.isEmpty()) {
+		if(events == null  || !(events.isEmpty())) {
 			eventService.printEventSummaries(events);
 		}
 		

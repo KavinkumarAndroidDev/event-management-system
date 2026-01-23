@@ -60,7 +60,7 @@ public class VenueDaoImpl implements VenueDao {
 	// gets all venue cities
 	@Override
 	public Map<Integer, String> getAllCities(){
-		String sql = "select venue_id, city from venues order by city";
+		String sql = "select venue_id, city from venues where is_active = TRUE order by city ";
 		Map<Integer, String> cities = new HashMap<>();
 		try(Connection con = DBConnectionUtil.getConnection();
 				Statement ps = con.createStatement()){

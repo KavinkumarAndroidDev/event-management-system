@@ -56,7 +56,7 @@ public class CategoryDaoImpl implements CategoryDao {
 	// gets all categories and returns as map
 	@Override
 	public Map<Integer, String> getAllCategories() throws DataAccessException {
-		String sql = "select category_id, name from categories order by name";
+		String sql = "select category_id, name from categories where is_active = true order by name";
 		Map<Integer, String> categories = new HashMap<>();
 		try (Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql);

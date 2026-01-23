@@ -19,7 +19,7 @@ public class RoleDaoImpl implements RoleDao{
 	public List<Role> getRoles() {
 		List<Role> roles = new ArrayList<>();
 
-        String query = "SELECT role_id, role_name, created_at FROM Roles";
+        String query = "SELECT role_id, role_name, created_at FROM Roles where is_active = true";
 
         try (Connection conn = DBConnectionUtil.getConnection();
              Statement stmt = conn.createStatement();

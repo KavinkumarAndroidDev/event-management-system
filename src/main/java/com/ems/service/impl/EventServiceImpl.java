@@ -13,6 +13,7 @@ import com.ems.exception.DataAccessException;
 import com.ems.model.BookingDetail;
 import com.ems.model.Event;
 import com.ems.model.Ticket;
+import com.ems.model.UserEventRegistration;
 import com.ems.service.EventService;
 import com.ems.service.PaymentService;
 import com.ems.util.DateTimeUtil;
@@ -168,17 +169,19 @@ public class EventServiceImpl implements EventService {
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-		if(!cities.isEmpty()) {
-			cities.forEach((key, value) -> System.out.println(key + ". " + value));
-		}else {
-			System.out.println("No cities found!");
-			return;
-		}
-		int cityId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the city id:");
-		while(!cities.containsKey(cityId)) {			
-			cityId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the valid city id:");
-		}
-		final int selectedCityId = cityId;
+		List<Integer> dbKeys = new ArrayList<>(cities.keySet());
+		for (int i = 0; i < dbKeys.size(); i++) {
+	        int internalDbId = dbKeys.get(i);
+	        String cityName = cities.get(internalDbId);
+	        System.out.println((i + 1) + ". " + cityName);
+	    }
+		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the city (1 - " + dbKeys.size() + "):");
+	    while (choice < 1 || choice > dbKeys.size()) {
+	        choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid city (1 - " + dbKeys.size() + "):");
+	    }
+
+	    final int selectedCityId = dbKeys.get(choice - 1);
+
 		try {
 			List<Event> allEvents = eventDao.listAvailableEvents();
 			List<Event> filteredEvents = allEvents.stream()
@@ -259,17 +262,23 @@ public class EventServiceImpl implements EventService {
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-		if(!categories.isEmpty()) {
-			categories.forEach((key, value) -> System.out.println(key + ". " + value));
-		}else {
+		if(categories.isEmpty()) {
 			System.out.println("No cities found!");
 			return;
 		}
-		int categoryId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the category id:");
-		while(!categories.containsKey(categoryId)) {			
-			categoryId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the valid category id:");
-		}
-		final int selectedCategoryId = categoryId;
+		List<Integer> dbKeys = new ArrayList<>(categories.keySet());
+		for (int i = 0; i < dbKeys.size(); i++) {
+	        int internalDbId = dbKeys.get(i);
+	        String categoryName = categories.get(internalDbId);
+	        System.out.println((i + 1) + ". " + categoryName);
+	    }
+		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the category (1 - " + dbKeys.size() + "):");
+	    while (choice < 1 || choice > dbKeys.size()) {
+	        choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid category (1 - " + dbKeys.size() + "):");
+	    }
+
+	    final int selectedCategoryId = dbKeys.get(choice - 1);
+
 		try {
 			List<Event> allEvents = eventDao.listAvailableEvents();
 			List<Event> filteredEvents = allEvents.stream()
@@ -325,7 +334,7 @@ public class EventServiceImpl implements EventService {
 	                    displayIndex + " | " +
 	                    ticket.getTicketType() + " | ₹" +
 	                    ticket.getPrice() + " | " +
-	                    " | Tickets: " + ticket.getAvailableQuantity() +"/" + ticket.getTotalQuantity()
+	                    "Tickets: " + ticket.getAvailableQuantity() +"/" + ticket.getTotalQuantity()
 	                );
 
 	                displayIndex++;
@@ -367,44 +376,83 @@ public class EventServiceImpl implements EventService {
 
     // shows upcoming events for user
     @Override
-	public void viewUpcomingEvents(int userId) {
-		List<Event> events = new ArrayList<>();
-		try {
-			events = eventDao.getUserEvents(userId);
-			List<Event> upcomingEvents = events.stream()
-					.filter(e -> e.getStartDateTime().isAfter(LocalDateTime.now()))
-					.toList();	
-			if(upcomingEvents.isEmpty()) {
-				System.out.println("No upcoming events!");
-				return;
-			}
-			System.out.println("--- Events found: " + upcomingEvents.size() + " ---");
-			upcomingEvents.forEach(e -> printEventSummaries(e));
-		} catch(DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-	}
+    public void viewUpcomingEvents(int userId) {
+        try {
+            List<UserEventRegistration> registrations =
+                    eventDao.getUserRegistrations(userId);
+
+            List<UserEventRegistration> upcoming = registrations.stream()
+                    .filter(r -> r.getStartDateTime().isAfter(LocalDateTime.now()))
+                    .toList();
+
+            if (upcoming.isEmpty()) {
+                System.out.println("No upcoming events!");
+                return;
+            }
+
+            System.out.println("--- Upcoming Events: " + upcoming.size() + " ---");
+            int displayIndex = 1;
+            for (UserEventRegistration r : upcoming) {
+                try {
+                    System.out.println(
+                        displayIndex + " | " +
+                        r.getTitle() + " | " +
+                        r.getCategory() + " | " +
+                        DateTimeUtil.formatDateTime(r.getStartDateTime()) +
+                        " | Tickets booked: " + r.getTicketsPurchased() +
+                        " | Status: " + r.getRegistrationStatus()
+                    );
+
+                    displayIndex++;
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+        } catch (DataAccessException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
 
     // shows past events for user
     @Override
-	public void viewPastEvents(int userId) {
-		List<Event> events = new ArrayList<>();
-		try {
-			events = eventDao.getUserEvents(userId);
-			List<Event> pastEvents = events.stream()
-					.filter(e -> e.getStartDateTime().isBefore(LocalDateTime.now()))
-					.toList();	
-			if(pastEvents.isEmpty()) {
-				System.out.println("No past events!");
-				return;
-			}
-			System.out.println("--- Events found: " + pastEvents.size() + " ---");
-			pastEvents.forEach(e -> printEventSummaries(e));
-			
-		} catch (DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-	}
+    public void viewPastEvents(int userId) {
+        try {
+            List<UserEventRegistration> registrations =
+                    eventDao.getUserRegistrations(userId);
+
+            List<UserEventRegistration> past = registrations.stream()
+                    .filter(r -> r.getStartDateTime().isBefore(LocalDateTime.now()))
+                    .toList();
+
+            if (past.isEmpty()) {
+                System.out.println("No past events!");
+                return;
+            }
+
+            System.out.println("--- Past Events: " + past.size() + " ---");
+            int displayIndex = 1;
+            for (UserEventRegistration r : past) {
+                try {
+                    System.out.println(
+                        displayIndex + " | " +
+                        r.getTitle() + " | " +
+                        r.getCategory() + " | " +
+                        DateTimeUtil.formatDateTime(r.getStartDateTime()) +
+                        " | Tickets booked: " + r.getTicketsPurchased() +
+                        " | Status: " + r.getRegistrationStatus()
+                    );
+
+                    displayIndex++;
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+        } catch (DataAccessException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
 
     // shows booking details for user
     @Override
@@ -434,36 +482,54 @@ public class EventServiceImpl implements EventService {
     // submits rating for past events
     @Override
 	public void submitRating(int userId) {
-		List<Event> events = new ArrayList<>();
+		List<UserEventRegistration> events = new ArrayList<>();
 		try {
-			events = eventDao.getUserEvents(userId);
+			events = eventDao.getUserRegistrations(userId);
 			if (events.isEmpty()) {
 				System.out.println("No events registered by the user!");
 				return;
 			}
-			List<Event> pastEvents = events.stream()
-					.filter(e -> e.getStartDateTime().isBefore(LocalDateTime.now()))
-					.toList();	
-			if(pastEvents.isEmpty()) {
-				System.out.println("No past events available to rate!");
-				return;
-			}
-			printEventSummaries(pastEvents);
+			List<UserEventRegistration> past = events.stream()
+                    .filter(r -> r.getStartDateTime().isBefore(LocalDateTime.now()))
+                    .toList();
+
+            if (past.isEmpty()) {
+                System.out.println("No past events!");
+                return;
+            }
+            System.out.println("--- Past Events: " + past.size() + " ---");
+            int displayIndex = 1;
+            for (UserEventRegistration r : past) {
+                try {
+                    System.out.println(
+                        displayIndex + " | " +
+                        r.getTitle() + " | " +
+                        r.getCategory() + " | " +
+                        DateTimeUtil.formatDateTime(r.getStartDateTime()) +
+                        " | Tickets booked: " + r.getTicketsPurchased() +
+                        " | Status: " + r.getRegistrationStatus() +
+                        " | Attended at: " + r.getStartDateTime()
+                    );
+
+                    displayIndex++;
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
 
 			int choice = InputValidationUtil.readInt(
 			    ScannerUtil.getScanner(),
-			    "Select an event (1-" + pastEvents.size() + "): "
+			    "Select an event (1-" + past.size() + "): "
 			);
 
-			while (choice < 1 || choice > pastEvents.size()) {
+			while (choice < 1 || choice > past.size()) {
 			    choice = InputValidationUtil.readInt(
 			        ScannerUtil.getScanner(),
 			        "Enter a valid choice: "
 			    );
 			}
 
-			Event selectedEvent = pastEvents.get(choice - 1);
-			int eventId = selectedEvent.getEventId();
+			int eventId = past.get(choice - 1).getEventId();
 
 			int rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the rating (1-5): ");
 			while(rating >5 || rating <1) {

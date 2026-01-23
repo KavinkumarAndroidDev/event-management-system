@@ -1,7 +1,5 @@
 package com.ems.service.impl;
 
-import java.time.LocalDateTime;
-
 import com.ems.dao.EventDao;
 import com.ems.dao.NotificationDao;
 import com.ems.dao.PaymentDao;
@@ -11,7 +9,6 @@ import com.ems.enums.NotificationType;
 import com.ems.enums.PaymentMethod;
 import com.ems.model.Ticket;
 import com.ems.service.PaymentService;
-import com.ems.util.DateTimeUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
 

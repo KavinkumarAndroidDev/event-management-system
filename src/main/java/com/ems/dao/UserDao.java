@@ -22,8 +22,3 @@ public interface UserDao {
 	
 	UserRole getRole(User user)  throws DataAccessException;
 }
-//
-//public interface UserDao {
-//    User findByEmail(String email);
-//    void save(User user);
-//}

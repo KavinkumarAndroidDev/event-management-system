@@ -17,6 +17,7 @@ import com.ems.enums.EventStatus;
 import com.ems.exception.DataAccessException;
 import com.ems.model.BookingDetail;
 import com.ems.model.Event;
+import com.ems.model.UserEventRegistration;
 import com.ems.util.DBConnectionUtil;
 import com.ems.util.DateTimeUtil;
 
@@ -187,20 +188,61 @@ public class EventDaoImpl implements EventDao {
 
 	// returns events registered by user
 	@Override
-	public List<Event> getUserEvents(int userId) throws DataAccessException {
-		List<Event> events = new ArrayList<>();
-		String sql = "select distinct e.* from events e inner join registrations r on e.event_id = r.event_id"
-				+ " where r.user_id = ?";
-		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+	public List<UserEventRegistration> getUserRegistrations(int userId)
+        throws DataAccessException {
 
-			ps.setInt(1, userId);
-			ResultSet rs = ps.executeQuery();
-			events = getEventList(rs);
-			return events;
-		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching events registered by users: " + e.getMessage());
-		}
+	    List<UserEventRegistration> list = new ArrayList<>();
+	
+	    String sql = "select "
+	    		+ "  r.registration_id, "
+	    		+ "  r.registration_date, "
+	    		+ "  r.status as registration_status, "
+	    		+ "  e.event_id, "
+	    		+ "  e.title, "
+	    		+ "  e.start_datetime, "
+	    		+ "  e.end_datetime, "
+	    		+ "  c.name as category_name, "
+	    		+ "  (select coalesce(sum(rt.quantity), 0) "
+	            + "     from registration_tickets rt "
+	            + "     where rt.registration_id = r.registration_id) as tickets_purchased, "
+	            + "  (select coalesce(sum(p.amount), 0) "
+	            + "     from payments p "
+	            + "     where p.registration_id = r.registration_id) as amount_paid "
+	    		+ "from registrations r "
+	    		+ "join events e on r.event_id = e.event_id "
+	    		+ "join categories c on e.category_id = c.category_id "
+	    		+ "where r.user_id = ? ";
+	
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	
+	        ps.setInt(1, userId);
+	        ResultSet rs = ps.executeQuery();
+	
+	        while (rs.next()) {
+	            UserEventRegistration uer = new UserEventRegistration();
+	
+	            uer.setRegistrationId(rs.getInt("registration_id"));
+	            uer.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
+	            uer.setRegistrationStatus(rs.getString("registration_status"));
+	            uer.setEventId(rs.getInt("event_id"));
+	            uer.setTitle(rs.getString("title"));
+	            uer.setCategory(rs.getString("category_name"));
+	            uer.setStartDateTime(rs.getTimestamp("start_datetime").toLocalDateTime());
+	            uer.setEndDateTime(rs.getTimestamp("end_datetime").toLocalDateTime());
+	            uer.setTicketsPurchased(rs.getInt("tickets_purchased"));
+	            uer.setAmountPaid(rs.getDouble("amount_paid"));
+	
+	            list.add(uer);
+	        }
+	
+	    } catch (SQLException e) {
+	        throw new DataAccessException("Error fetching user registrations: " + e.getMessage());
+	    }
+	
+	    return list;
 	}
+
 
 	// shows booking details for user
 	@Override
@@ -208,11 +250,11 @@ public class EventDaoImpl implements EventDao {
 
 		List<BookingDetail> bookings = new ArrayList<>();
 
-		String sql = "SELECT e.title, e.start_datetime, v.name, v.city, "
-				+ "t.ticket_type, rt.quantity, (rt.quantity * t.price) AS total_cost " + "FROM registrations r "
-				+ "JOIN events e ON r.event_id = e.event_id " + "JOIN venues v ON e.venue_id = v.venue_id "
-				+ "JOIN registration_tickets rt ON r.registration_id = rt.registration_id "
-				+ "JOIN tickets t ON rt.ticket_id = t.ticket_id " + "WHERE r.user_id = ? AND r.status = 'CONFIRMED'";
+		String sql = "select e.title, e.start_datetime, v.name, v.city, "
+				+ "t.ticket_type, rt.quantity, (rt.quantity * t.price) as total_cost " + "from registrations r "
+				+ "join events e ON r.event_id = e.event_id " + "join venues v on e.venue_id = v.venue_id "
+				+ "join registration_tickets rt on r.registration_id = rt.registration_id "
+				+ "join tickets t on rt.ticket_id = t.ticket_id " + "where r.user_id = ? and r.status = 'CONFIRMED'";
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
