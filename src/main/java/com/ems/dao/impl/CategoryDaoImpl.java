@@ -13,57 +13,58 @@ import com.ems.exception.DataAccessException;
 import com.ems.util.DBConnectionUtil;
 
 /**
- * Implements Category DAO. Methods used to create, read, update and delete categories
+ * category dao implementation
  */
-public class CategoryDaoImpl implements CategoryDao{
-	
-	
-	//to get the category using the category id
+public class CategoryDaoImpl implements CategoryDao {
+	//Fetch methods
+	// returns category name based on category id
 	@Override
-	public String getCategory(int categoryId) throws DataAccessException{
+	public String getCategory(int categoryId) throws DataAccessException {
 		String sql = "select name from categories where category_id=?";
-		try(Connection con = DBConnectionUtil.getConnection();
-				PreparedStatement ps = con.prepareStatement(sql)){
+		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 			ps.setInt(1, categoryId);
 			try (ResultSet rs = ps.executeQuery()) {
-	            if (rs.next()) {
-	                return rs.getString("name");
-	            }
-	        }
+				if (rs.next()) {
+					return rs.getString("name");
+				}
+			}
 		} catch (SQLException e) {
 			throw new DataAccessException("Error while fetching category: " + e.getMessage());
 		}
 		return null;
 	}
-	
-	//get all catgeories
+
+	// prints all categories
 	@Override
-	public void listAllCategory() throws DataAccessException{
-		
+	public void listAllCategory() throws DataAccessException {
+
 		String sql = "select * from categories order by category_id";
-		try(Connection con = DBConnectionUtil.getConnection();
-				Statement ps = con.createStatement()){
-			try (ResultSet rs = ps.executeQuery(sql)) {
-	            while (rs.next()) {
-	            	System.out.println("category id: " + rs.getInt("category_id") + ", category name:" + rs.getString("name"));
-	            }
-	        }
+		try (Connection con = DBConnectionUtil.getConnection();
+				Statement ps = con.createStatement();
+				ResultSet rs = ps.executeQuery(sql);) {
+
+			while (rs.next()) {
+				System.out.println(
+						"category id: " + rs.getInt("category_id") + ", category name:" + rs.getString("name"));
+			}
+
 		} catch (SQLException e) {
 			throw new DataAccessException("Error while fetching categories: " + e.getMessage());
 		}
 	}
-	
+
+	// gets all categories and returns as map
 	@Override
-	public Map<Integer, String> getAllCategories() throws DataAccessException{
+	public Map<Integer, String> getAllCategories() throws DataAccessException {
 		String sql = "select category_id, name from categories order by name";
 		Map<Integer, String> categories = new HashMap<>();
-		try(Connection con =  DBConnectionUtil.getConnection();
-				PreparedStatement ps = con.prepareStatement(sql)){
-			ResultSet rs = ps.executeQuery();
-			while(rs.next()) {
+		try (Connection con = DBConnectionUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery();) {
+			while (rs.next()) {
 				categories.put(rs.getInt("category_id"), rs.getString("name"));
 			}
-		}catch (SQLException e) {
+		} catch (SQLException e) {
 			throw new DataAccessException("Error while fetching categories: " + e.getMessage());
 		}
 		return categories;

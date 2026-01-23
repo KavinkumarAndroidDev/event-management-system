@@ -4,6 +4,7 @@ package com.ems.dao;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.ems.enums.UserRole;
 import com.ems.exception.DataAccessException;
 import com.ems.model.User;
 
@@ -19,7 +20,7 @@ public interface UserDao {
 	
 	List<User> findAllUsers()  throws DataAccessException;
 	
-	int getRole(User user)  throws DataAccessException;
+	UserRole getRole(User user)  throws DataAccessException;
 }
 //
 //public interface UserDao {

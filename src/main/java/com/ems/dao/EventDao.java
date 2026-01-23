@@ -1,6 +1,7 @@
 package com.ems.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ems.exception.DataAccessException;
 import com.ems.model.BookingDetail;
@@ -9,28 +10,30 @@ import com.ems.model.Event;
 public interface EventDao {
 	List<Event> listAvailableEvents() throws DataAccessException;
 
-	List<Event> listAllEvents() throws DataAccessException;
+	 List<Event> listAllEvents() throws DataAccessException;
 
-	List<Event> listEventsYetToApprove() throws DataAccessException;
+	 List<Event> listEventsYetToApprove() throws DataAccessException;
 
-	boolean approveEvent(int eventId, int userId) throws DataAccessException ;
+	 boolean approveEvent(int eventId, int userId) throws DataAccessException ;
 
-	boolean cancelEvent(int eventId) throws DataAccessException;
+	 boolean cancelEvent(int eventId) throws DataAccessException;
 
-	int getOrganizerId(int eventId) throws DataAccessException;
+	 int getOrganizerId(int eventId) throws DataAccessException;
 
-	List<Event> listAvailableAndDraftEvents() throws DataAccessException;
+	 List<Event> listAvailableAndDraftEvents() throws DataAccessException;
 
-	Event getEventById(int eventId) throws DataAccessException;
+	 Event getEventById(int eventId) throws DataAccessException;
 
-	String getEventName(int eventId) throws DataAccessException;
+	 String getEventName(int eventId) throws DataAccessException;
 
-	void completeEvents() throws DataAccessException;
+	 void completeEvents() throws DataAccessException;
 
-	List<Event> getUserEvents(int userId) throws DataAccessException;
+	 List<Event> getUserEvents(int userId) throws DataAccessException;
 
-	List<BookingDetail> viewBookingDetails(int userId) throws DataAccessException;
+	 List<BookingDetail> viewBookingDetails(int userId) throws DataAccessException;
+	
+	 Map<String, Double> getEventWiseRevenue() throws DataAccessException;
 
-	void submitRating(int eventId, int userId, int rating, String comments) throws DataAccessException;
+	 Map<String, Integer> getOrganizerWiseEventCount() throws DataAccessException;
 
 }

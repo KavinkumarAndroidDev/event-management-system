@@ -3,18 +3,20 @@ package com.ems.util;
 import com.ems.dao.impl.*;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
+import com.ems.service.GuestService;
 import com.ems.service.NotificationService;
 import com.ems.service.PaymentService;
 import com.ems.service.UserService;
 import com.ems.service.impl.*;
 
 public final class ApplicationUtil {
-
+	//So basically application util class helps to share the service 
     private static final EventService eventService;
     private static final NotificationService notificationService;
     private static final PaymentService paymentService;
     private static final UserService userService;
     private static final AdminService adminService;
+    private static final GuestService guestService;
 
     static {
         NotificationDaoImpl notificationDao = new NotificationDaoImpl();
@@ -26,6 +28,7 @@ public final class ApplicationUtil {
         PaymentDaoImpl paymentDao = new PaymentDaoImpl();
         UserDaoImpl userDao = new UserDaoImpl();
         RoleDaoImpl roleDao = new RoleDaoImpl();
+        FeedbackDaoImpl feedbackDao = new FeedbackDaoImpl();
 
         notificationService =
             new NotificationServiceImpl(notificationDao);
@@ -45,7 +48,8 @@ public final class ApplicationUtil {
                 categoryDao,
                 venueDao,
                 ticketDao,
-                paymentService
+                paymentService,
+                feedbackDao
             );
 
         userService =
@@ -64,6 +68,11 @@ public final class ApplicationUtil {
                 notificationService,
                 eventService
             );
+        guestService =
+                new GuestServiceImpl(
+                    userService,
+                    eventService
+                );
     }
 
     public static AdminService adminService() {
@@ -80,5 +89,8 @@ public final class ApplicationUtil {
     
     public static NotificationService notificationService() {
     	return notificationService;
+    }
+    public static GuestService guestService() {
+        return guestService;
     }
 }

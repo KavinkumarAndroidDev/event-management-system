@@ -1,7 +1,6 @@
 package com.ems.menu;
 
 import com.ems.service.GuestService;
-import com.ems.service.impl.GuestServiceImpl;
 import com.ems.util.ApplicationUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
@@ -10,11 +9,7 @@ public class GuestMenu extends BaseMenu {
 	private final GuestService guestService;
 	public GuestMenu() {
 		super(null);
-		this.guestService =
-			    new GuestServiceImpl(
-			        ApplicationUtil.userService(),
-			        ApplicationUtil.eventService()
-			    );
+		this.guestService = ApplicationUtil.guestService();
 	}
 	public void start() {
 		while(true) {

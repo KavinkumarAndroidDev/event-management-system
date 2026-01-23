@@ -10,9 +10,10 @@ import com.ems.util.DBConnectionUtil;
 
 public class PaymentDaoImpl implements PaymentDao{
 
+	// handles payment entry for a registration
 	@Override
 	public boolean processPayment(int regId, double totalAmount, String paymentMethod) throws DataAccessException{
-		String sql = "insert into payments (registration_id, amount, payment_method, payment_status, created_at) values(?, ?, ?, 'SUCCESS', now())";
+		String sql = "insert into payments (registration_id, amount, payment_method, payment_status, created_at) values(?, ?, ?, 'SUCCESS', utc_timestamp())";
 		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setInt(1, regId);
@@ -33,25 +34,3 @@ public class PaymentDaoImpl implements PaymentDao{
 
 }
 
-
-//public class PaymentDaoImpl implements PaymentDao {
-//
-//    @Override
-//    public void save(Payment payment) {
-//        String sql = "INSERT INTO payments (registration_id, amount, payment_method, payment_status, created_at) VALUES (?, ?, ?, ?, ?)";
-//        try (Connection con = DBConnectionUtil.getConnection();
-//             PreparedStatement ps = con.prepareStatement(sql)) {
-//
-//            ps.setInt(1, payment.getRegistrationId());
-//            ps.setBigDecimal(2, payment.getAmount());
-//            ps.setString(3, payment.getPaymentMethod());
-//            ps.setString(4, payment.getPaymentStatus());
-//            ps.setTimestamp(5, Timestamp.valueOf(payment.getCreatedAt()));
-//
-//            ps.executeUpdate();
-//
-//        } catch (SQLException e) {
-//            throw new DataAccessException("Payment save failed", e);
-//        }
-//    }
-//}

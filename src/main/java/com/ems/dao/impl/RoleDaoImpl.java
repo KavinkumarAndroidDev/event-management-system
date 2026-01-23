@@ -34,6 +34,7 @@ public class RoleDaoImpl implements RoleDao{
 
                 roles.add(role);
             }
+            rs.close();
 
         } catch (SQLException e) {
             e.printStackTrace();

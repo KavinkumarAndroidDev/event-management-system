@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import com.ems.dao.RoleDao;
 import com.ems.dao.UserDao;
+import com.ems.enums.UserRole;
 import com.ems.exception.AuthorizationException;
 import com.ems.exception.DataAccessException;
 import com.ems.exception.InvalidPasswordFormatException;
@@ -39,7 +40,8 @@ public class UserServiceImpl implements UserService {
         this.roleDao = roleDao;
         this.eventService = eventService;
     }
-
+    
+    //login functionality
     @Override
     public User login() throws AuthorizationException, AuthenticationException {
 
@@ -90,15 +92,15 @@ public class UserServiceImpl implements UserService {
 
             System.out.println("Logged in as: " + emailId);
 
-            int role = getRole(user);
+            UserRole role = getRole(user);
 
-            if (role == 1) {
+            if (role == UserRole.ADMIN) {
                 AdminMenu adminMenu = new AdminMenu(user);
                 adminMenu.start();
-            } else if (role == 2) {
+            } else if (role == UserRole.ATTENDEE) {
                 UserMenu userMenu = new UserMenu(user);
                 userMenu.start();
-            } else if (role == 3) {
+            } else if (role == UserRole.ORGANIZER) {
                 OrganizerMenu organizerMenu = new OrganizerMenu(user);
                 organizerMenu.start();
             } else {
@@ -138,17 +140,22 @@ public class UserServiceImpl implements UserService {
                     "Enter valid Email Address: "
                 );
         }
-
+        
         String phone =
             InputValidationUtil.readString(
                 ScannerUtil.getScanner(),
                 "Enter Phone Number: "
             );
-
+        
         if (phone.trim().isEmpty()) {
             phone = null;
+        }else {
+        	phone = phone.replaceAll("\\D", ""); 
+            while (phone.length() != 10) {
+            	phone =InputValidationUtil.readString(ScannerUtil.getScanner(),"Enter valid phone Number: ");
+            }
         }
-
+        
         String passwordPrompt =
             "Enter Password (Min 8 chars, 1 Digit, 1 Upper, 1 Lower, 1 Special [!@#$%^&*]): ";
 
@@ -182,7 +189,7 @@ public class UserServiceImpl implements UserService {
                 ? "Male"
                 : (genderChoice == 2)
                     ? "Female"
-                    : "Prefer not to say";
+                    : "Opt-out"; 
         try {
         List<Role> roles = roleDao.getRoles();
         roles.sort(
@@ -234,13 +241,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int getRole(User user) {
+    public UserRole getRole(User user) {
         try {
 			return userDao.getRole(user);
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-        return 0;
+		return null;
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.ems.model.User;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
+import com.ems.service.UserService;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
 import com.ems.util.ApplicationUtil;
@@ -13,6 +14,7 @@ public class AdminMenu extends BaseMenu {
 	private final AdminService adminService;
 	private final EventService eventService;
 	private final NotificationService notificationService;
+	private final UserService userService;
 	
 		
 	public AdminMenu(User user) {
@@ -20,18 +22,26 @@ public class AdminMenu extends BaseMenu {
 	    this.notificationService = ApplicationUtil.notificationService();
 	    this.adminService = ApplicationUtil.adminService();
 	    this.eventService = ApplicationUtil.eventService();
+	    this.userService = ApplicationUtil.userService();
 	}
 
 
 	public void start() {
 		while (true) {
 			adminService.markCompletedEvents();
-		    System.out.println("\nAdmin Menu\n"
+		    System.out.println("Admin Menu\n"
 		    		+ "1. User Management\n"
 		    		+ "2. Event Management\n"
-		    		+ "3. Reports & Analytics\n"
-		    		+ "4. Notifications\n"
-		    		+ "5. Logout"
+		    		+ "3. Category Management\n"
+		    		+ "4. Venue Management\n"
+		    		+ "5. Ticket & Registration Management\n"
+		    		+ "6. Payment & Revenue Management\n"
+		    		+ "7. Offer & Promotion Management\n"
+		    		+ "8. Reports & Analytics\n"
+		    		+ "9. Notifications\n"
+		    		+ "10. Feedback Moderation\n"
+		    		+ "11. Role Management\n"
+		    		+ "12. Logout\n"
 		    		+ "\n>");
 		
 		    int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
@@ -43,13 +53,34 @@ public class AdminMenu extends BaseMenu {
 		        case 2 : 
 		        	eventManagementMenu();
 		        	break;
-		        case 3 : 
+		        case 3:
+		        	categoryManagementMenu();
+		        	break;
+		        case 4:
+		        	venueManagementMenu();
+		        	break;
+		        case 5:
+		        	ticketRegistrationManagementMenu();
+		        	break;
+		        case 6:
+		        	paymentRevenueManagementMenu();
+		        	break;
+		        case 7:
+		        	offerPromotionManagementMenu();
+		        	break;
+		        case 8 : 
 		        	reportsMenu();
 		        	break;
-		        case 4 : 
+		        case 9 : 
 		        	notificationMenu();
 		        	break;
-		        case 5 :
+		        case 10:
+		        	feedbackModerationMenu();
+		        	break;
+		        case 11:
+		        	roleManagementMenu();
+		        	break;
+		        case 12 :
 		        	adminService.markCompletedEvents();
 		            if (confirmLogout()) {
 		            	System.out.println("Logging out...");
@@ -65,11 +96,11 @@ public class AdminMenu extends BaseMenu {
 	private void userManagementMenu() {
 	    while (true) {
 	        System.out.println("\nUser Management\n"
-	        		+ "1. View all users\r\n"
+	        		+ "1. View all users\n"
 	        		+ "2. View organizers\n"
 	        		+ "3. Activate user\n"
 	        		+ "4. Suspend user\n"
-	        		+ "5. Back"
+	        		+ "5. Back\n"
 	        		+ "\n>");
 
 	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
@@ -98,33 +129,33 @@ public class AdminMenu extends BaseMenu {
 	private void eventManagementMenu() {
 	    while (true) {
 	        System.out.println("\nEvent Management\n"
-	        		+ "1. View all events\n"
-	        		+ "2. Approve event\n"
-	        		+ "3. Cancel event\n"
-	        		+ "4. Back"
+	        		+ "1. View all events\n" 
+	        		+ "2. View event details\n" 
+		            + "3. View ticket options\n" 
+	        		+ "4. Approve event\n"
+	        		+ "5. Cancel event\n"
+	        		+ "6. Back\n"
 	        		+ "\n>");
 
 	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
 	        switch (choice) {
 	            case 1 :
-	            	eventService.printAllEvents();
+	            	adminService.printAllEvents();
 	            	break;
-	            case 2 :
-					try {
-						adminService.approveEvents(loggedInUser.getUserId());
-					} catch (Exception e) {
-						System.out.println("Unexpected error occured: " + e.getMessage());
-					}
-					break;
-	            case 3 :
-					try {
-						adminService.cancelEvents();
-					} catch (Exception e) {
-						System.out.println("Unexpected error occured: " + e.getMessage());
-					}
-	            	break;
+	            case 2:
+	            	userService.viewEventDetails();
+	                break;
+	            case 3:
+	            	userService.viewTicketOptions();
+	                break;
 	            case 4 :
+	            	adminService.approveEvents(loggedInUser.getUserId());
+					break;
+	            case 5 :
+	            	adminService.cancelEvents();
+	            	break;
+	            case 6 :
 	            	return; 
 	            default :
 	            	System.out.println("Invalid option");
@@ -137,7 +168,7 @@ public class AdminMenu extends BaseMenu {
 	        		+ "1. Event-wise registrations\n"
 	        		+ "2. Organizer-wise performance\n"
 	        		+ "3. Revenue report\n"
-	        		+ "4. Back"
+	        		+ "4. Back\n"
 	        		+ "\n>");
 
 	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
@@ -210,7 +241,170 @@ public class AdminMenu extends BaseMenu {
 	        }
 	    }
 	}
+	private void categoryManagementMenu() {
+	    while (true) {
+	        System.out.println("Category Management\n"
+	        		+ "1. View all categories\n"
+	        		+ "2. Add new category\n"
+	        		+ "3. Update category name\n"
+	        		+ "4. Delete category\n"
+	        		+ "5. Back\n"
+	                + "\n>");
 
+	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+
+	        switch (choice) {
+	        	case 1:
+	        		//adminService.listAllCategories();
+	        		break;
+	        	case 2:
+	        		//adminService.addNewCategory();
+	        		break;
+	        	case 3:
+	        		//adminService.updateCategory();
+	        		break;
+	        	case 4:
+	        		break;
+
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+	
+	private void venueManagementMenu() {
+	    while (true) {
+	        System.out.println("Venue Management\n"
+	        		+ "1. View all venues\n"
+	        		+ "2. Add new venue\n"
+	        		+ "3. Update venue details\n"
+	        		+ "4. Remove venue\n"
+	        		+ "5. View events at a venue\n"
+	        		+ "6. Back\n"
+	                + "\n>");
+
+	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+
+	        switch (choice) {
+	            
+
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+	
+	private void ticketRegistrationManagementMenu() {
+	    while (true) {
+	        System.out.println("Ticket & Registration Management\n"
+	        		+ "1. View tickets by event\n"
+	        		+ "2. View ticket availability summary\n"
+	        		+ "3. View registrations by event\n"
+	        		+ "4. View registrations by user\n"
+	        		+ "5. Cancel a registration\n"
+	        		+ "6. Restore cancelled registration\n"
+	        		+ "7. Back\n"
+	                + "\n>");
+
+	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+
+	        switch (choice) {
+	            
+
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+	
+	private void paymentRevenueManagementMenu() {
+	    while (true) {
+	        System.out.println("Payment & Revenue Management\n"
+	        		+ "1. View payments by event\n"
+	        		+ "2. View payments by user\n"
+	        		+ "3. View failed payments\n"
+	        		+ "4. View payment summary\n"
+	        		+ "5. Initiate refund\n"
+	        		+ "6. Back\n"
+	                + "\n>");
+
+	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+
+	        switch (choice) {
+	            
+
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+	private void offerPromotionManagementMenu() {
+	    while (true) {
+	        System.out.println("Offer & Promotion Management\n"
+	        		+ "	1. View all offers\n"
+	        		+ "	2. Create new offer\n"
+	        		+ "	3. Assign offer to event\n"
+	        		+ "	4. Activate or deactivate offer\n"
+	        		+ "	5. View offer usage report\n"
+	        		+ "	6. Back\n"
+	                + "\n>");
+
+	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+
+	        switch (choice) {
+	            
+
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+	private void feedbackModerationMenu() {
+	    while (true) {
+	        System.out.println("Feedback Moderation\n"
+	        		+ "1. View feedback by event\n"
+	        		+ "2. View feedback by organizer\n"
+	        		+ "3. Delete feedback\n"
+	        		+ "4. Flag feedback as reviewed\n"
+	        		+ "5. Back\n"
+	                + "\n>");
+
+	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+
+	        switch (choice) {
+	            
+
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+		
+	}
+	
+	private void roleManagementMenu() {
+		while (true) {
+	        System.out.println("Role Management\n"
+	        		+ "1. View all roles\n"
+	        		+ "2. Create new role\n"
+	        		+ "3. Assign role to user\n"
+	        		+ "4. Update role name\n"
+	        		+ "5. Delete role\n"
+	        		+ "6. Back\n"
+	                + "\n>");
+
+	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+
+	        switch (choice) {
+	            
+
+	            default:
+	                System.out.println("Invalid option");
+	        }
+	    }
+	}
+
+
+	
 	private boolean confirmLogout() {
 	    char choice = InputValidationUtil.readChar(
 	        ScannerUtil.getScanner(),

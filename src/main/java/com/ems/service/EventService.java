@@ -62,4 +62,6 @@ public interface EventService {
     void printEventDetails(List<Event> events);
 
     void printEventSummaries(List<Event> events);
+
+	List<Event> getAllEvents();
 }

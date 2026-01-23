@@ -14,7 +14,7 @@ import com.ems.util.DBConnectionUtil;
 
 public class RegistrationDaoImpl implements RegistrationDao {
 	
-	//Gets the details of registration with the event id
+	// gets registration details for a specific event
 	@Override
 	public List<EventRegistrationReport> getEventWiseRegistrations(int eventId)
         throws DataAccessException {
@@ -49,6 +49,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	
 	            reports.add(report);
 	        }
+	        rs.close();
 	
 	    } catch (SQLException e) {
 	        throw new DataAccessException(
@@ -59,10 +60,10 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	    return reports;
 	}
 
-
+	// creates a new registration entry
 	@Override
 	public int createRegistration(int userId, int eventId) throws DataAccessException {
-		String sql = "insert into registrations (user_id, event_id, registration_date, status) values (?,?,now(),'CONFIRMED')";
+		String sql = "insert into registrations (user_id, event_id, registration_date, status) values (?,?,utc_timestamp(),'CONFIRMED')";
 		try (Connection con = DBConnectionUtil.getConnection();
 		         PreparedStatement ps = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 			ps.setInt(1, userId);
@@ -81,6 +82,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 		return 0;
 	}
 
+	// adds ticket details for a registration
 	@Override
 	public void addRegistrationTickets(int regId, int ticketId, int quantity) throws DataAccessException {
 		String sql = "insert into registration_tickets (registration_id, ticket_id, quantity) values (?,?,?)";
@@ -95,6 +97,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 		}
 	}
 
+	// removes registration entry
 	@Override
 	public void removeRegistrations(int regId) throws DataAccessException {
 		String sql = "delete from registrations where registration_id = ?";
@@ -108,6 +111,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 		}
 	}
 
+	// removes tickets linked to a registration
 	@Override
 	public void removeRegistrationTickets(int regId, int ticketId) throws DataAccessException {
 		String sql = "delete from registrations_tickets where registration_id = ? and ticket_id = ?";
@@ -122,6 +126,4 @@ public class RegistrationDaoImpl implements RegistrationDao {
 		}
 		
 	}
-	
-
 }

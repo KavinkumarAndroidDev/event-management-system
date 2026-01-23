@@ -11,14 +11,14 @@ import com.ems.dao.TicketDao;
 import com.ems.model.Ticket;
 import com.ems.util.DBConnectionUtil;
 
-public class TicketDaoImpl implements  TicketDao{
+public class TicketDaoImpl implements TicketDao{
 	
-	//used as helper function of event, used to get the available tickets of the event
+	// returns total available tickets for an event
 	@Override
 	public int getAvailableTickets(int eventId) {
-		String sql = "SELECT SUM(available_quantity) AS total_available\n"
-				+ "FROM tickets\n"
-				+ "WHERE event_id = ?\n";
+		String sql = "select sum(available_quantity) as total_available "
+				+ "from tickets "
+				+ "where event_id = ?";
 		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setInt(1, eventId);
@@ -35,7 +35,7 @@ public class TicketDaoImpl implements  TicketDao{
 		return 0;
 	}
 	
-	//helps to get the ticket type of a event
+	// gets all available ticket types for an event
 	@Override
 	public List<Ticket> getTicketTypes(int eventId) {
 		String sql = "select * from tickets where event_id = ? and available_quantity > 0";
@@ -64,6 +64,7 @@ public class TicketDaoImpl implements  TicketDao{
 		return tickets;
 	}
 
+	// gets ticket details using ticket id
 	@Override
 	public Ticket getTicketById(int ticketId) {
 		String sql = "select * from tickets where ticket_id = ?";
@@ -91,6 +92,7 @@ public class TicketDaoImpl implements  TicketDao{
 		return null;
 	}
 
+	// updates available ticket quantity
 	@Override
 	public void updateAvailableQuantity(int ticketId, int i) {
 		String sql = "update tickets set available_quantity = available_quantity + ?"
@@ -111,4 +113,3 @@ public class TicketDaoImpl implements  TicketDao{
 	}
 	
 }
-

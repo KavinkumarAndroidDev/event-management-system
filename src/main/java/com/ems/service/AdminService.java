@@ -10,9 +10,9 @@ public interface AdminService {
 
     void sendSystemWideNotification(String message, String notificationType);
 
-    void approveEvents(int userId) throws Exception;
+    void approveEvents(int userId);
 
-    void cancelEvents() throws Exception;
+    void cancelEvents();
 
     void getEventWiseRegistrations();
 
@@ -25,4 +25,6 @@ public interface AdminService {
 	void sendNotificationByRole();
 
 	void sendNotificationToUser();
+
+	void printAllEvents();
 }

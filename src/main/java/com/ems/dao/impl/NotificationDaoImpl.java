@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,13 +16,12 @@ import com.ems.util.DateTimeUtil;
 
 public class NotificationDaoImpl implements NotificationDao {
 	
-	//send the system wide notification to all users
-	//notificationType - SYSTEM, EVENT, etc...
+	// sends notification to all active users
 	@Override
 	public void sendSystemWideNotification(String message, String notificationType) {
 		String sql = "insert into notifications (user_id, message, type,"
 				+ " created_at, read_status) select u.user_id"
-				+ ", ? , ?, NOW(), false from users u"
+				+ ", ? , ?, utc_timestamp(), false from users u"
 				+ " where u.status = 'ACTIVE' ";
 		try (Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)) {
@@ -37,7 +35,7 @@ public class NotificationDaoImpl implements NotificationDao {
 		}
 	}
 	
-	//Helps to get all unread notifications
+	// gets all unread notifications for user
 	@Override
 	public List<Notification> getUnreadNotifications(int userId) {
 		List<Notification> notifications = new ArrayList<>();
@@ -60,6 +58,7 @@ public class NotificationDaoImpl implements NotificationDao {
 				notification.setReadStatus(rs.getBoolean("read_status"));
 				notifications.add(notification);
 			}
+			rs.close();
 			
 		} catch (SQLException e) {
 			System.out.println("Database error while reading notification: " + e.getMessage());
@@ -69,7 +68,7 @@ public class NotificationDaoImpl implements NotificationDao {
 		return notifications;
 	}
 	
-	//helps to set a notification as read
+	// marks single notification as read
 	@Override
 	public void markAsRead(int notificationId) {
 		String sql = "update notifications set read_status = 1 where notification_id = ?";
@@ -85,7 +84,7 @@ public class NotificationDaoImpl implements NotificationDao {
 		
 	}
 	
-	// get all notification despite of its read_state
+	// gets all notifications for user
 	@Override
 	public List<Notification> getAllNotifications(int userId) {
 		List<Notification> notifications = new ArrayList<>();
@@ -108,6 +107,7 @@ public class NotificationDaoImpl implements NotificationDao {
 				notification.setReadStatus(rs.getBoolean("read_status"));
 				notifications.add(notification);
 			}
+			rs.close();
 			
 		} catch (SQLException e) {
 			System.out.println("Database error while reading notification: " + e.getMessage());
@@ -117,7 +117,7 @@ public class NotificationDaoImpl implements NotificationDao {
 		return notifications;
 	}	
 	
-	//when the user opens notification tab, all notification will be marked as read
+	// marks all unread notifications as read
 	@Override
 	public void markAllAsRead(int userId) {
 	    String sql =
@@ -138,7 +138,7 @@ public class NotificationDaoImpl implements NotificationDao {
 		}
 	}
 	
-	//helps to send the notification to particular user
+	// sends notification to a specific user
 	@Override
 	public void sendNotification(int userId, String message, String notificationType) {
 		String sql = "insert into notifications (user_id, message, type,"
@@ -149,7 +149,7 @@ public class NotificationDaoImpl implements NotificationDao {
 			ps.setInt(1, userId);
 			ps.setString(2, message);
 			ps.setString(3, notificationType);
-			ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+			ps.setTimestamp(4, Timestamp.from(DateTimeUtil.getCurrentUtc()));
 			ps.setBoolean(5, false);
 			int affectedRows = ps.executeUpdate();
 			if(affectedRows == 0) {
@@ -162,10 +162,11 @@ public class NotificationDaoImpl implements NotificationDao {
 		}
 	}
 
+	// sends notification based on user role
 	@Override
 	public void sendNotificationByRole(String message, String notificationType, String role) {
 		String sql = "insert into notifications (user_id, message, type,created_at, read_status) "
-				+ "select u.user_id, ? , ?, NOW(), false from users u "
+				+ "select u.user_id, ? , ?, utc_timestamp(), false from users u "
 				+ "inner join roles r on u.role_id = r.role_id "
 				+ "where u.status = 'ACTIVE' and role_name = ?";
 		try (Connection con = DBConnectionUtil.getConnection();
@@ -180,8 +181,4 @@ public class NotificationDaoImpl implements NotificationDao {
 		        System.out.println("Unexpected error while sending system notification: " + e.getMessage());
 		}
 	}
-
-	
-	
-
 }

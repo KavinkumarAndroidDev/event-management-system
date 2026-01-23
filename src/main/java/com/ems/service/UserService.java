@@ -1,6 +1,7 @@
 package com.ems.service;
 
 import com.ems.exception.AuthorizationException;
+import com.ems.enums.UserRole;
 import com.ems.exception.AuthenticationException;
 import com.ems.model.User;
 
@@ -10,7 +11,7 @@ public interface UserService {
 
     void createAccount(int type);
 
-    int getRole(User user);
+    UserRole getRole(User user);
 
     void printAllAvailableEvents();
 
