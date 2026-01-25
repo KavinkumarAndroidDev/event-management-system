@@ -8,6 +8,7 @@ import com.ems.model.Category;
 import com.ems.model.Event;
 import com.ems.model.Ticket;
 import com.ems.model.User;
+import com.ems.model.Venue;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
@@ -33,7 +34,7 @@ public class AdminMenu extends BaseMenu {
 	public void start() {
 		while (true) {
 			adminService.markCompletedEvents();
-			System.out.println("Admin Menu\n" + "1. User Management\n" + "2. Event Management\n"
+			System.out.println("\nAdmin Menu\n" + "1. User Management\n" + "2. Event Management\n"
 					+ "3. Category Management\n" + "4. Venue Management\n" + "5. Ticket & Registration Management\n"
 					+ "6. Payment & Revenue Management\n" + "7. Offer & Promotion Management\n"
 					+ "8. Reports & Analytics\n" + "9. Notifications\n" + "10. Feedback Moderation\n"
@@ -514,50 +515,177 @@ public class AdminMenu extends BaseMenu {
 			}
 			}
 		}
-		}
-	
-	private Category selectCategory() {
-
-	    List<Category> categories = adminService.getAllCategories();
-
-	    if (categories.isEmpty()) {
-	        System.out.println("No categories available");
-	        return null;
-	    }
-
-	    MenuHelper.displayCategories(categories);
-
-	    int choice = InputValidationUtil.readInt(
-	        ScannerUtil.getScanner(),
-	        "Select a category (1-" + categories.size() + "): "
-	    );
-
-	    while (choice < 1 || choice > categories.size()) {
-	        choice = InputValidationUtil.readInt(
-	            ScannerUtil.getScanner(),
-	            "Enter a valid choice: "
-	        );
-	    }
-
-	    return categories.get(choice - 1);
 	}
 
+	private Category selectCategory() {
 
+		List<Category> categories = adminService.getAllCategories();
+
+		if (categories.isEmpty()) {
+			System.out.println("No categories available");
+			return null;
+		}
+
+		MenuHelper.displayCategories(categories);
+
+		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+				"Select a category (1-" + categories.size() + "): ");
+
+		while (choice < 1 || choice > categories.size()) {
+			choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
+		}
+
+		return categories.get(choice - 1);
+	}
 
 	private void venueManagementMenu() {
+
 		while (true) {
 			System.out.println(
-					"Venue Management\n" + "1. View all venues\n" + "2. Add new venue\n" + "3. Update venue details\n"
-							+ "4. Remove venue\n" + "5. View events at a venue\n" + "6. Back\n" + ">");
+					"\nVenue Management\n" + "1. View all venues\n" + "2. Add new venue\n" + "3. Update venue details\n"
+							+ "4. Remove venue\n" + "5. View events at a venue\n" + "6. Back\n\n>");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
 			switch (choice) {
 
-			default:
+			case 1: {
+				List<Venue> venues = eventService.getAllVenues();
+
+				if (venues.isEmpty()) {
+					System.out.println("No venues available");
+				} else {
+					MenuHelper.displayVenues(venues);
+				}
+				break;
+			}
+
+			case 2: {
+				Venue venue = new Venue();
+
+				venue.setName(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Venue name: "));
+				venue.setStreet(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Street: "));
+				venue.setCity(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "City: "));
+				venue.setState(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "State: "));
+				venue.setPincode(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Pincode: "));
+				venue.setMaxCapacity(InputValidationUtil.readInt(ScannerUtil.getScanner(), "Maximum capacity: "));
+
+				adminService.addVenue(venue);
+				System.out.println("Venue added successfully");
+				break;
+			}
+
+			case 3: {
+				Venue selectedVenue = selectVenue();
+				if (selectedVenue == null)
+					break;
+
+				System.out.println("Press Enter to keep the current value");
+
+				String name = InputValidationUtil.readString(ScannerUtil.getScanner(),
+						"Venue name (" + selectedVenue.getName() + "): ");
+				if (!name.isBlank()) {
+					selectedVenue.setName(name);
+				}
+
+				String street = InputValidationUtil.readString(ScannerUtil.getScanner(),
+						"Street (" + selectedVenue.getStreet() + "): ");
+				if (!street.isBlank()) {
+					selectedVenue.setStreet(street);
+				}
+
+				String city = InputValidationUtil.readString(ScannerUtil.getScanner(),
+						"City (" + selectedVenue.getCity() + "): ");
+				if (!city.isBlank()) {
+					selectedVenue.setCity(city);
+				}
+
+				String state = InputValidationUtil.readString(ScannerUtil.getScanner(),
+						"State (" + selectedVenue.getState() + "): ");
+				if (!state.isBlank()) {
+					selectedVenue.setState(state);
+				}
+
+				String pincode = InputValidationUtil.readString(ScannerUtil.getScanner(),
+						"Pincode (" + selectedVenue.getPincode() + "): ");
+				if (!pincode.isBlank()) {
+					selectedVenue.setPincode(pincode);
+				}
+
+				int capacity = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+						"Maximum capacity (" + selectedVenue.getMaxCapacity() + ") enter 0 to skip: ");
+				if (capacity > 0) {
+					selectedVenue.setMaxCapacity(capacity);
+				}
+
+				adminService.updateVenue(selectedVenue);
+				System.out.println("Venue updated successfully");
+				break;
+			}
+
+			case 4: {
+				Venue selectedVenue = selectVenue();
+				if (selectedVenue == null)
+					break;
+
+				char confirm = InputValidationUtil.readChar(ScannerUtil.getScanner(),
+						"Are you sure you want to remove this venue (Y/N): ");
+
+				if (Character.toUpperCase(confirm) != 'Y') {
+					System.out.println("Removal aborted");
+					break;
+				}
+
+				adminService.removeVenue(selectedVenue.getVenueId());
+				System.out.println("Venue removed successfully");
+				break;
+			}
+
+			case 5: {
+				Venue selectedVenue = selectVenue();
+				if (selectedVenue == null)
+					break;
+
+				List<Event> events = eventService.searchByCity(selectedVenue.getVenueId());
+
+				if (events.isEmpty()) {
+					System.out.println("No events for this venue");
+				} else {
+					MenuHelper.printEventSummaries(events);
+				}
+				break;
+			}
+
+			case 6: {
+				return;
+			}
+
+			default: {
 				System.out.println("Invalid option");
 			}
+			}
 		}
+	}
+
+	private Venue selectVenue() {
+
+		List<Venue> venues = eventService.getAllVenues();
+
+		if (venues.isEmpty()) {
+			System.out.println("No venues available");
+			return null;
+		}
+
+		MenuHelper.displayVenues(venues);
+
+		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+				"Select a venue (1-" + venues.size() + "): ");
+
+		while (choice < 1 || choice > venues.size()) {
+			choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
+		}
+
+		return venues.get(choice - 1);
 	}
 
 	private void ticketRegistrationManagementMenu() {

@@ -20,4 +20,11 @@ public interface VenueDao {
 	boolean isVenueAvailable(int venueId, Timestamp from, Timestamp from2) throws DataAccessException;
 
 	Venue getVenueById(int venueId) throws DataAccessException;
+
+	void addVenue(Venue venue) throws DataAccessException;
+
+	void updateVenue(Venue venue) throws DataAccessException;
+
+	void deactivateVenue(int venueId) throws DataAccessException;
+
 }

@@ -64,6 +64,7 @@ public final class ApplicationUtil {
                 notificationDao,
                 registrationDao,
                 categoryDao,
+                venueDao,
                 notificationService,
                 eventService
             );

@@ -6,6 +6,7 @@ import com.ems.enums.NotificationType;
 import com.ems.enums.UserRole;
 import com.ems.model.Category;
 import com.ems.model.User;
+import com.ems.model.Venue;
 
 public interface AdminService {
 
@@ -37,6 +38,9 @@ public interface AdminService {
     void updateCategory(int categoryId, String name);
 
     void deleteCategory(int categoryId);
-
     
+    //Venue
+	void addVenue(Venue venue);
+	void updateVenue(Venue selectedVenue);
+	void removeVenue(int venueId);
 }

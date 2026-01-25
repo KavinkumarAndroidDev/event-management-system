@@ -12,6 +12,7 @@ import com.ems.exception.DataAccessException;
 import com.ems.model.Category;
 import com.ems.model.EventRegistrationReport;
 import com.ems.model.User;
+import com.ems.model.Venue;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
@@ -25,6 +26,7 @@ public class AdminServiceImpl implements AdminService {
     private final NotificationService notificationService;
     private final EventService eventService;
     private final CategoryDao categoryDao;
+    private final VenueDao venueDao;
 
     // initializes admin service with required dependencies
     public AdminServiceImpl(
@@ -33,6 +35,7 @@ public class AdminServiceImpl implements AdminService {
             NotificationDao notificationDao,
             RegistrationDao registrationDao,
             CategoryDao categoryDao,
+            VenueDao venueDao,
             NotificationService notificationService,
             EventService eventService
     ) {
@@ -41,6 +44,7 @@ public class AdminServiceImpl implements AdminService {
         this.notificationDao = notificationDao;
         this.registrationDao = registrationDao;
         this.categoryDao = categoryDao;
+        this.venueDao = venueDao;
         this.notificationService = notificationService;
         this.eventService = eventService;
     }
@@ -284,6 +288,33 @@ public class AdminServiceImpl implements AdminService {
 	        System.out.println(e.getMessage());
 	    }
 		
+	}
+
+	@Override
+	public void addVenue(Venue venue) {
+	    try {
+	        venueDao.addVenue(venue);
+	    } catch (DataAccessException e) {
+	        System.out.println(e.getMessage());
+	    }
+	}
+
+	@Override
+	public void updateVenue(Venue venue) {
+	    try {
+	        venueDao.updateVenue(venue);
+	    } catch (DataAccessException e) {
+	        System.out.println(e.getMessage());
+	    }
+	}
+
+	@Override
+	public void removeVenue(int venueId) {
+	    try {
+	        venueDao.deactivateVenue(venueId);
+	    } catch (DataAccessException e) {
+	        System.out.println(e.getMessage());
+	    }
 	}
 
 }

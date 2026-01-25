@@ -7,6 +7,7 @@ import com.ems.model.Category;
 import com.ems.model.Event;
 import com.ems.model.Ticket;
 import com.ems.model.User;
+import com.ems.model.Venue;
 import com.ems.service.EventService;
 
 public class MenuHelper {
@@ -162,7 +163,7 @@ public class MenuHelper {
 	public static void displayCategories(List<Category> categories) {
 
 	    int index = 1;
-
+	    System.out.println("\nAvailable categories:");
 	    for (Category c : categories) {
 	        System.out.println(
 	            index + ". " +
@@ -170,6 +171,17 @@ public class MenuHelper {
 	        );
 	        index++;
 	    }
+	}
+
+	public static void displayVenues(List<Venue> venues) {
+		int index = 1;
+		System.out.println("\nAvailable venues:");
+		for(Venue venue: venues) {
+			System.out.println(
+					index + ". " + venue.getName());
+			index++;
+		}
+		
 	}
 
     

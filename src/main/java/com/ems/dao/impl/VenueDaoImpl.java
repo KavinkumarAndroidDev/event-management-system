@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -160,4 +162,65 @@ public class VenueDaoImpl implements VenueDao {
         }
         return venue;
 	}
+	
+	
+	@Override
+	public void addVenue(Venue venue) throws DataAccessException {
+	    String sql =
+	        "insert into venues (name, street, city, state, pincode, max_capacity, created_at, is_active) " +
+	        "values (?, ?, ?, ?, ?, ?, ?, 1)";
+
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setString(1, venue.getName());
+	        ps.setString(2, venue.getStreet());
+	        ps.setString(3, venue.getCity());
+	        ps.setString(4, venue.getState());
+	        ps.setString(5, venue.getPincode());
+	        ps.setInt(6, venue.getMaxCapacity());
+	        ps.setTimestamp(7, Timestamp.from(DateTimeUtil.convertLocalDefaultToUtc(LocalDateTime.now())));
+	        ps.executeUpdate();
+	    } catch (Exception e) {
+	        throw new DataAccessException("Failed to add venue");
+	    }
+	}
+
+	@Override
+	public void updateVenue(Venue venue) throws DataAccessException {
+	    String sql =
+	        "update venues set name=?, street=?, city=?, state=?, pincode=?, max_capacity=? " +
+	        "where venue_id=? and is_active=1";
+
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setString(1, venue.getName());
+	        ps.setString(2, venue.getStreet());
+	        ps.setString(3, venue.getCity());
+	        ps.setString(4, venue.getState());
+	        ps.setString(5, venue.getPincode());
+	        ps.setInt(6, venue.getMaxCapacity());
+	        ps.setInt(7, venue.getVenueId());
+
+	        ps.executeUpdate();
+	    } catch (Exception e) {
+	        throw new DataAccessException("Failed to update venue");
+	    }
+	}
+
+	@Override
+	public void deactivateVenue(int venueId) throws DataAccessException {
+	    String sql = "update venues set is_active=0 where venue_id=?";
+
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setInt(1, venueId);
+	        ps.executeUpdate();
+	    } catch (Exception e) {
+	        throw new DataAccessException("Failed to remove venue");
+	    }
+	}
+
 }
