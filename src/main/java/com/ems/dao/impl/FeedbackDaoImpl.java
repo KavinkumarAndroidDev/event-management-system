@@ -9,35 +9,50 @@ import com.ems.dao.FeedbackDao;
 import com.ems.exception.DataAccessException;
 import com.ems.util.DBConnectionUtil;
 
-public class FeedbackDaoImpl implements FeedbackDao{
+/**
+ * Feedback DAO implementation - Database operations ONLY
+ */
+public class FeedbackDaoImpl implements FeedbackDao {
 	
-	// submits rating and feedback for completed event
+	// Returns: 1 = success, 0 = no completed booking, -1 = insert failed
 	@Override
-	public void submitRating(int eventId, int userId, int rating, String comments) throws DataAccessException{
+	public int submitRating(int eventId, int userId, int rating, String comments) 
+			throws DataAccessException {
+		
 		String sql = "select count(*) from events e join registrations r on e.event_id = r.event_id " +
 	             "where r.user_id = ? and e.event_id = ? and e.status = 'COMPLETED' and r.status = 'CONFIRMED'";
-
+		
 		try (Connection con = DBConnectionUtil.getConnection();
-			PreparedStatement ps= con.prepareStatement(sql)) {
+			PreparedStatement ps = con.prepareStatement(sql)) {
+			
 		    ps.setInt(1, userId);
 		    ps.setInt(2, eventId);
 		    ResultSet rs = ps.executeQuery();
 		    
 		    if (rs.next() && rs.getInt(1) > 0) {
-		        String insertReview = "insert into feedback(event_id,user_id, rating, comments, submitted_at) values(?,?,?,?,utc_timestamp())";
-		        PreparedStatement ps1 = con.prepareStatement(insertReview);
-		        ps1.setInt(1, eventId);
-		        ps1.setInt(2, userId);
-		        ps1.setInt(3, rating);
-		        ps1.setString(4, comments);
-		        int affectedRows = ps.executeUpdate();
-		        if(affectedRows > 0) System.out.println("Your valuable feedback has been stored!");
-		        else System.out.println("Unexpected error occured during the feedback storage!");
+		        // User has completed booking, proceed with insert
+		        String insertReview = "insert into feedback(event_id, user_id, rating, comments, submitted_at) " +
+		                            "values(?, ?, ?, ?, utc_timestamp())";
+		        
+		        try (PreparedStatement ps1 = con.prepareStatement(insertReview)) {
+			        ps1.setInt(1, eventId);
+			        ps1.setInt(2, userId);
+			        ps1.setInt(3, rating);
+			        ps1.setString(4, comments);
+			        
+			        int affectedRows = ps1.executeUpdate();
+			        
+			        if (affectedRows > 0) {
+			            return 1;  // Success
+			        } else {
+			            return -1;  // Insert failed
+			        }
+		        }
 		    } else {
-		        System.out.println("Status: No completed booking found for this event/user.");
+		        return 0;  // No completed booking found
 		    }
-		    rs.close();
-		}catch (SQLException e) {
+		    
+		} catch (SQLException e) {
 			throw new DataAccessException("Error while submitting rating: " + e.getMessage());
 		}
 	}

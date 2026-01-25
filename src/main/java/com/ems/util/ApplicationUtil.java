@@ -3,7 +3,6 @@ package com.ems.util;
 import com.ems.dao.impl.*;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
-import com.ems.service.GuestService;
 import com.ems.service.NotificationService;
 import com.ems.service.PaymentService;
 import com.ems.service.UserService;
@@ -16,7 +15,6 @@ public final class ApplicationUtil {
     private static final PaymentService paymentService;
     private static final UserService userService;
     private static final AdminService adminService;
-    private static final GuestService guestService;
 
     static {
         NotificationDaoImpl notificationDao = new NotificationDaoImpl();
@@ -31,7 +29,7 @@ public final class ApplicationUtil {
         FeedbackDaoImpl feedbackDao = new FeedbackDaoImpl();
 
         notificationService =
-            new NotificationServiceImpl(notificationDao);
+            new NotificationServiceImpl(notificationDao, registrationDao);
 
         paymentService =
             new PaymentServiceImpl(
@@ -65,14 +63,10 @@ public final class ApplicationUtil {
                 eventDao,
                 notificationDao,
                 registrationDao,
+                categoryDao,
                 notificationService,
                 eventService
             );
-        guestService =
-                new GuestServiceImpl(
-                    userService,
-                    eventService
-                );
     }
 
     public static AdminService adminService() {
@@ -89,8 +83,5 @@ public final class ApplicationUtil {
     
     public static NotificationService notificationService() {
     	return notificationService;
-    }
-    public static GuestService guestService() {
-        return guestService;
     }
 }

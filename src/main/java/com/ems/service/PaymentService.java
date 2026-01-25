@@ -1,5 +1,7 @@
 package com.ems.service;
 
+import com.ems.enums.PaymentMethod;
+
 public interface PaymentService {
 
     boolean processRegistration(
@@ -7,6 +9,7 @@ public interface PaymentService {
             int eventId,
             int ticketId,
             int quantity,
-            double price
+            double price,
+            PaymentMethod selectedMethod
     );
 }

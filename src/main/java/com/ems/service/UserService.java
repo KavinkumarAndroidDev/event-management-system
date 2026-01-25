@@ -7,29 +7,22 @@ import com.ems.model.User;
 
 public interface UserService {
 
-    User login() throws AuthorizationException, AuthenticationException;
+	 // authentication
+    User login(String emailId, String password)
+            throws AuthorizationException, AuthenticationException;
 
-    void createAccount(int type);
-
+    // account creation
+    void createAccount(
+            String fullName,
+            String email,
+            String phone,
+            String password,
+            String gender,
+            UserRole role
+    );
+    
+    boolean checkUserExists(String email);
+    
+    // role resolution
     UserRole getRole(User user);
-
-    void printAllAvailableEvents();
-
-    void viewTicketOptions();
-
-    void viewEventDetails();
-
-    void registerForEvent(int userId);
-
-    void viewUpcomingEvents(int userId);
-
-    void viewPastEvents(int userId);
-
-    void viewBookingDetails(int userId);
-
-    void submitRating(int userId);
-
-    void submitReview(int userId);
-
-    void searchEvents();
 }

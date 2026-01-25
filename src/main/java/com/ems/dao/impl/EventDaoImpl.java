@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,6 @@ import com.ems.util.DateTimeUtil;
 
 public class EventDaoImpl implements EventDao {
 
-	// fetch functions
 	// lists all future published events with available tickets
 	@Override
 	public List<Event> listAvailableEvents() throws DataAccessException {
@@ -42,7 +42,6 @@ public class EventDaoImpl implements EventDao {
 		return events;
 	}
 
-	// lists published and draft events
 	@Override
 	public List<Event> listAvailableAndDraftEvents() throws DataAccessException {
 		List<Event> events = new ArrayList<>();
@@ -63,7 +62,6 @@ public class EventDaoImpl implements EventDao {
 		return events;
 	}
 
-	// lists all events
 	@Override
 	public List<Event> listAllEvents() throws DataAccessException {
 		List<Event> events = new ArrayList<>();
@@ -80,7 +78,6 @@ public class EventDaoImpl implements EventDao {
 		return events;
 	}
 
-	// lists events that are not approved yet
 	@Override
 	public List<Event> listEventsYetToApprove() throws DataAccessException {
 		List<Event> events = new ArrayList<>();
@@ -101,7 +98,6 @@ public class EventDaoImpl implements EventDao {
 		return events;
 	}
 
-	// returns organizer id for an event
 	@Override
 	public int getOrganizerId(int eventId) throws DataAccessException {
 		String sql = "select organizer_id from events where event_id = ?";
@@ -117,7 +113,6 @@ public class EventDaoImpl implements EventDao {
 		throw new DataAccessException("Organizer not found");
 	}
 
-	// gets event details using event id
 	@Override
 	public Event getEventById(int eventId) throws DataAccessException {
 		Event event = new Event();
@@ -168,7 +163,6 @@ public class EventDaoImpl implements EventDao {
 		return null;
 	}
 
-	// returns event name
 	@Override
 	public String getEventName(int eventId) throws DataAccessException {
 		String sql = "select title from events where event_id = ?";
@@ -186,7 +180,6 @@ public class EventDaoImpl implements EventDao {
 		return null;
 	}
 
-	// returns events registered by user
 	@Override
 	public List<UserEventRegistration> getUserRegistrations(int userId)
         throws DataAccessException {
@@ -243,8 +236,6 @@ public class EventDaoImpl implements EventDao {
 	    return list;
 	}
 
-
-	// shows booking details for user
 	@Override
 	public List<BookingDetail> viewBookingDetails(int userId) throws DataAccessException {
 
@@ -274,7 +265,6 @@ public class EventDaoImpl implements EventDao {
 		return bookings;
 	}
 
-	/// Event details manipulations
 	// approves an event
 	@Override
 	public boolean approveEvent(int eventId, int userId) throws DataAccessException {
@@ -288,19 +278,15 @@ public class EventDaoImpl implements EventDao {
 			ps.setInt(4, eventId);
 			ps.setTimestamp(5, Timestamp.from(DateTimeUtil.getCurrentUtc()));
 			int rowsUpdated = ps.executeUpdate();
-			if (rowsUpdated == 0) {
-				System.out.println("No event found with the id: " + eventId);
-				return false;
-			} else {
-				System.out.println("Event has been approved: " + eventId);
-			}
+			
+			// ✅ REMOVED print statements - Service/Menu will handle this
+			return rowsUpdated > 0;
+			
 		} catch (SQLException e) {
 			throw new DataAccessException("Error while updating events" + e.getMessage());
 		}
-		return true;
 	}
 
-	// cancels an event
 	@Override
 	public boolean cancelEvent(int eventId) throws DataAccessException {
 
@@ -313,20 +299,15 @@ public class EventDaoImpl implements EventDao {
 			ps.setInt(3, eventId);
 			ps.setTimestamp(4, Timestamp.from(DateTimeUtil.getCurrentUtc()));
 			int rowsUpdated = ps.executeUpdate();
-			if (rowsUpdated == 0) {
-				System.out.println("No event found with the id: " + eventId);
-				return false;
-			} else {
-				System.out.println("Event has been cancelled: " + eventId);
-			}
-
+			
+			// ✅ REMOVED print statements - Service/Menu will handle this
+			return rowsUpdated > 0;
+			
 		} catch (SQLException e) {
 			throw new DataAccessException("Error while updating events" + e.getMessage());
 		}
-		return true;
 	}
 
-	// marks completed events
 	@Override
 	public void completeEvents() throws DataAccessException {
 		String sql = "update events set status = ? where status = ? " + "and end_datetime <= CURRENT_TIMESTAMP";
@@ -339,8 +320,6 @@ public class EventDaoImpl implements EventDao {
 		}
 	}
 
-	// helper function
-	// maps resultset to event list
 	public List<Event> getEventList(ResultSet rs) throws DataAccessException {
 		List<Event> events = new ArrayList<>();
 		try {
@@ -390,7 +369,6 @@ public class EventDaoImpl implements EventDao {
 		return events;
 	}
 
-	// report daos
 	@Override
 	public Map<String, Double> getEventWiseRevenue() throws DataAccessException {
 		Map<String, Double> revenueMap = new HashMap<>();
@@ -428,4 +406,111 @@ public class EventDaoImpl implements EventDao {
 
 		return result;
 	}
+	
+	
+	
+	
+	//organizer functions:
+	@Override
+    public int createEvent(Event event) throws DataAccessException {
+        String sql = "insert into events (organizer_id,title,description,category_id,venue_id,start_datetime,end_datetime,capacity,status,created_at) values (?,?,?,?,?,?,?,?,?,?)";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, event.getOrganizerId());
+            ps.setString(2, event.getTitle());
+            ps.setString(3, event.getDescription());
+            ps.setInt(4, event.getCategoryId());
+            ps.setInt(5, event.getVenueId());
+            ps.setTimestamp(6, Timestamp.valueOf(event.getStartDateTime()));
+            ps.setTimestamp(7, Timestamp.valueOf(event.getEndDateTime()));
+            ps.setInt(8, event.getCapacity());
+            ps.setString(9, event.getStatus());
+            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+
+            ps.executeUpdate();
+            ResultSet rs = ps.getGeneratedKeys();
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (Exception e) {
+			throw new DataAccessException("Failed to create event");
+		}
+    }
+	@Override
+    public boolean updateEventDetails(int eventId, String title, String description, int categoryId, int venueId) throws DataAccessException {
+        String sql = "update events set title=?, description=?, category_id=?, venue_id=?, updated_at=? where event_id=?";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, title);
+            ps.setString(2, description);
+            ps.setInt(3, categoryId);
+            ps.setInt(4, venueId);
+            ps.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(6, eventId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+			throw new DataAccessException("Failed to update event details");
+		}
+    }
+	@Override
+    public boolean updateEventSchedule(int eventId, LocalDateTime start, LocalDateTime end) throws DataAccessException {
+        String sql = "update events set start_datetime=?, end_datetime=?, updated_at=? where event_id=?";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setTimestamp(1, Timestamp.valueOf(start));
+            ps.setTimestamp(2, Timestamp.valueOf(end));
+            ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(4, eventId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+			throw new DataAccessException("Failed to update the event schedule");
+		}
+    }
+	@Override
+    public boolean updateEventCapacity(int eventId, int capacity) throws DataAccessException {
+        String sql = "update events set capacity=?, updated_at=? where event_id=?";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, capacity);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(3, eventId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+			throw new DataAccessException("Failed to update event capacity");
+		}
+    }
+	@Override
+    public boolean updateEventStatus(int eventId, String status) throws DataAccessException {
+        String sql = "update events set status=?, updated_at=? where event_id=?";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, status);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(3, eventId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+			throw new DataAccessException("Failed to update event status");
+		}
+    }
+
+    public List<Event> getEventsByOrganizer(int organizerId) throws DataAccessException {
+        List<Event> list = new ArrayList<>();
+        String sql = "select * from events where organizer_id=?";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, organizerId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                return getEventList(rs);
+            }
+        } catch (SQLException e) {
+			throw new DataAccessException("Failed to fetch organizer events");
+		}
+        return list;
+    }
+
 }

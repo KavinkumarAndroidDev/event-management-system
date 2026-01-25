@@ -40,7 +40,8 @@ public class PaymentServiceImpl implements PaymentService {
             int eventId,
             int ticketId,
             int quantity,
-            double price
+            double price,
+            PaymentMethod selectedMethod
     ) {
         try {
             Ticket ticket = ticketDao.getTicketById(ticketId);
@@ -53,30 +54,6 @@ public class PaymentServiceImpl implements PaymentService {
             registrationDao.addRegistrationTickets(regId, ticketId, quantity);
 
             double totalAmount = price * quantity;
-
-            System.out.println("available payment method:");
-            PaymentMethod[] methods = PaymentMethod.values();
-
-            for (int i = 0; i < methods.length; i++) {
-                System.out.println(
-                    (i + 1) + ". " + methods[i].name().replace("_", " ")
-                );
-            }
-
-            int choice = InputValidationUtil.readInt(
-                ScannerUtil.getScanner(),
-                "Enter choice (1-" + methods.length + "): "
-            );
-
-            while (choice < 1 || choice > methods.length) {
-                System.out.println("Invalid payment method selected");
-                choice = InputValidationUtil.readInt(
-                    ScannerUtil.getScanner(),
-                    "Enter choice (1-" + methods.length + "): "
-                );
-            }
-
-            PaymentMethod selectedMethod = methods[choice - 1];
 
             boolean paymentSuccess =
                 paymentDao.processPayment(

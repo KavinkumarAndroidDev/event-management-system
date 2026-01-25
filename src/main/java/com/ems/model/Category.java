@@ -4,8 +4,8 @@ public class Category {
 	private int categoryId;
 	private String name;
 	/**
-	 * @param categoryId
-	 * @param name
+	 * @param name 
+	 * @param categoryId 
 	 */
 	public Category(int categoryId, String name) {
 		this.categoryId = categoryId;

@@ -13,5 +13,14 @@ public interface TicketDao {
 
 	Ticket getTicketById(int ticketId)  throws DataAccessException;
 
-	void updateAvailableQuantity(int ticketId, int i)  throws DataAccessException;
+	boolean updateAvailableQuantity(int ticketId, int i)  throws DataAccessException;
+
+	//organizer functions
+    boolean createTicket(Ticket ticket);
+
+    boolean updateTicketPrice(int ticketId, double price);
+
+    boolean updateTicketQuantity(int ticketId, int quantity);
+
+    List<Ticket> getTicketsByEvent(int eventId);
 }

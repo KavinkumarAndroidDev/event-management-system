@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.ems.dao.NotificationDao;
+import com.ems.dao.RegistrationDao;
 import com.ems.exception.DataAccessException;
 import com.ems.model.Notification;
 import com.ems.service.NotificationService;
@@ -11,9 +12,11 @@ import com.ems.service.NotificationService;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationDao notificationDao;
+    private final RegistrationDao registrationDao;
 
-    public NotificationServiceImpl(NotificationDao notificationDao) {
+    public NotificationServiceImpl(NotificationDao notificationDao, RegistrationDao registrationDao) {
         this.notificationDao = notificationDao;
+        this.registrationDao = registrationDao;
     }
 
     @Override
@@ -72,4 +75,22 @@ public class NotificationServiceImpl implements NotificationService {
 	    	System.out.println(e.getMessage());
 	    }
     }
+
+    @Override
+    public void sendEventNotification(int eventId, String message, String type) {
+        try {
+            List<Integer> userIds =
+                registrationDao.getRegisteredUserIdsByEvent(eventId);
+
+            for (Integer userId : userIds) {
+                notificationDao.sendNotification(userId, message, type);
+            }
+        } catch (DataAccessException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+
+
+
 }

@@ -1,5 +1,6 @@
 package com.ems.dao;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -36,5 +37,19 @@ public interface EventDao {
 	 Map<String, Double> getEventWiseRevenue() throws DataAccessException;
 
 	 Map<String, Integer> getOrganizerWiseEventCount() throws DataAccessException;
+	 
+	 
+	 //organizer functions
+	 int createEvent(Event event) throws DataAccessException;
+	 
+	 boolean updateEventDetails(int eventId, String title, String description, int categoryId, int venueId) throws DataAccessException;
+
+	 boolean updateEventSchedule(int eventId, LocalDateTime start, LocalDateTime end) throws DataAccessException;
+
+	 boolean updateEventCapacity(int eventId, int capacity) throws DataAccessException;
+
+	 boolean updateEventStatus(int eventId, String status) throws DataAccessException;
+
+	 List<Event> getEventsByOrganizer(int organizerId) throws DataAccessException;
 
 }

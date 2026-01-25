@@ -1,24 +1,32 @@
 package com.ems.menu;
 
-import com.ems.service.GuestService;
+import java.util.List;
+
+import com.ems.enums.UserRole;
+import com.ems.model.Event;
+import com.ems.model.Ticket;
+import com.ems.service.EventService;
+import com.ems.service.UserService;
 import com.ems.util.ApplicationUtil;
 import com.ems.util.InputValidationUtil;
+import com.ems.util.MenuHelper;
 import com.ems.util.ScannerUtil;
 
 public class GuestMenu extends BaseMenu {
-	private final GuestService guestService;
+	private final EventService eventService;
+	private final UserService userService;
 	public GuestMenu() {
 		super(null);
-		this.guestService = ApplicationUtil.guestService();
+		this.eventService = ApplicationUtil.eventService();
+		this.userService = ApplicationUtil.userService();
 	}
 	public void start() {
 		while(true) {
 			System.out.println("\nGuest menu"
 					+ "\n\nPlease select an option\n"
 					+ "1. Browse Events\n" 
-		            + "2. Search & Filter Events\n"
-			        + "3. Register account\n"
-			        + "4. Exit Guest Mode\n"
+			        + "2. Register account\n"
+			        + "3. Exit Guest Mode\n"
 			        + "Guest accounts have limited access.\n"
 			        + "Please register or log in to use all features.\n"
 			        + "\n>");
@@ -27,13 +35,10 @@ public class GuestMenu extends BaseMenu {
 			case 1:
                 browseEventsMenu();
                 break;
-            case 2:
-                guestService.searchEvents();
-                break;
-			case 3:
-				guestService.createAccount();
+			case 2:
+				createAccount(UserRole.ATTENDEE);
 				break;
-			case 4:
+			case 3:
 			    System.out.println("Exiting Guest Mode...");
 			    return;   
 			default:
@@ -43,36 +48,176 @@ public class GuestMenu extends BaseMenu {
 			
 		}
 	}
+	private void createAccount(UserRole role) {
+		String fullName =
+	            InputValidationUtil.readNonEmptyString(
+	                ScannerUtil.getScanner(),
+	                "Enter Full Name: "
+	            );
+		String email = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the email address: ");
+		while (!email.matches(
+                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
+            email =
+                InputValidationUtil.readNonEmptyString(
+                    ScannerUtil.getScanner(),
+                    "Enter valid Email Address: "
+                );
+        }
+		while(userService.checkUserExists(email)) {
+			email =
+	                InputValidationUtil.readNonEmptyString(
+	                    ScannerUtil.getScanner(),
+	                    "Enter valid Email Address: "
+	                );
+		}
+		String phone =
+	            InputValidationUtil.readString(
+	                ScannerUtil.getScanner(),
+	                "Enter Phone Number: "
+	            );
+	        
+	        if (phone.trim().isEmpty()) {
+	            phone = null;
+	        }else {
+	        	phone = phone.replaceAll("\\D", ""); 
+	            while (phone.length() != 10) {
+	            	phone =InputValidationUtil.readString(ScannerUtil.getScanner(),"Enter valid phone Number: ");
+	            }
+	        }
+		String passwordPrompt =
+	            "Enter Password (Min 8 chars, 1 Digit, 1 Upper, 1 Lower, 1 Special [!@#$%^&*]): ";
+
+	        String password =
+	            InputValidationUtil.readNonEmptyString(
+	                ScannerUtil.getScanner(),
+	                passwordPrompt
+	            );
+
+	        while (!password.matches(
+	                "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$")) {
+	        	password =
+	    	            InputValidationUtil.readNonEmptyString(
+	    	                ScannerUtil.getScanner(),
+	    	                "Enter the valid password: "
+	    	            );
+	        }
+	        int genderChoice;
+	        do {
+	            genderChoice =
+	                InputValidationUtil.readInt(
+	                    ScannerUtil.getScanner(),
+	                    "Enter your gender:\n1. Male\n2. Female\n3. Prefer not to say\n"
+	                );
+	        } while (genderChoice < 1 || genderChoice > 3);
+
+	        String gender =
+	            (genderChoice == 1)
+	                ? "Male"
+	                : (genderChoice == 2)
+	                    ? "Female"
+	                    : "Opt-out"; 
+	        userService.createAccount(fullName, email, phone, password, gender, role);
+		
+	}
 	private void browseEventsMenu() {
 
-	    while (true) {
-	        System.out.println(
-	            "\nBrowse Events\n" +
-	            "1. View all available events\n" +
-	            "2. View event details\n" +
-	            "3. View ticket options\n" +
-	            "4. Back\n>"
-	        );
+		while (true) {
+			System.out.println("\nBrowse Events\n" + "1. View all available events\n" + "2. View event details\n"
+					+ "3. View ticket options\n" + "4. Back" + "\n>");
 
-	        int choice = InputValidationUtil.readInt(
-	            ScannerUtil.getScanner(), ""
-	        );
+			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
-	        switch (choice) {
-	            case 1:
-	            	guestService.printAllAvailableEvents();
-	                break;
-	            case 2:
-	            	guestService.viewEventDetails();
-	                break;
-	            case 3:
-	            	guestService.viewTicketOptions();
-	                break;
-	            case 4:
-	                return;
-	            default:
-	                System.out.println("Invalid option");
-	        }
-	    }
+			switch (choice) {
+			case 1:
+				printAllAvailableEvents();
+				break;
+			case 2:
+				viewEventDetails();
+				break;
+			case 3:
+				viewTicketOptions();
+				break;
+			case 4:
+				return;
+			default:
+				System.out.println("Invalid option");
+			}
+		}
 	}
+	private void printAllAvailableEvents() {
+		List<Event> filteredEvents = eventService.getAllEvents();
+		if(filteredEvents.isEmpty()) {
+			System.out.println("There is no available events!");
+			return;
+		}
+		MenuHelper.printEventSummaries(filteredEvents);
+	}
+	
+	private void viewEventDetails() {
+    	List<Event> events = eventService.listAvailableEvents();
+    	if (events.isEmpty()) {
+		    System.out.println("There are no available events!");
+		    return;
+		}
+		
+    	MenuHelper.printEventSummaries(events);
+    	int choice = InputValidationUtil.readInt(
+	    	    ScannerUtil.getScanner(),
+	    	    "Select an event (1-" + events.size() + "): "
+    	);
+    	while (choice < 1 || choice > events.size()) {
+    	    choice = InputValidationUtil.readInt(
+    	        ScannerUtil.getScanner(),
+    	        "Enter a valid choice: "
+    	    );
+    	}
+    	Event selectedEvent = events.get(choice - 1);
+    	MenuHelper.printEventDetails(selectedEvent);
+		
+	}
+	
+	private void viewTicketOptions() {
+		List<Event> events = eventService.listAvailableEvents();
+		if (events.isEmpty()) {
+		    System.out.println("There are no available events!");
+		    return;
+		}
+		
+    	MenuHelper.printEventSummaries(events);
+    	int choice = InputValidationUtil.readInt(
+	    	    ScannerUtil.getScanner(),
+	    	    "Select an event (1-" + events.size() + "): "
+    	);
+    	while (choice < 1 || choice > events.size()) {
+    	    choice = InputValidationUtil.readInt(
+    	        ScannerUtil.getScanner(),
+    	        "Enter a valid choice: "
+    	    );
+    	}
+    	Event selectedEvent = events.get(choice - 1);
+		int eventId = selectedEvent.getEventId();
+
+		List<Ticket> tickets = eventService.getTicketTypes(eventId);
+		
+		if(!tickets.isEmpty()) {
+			System.out.println("\nAvailable ticekt types: ");			
+			
+			int displayIndex = 1;
+	        for (Ticket ticket: tickets) {
+	        	System.out.println(
+	                    displayIndex + " | " +
+	                    ticket.getTicketType() + " | ₹" +
+	                    ticket.getPrice() + " | " +
+	                    "Tickets: " + ticket.getAvailableQuantity() +"/" + ticket.getTotalQuantity()
+	                );
+
+	                displayIndex++;
+	        }
+		}else {
+			System.out.println("No ticket types for the given event id");
+			return;
+		}
+		
+	}
+
 }

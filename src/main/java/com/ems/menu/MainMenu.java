@@ -1,7 +1,9 @@
 package com.ems.menu;
 
+import com.ems.enums.UserRole;
 import com.ems.exception.AuthenticationException;
 import com.ems.exception.AuthorizationException;
+import com.ems.model.User;
 import com.ems.service.UserService;
 import com.ems.util.ApplicationUtil;
 import com.ems.util.InputValidationUtil;
@@ -26,19 +28,14 @@ public class MainMenu {
 			int input = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 			switch(input) {
 				case 1:
-					try {
-						userService.login();
-					} catch (AuthorizationException e) {
-						System.out.println(e.getMessage());
-					} catch (AuthenticationException e) {
-						System.out.println(e.getMessage());
-					}
+					login();
 					break;
 				case 2:
-					userService.createAccount(1);
+					createAccount(UserRole.ATTENDEE);
 					break;
 				case 3:
-					userService.createAccount(2);
+					createAccount(UserRole.ORGANIZER);
+					
 					break;
 				case 4:
 					GuestMenu guestMenu = new GuestMenu();
@@ -52,6 +49,116 @@ public class MainMenu {
 	                break;
 			}
 			
+		}
+		
+	}
+	private void createAccount(UserRole role) {
+		String fullName =
+	            InputValidationUtil.readNonEmptyString(
+	                ScannerUtil.getScanner(),
+	                "Enter Full Name: "
+	            );
+		String email = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the email address: ");
+		while (!email.matches(
+                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
+            email =
+                InputValidationUtil.readNonEmptyString(
+                    ScannerUtil.getScanner(),
+                    "Enter valid Email Address: "
+                );
+        }
+		while(userService.checkUserExists(email)) {
+			email =
+	                InputValidationUtil.readNonEmptyString(
+	                    ScannerUtil.getScanner(),
+	                    "Enter valid Email Address: "
+	                );
+		}
+		String phone =
+	            InputValidationUtil.readString(
+	                ScannerUtil.getScanner(),
+	                "Enter Phone Number: "
+	            );
+	        
+	        if (phone.trim().isEmpty()) {
+	            phone = null;
+	        }else {
+	        	phone = phone.replaceAll("\\D", ""); 
+	            while (phone.length() != 10) {
+	            	phone =InputValidationUtil.readString(ScannerUtil.getScanner(),"Enter valid phone Number: ");
+	            }
+	        }
+		String passwordPrompt =
+	            "Enter Password (Min 8 chars, 1 Digit, 1 Upper, 1 Lower, 1 Special [!@#$%^&*]): ";
+
+	        String password =
+	            InputValidationUtil.readNonEmptyString(
+	                ScannerUtil.getScanner(),
+	                passwordPrompt
+	            );
+
+	        while (!password.matches(
+	                "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$")) {
+	        	password =
+	    	            InputValidationUtil.readNonEmptyString(
+	    	                ScannerUtil.getScanner(),
+	    	                "Enter the valid password: "
+	    	            );
+	        }
+	        int genderChoice;
+	        do {
+	            genderChoice =
+	                InputValidationUtil.readInt(
+	                    ScannerUtil.getScanner(),
+	                    "Enter your gender:\n1. Male\n2. Female\n3. Prefer not to say\n"
+	                );
+	        } while (genderChoice < 1 || genderChoice > 3);
+
+	        String gender =
+	            (genderChoice == 1)
+	                ? "Male"
+	                : (genderChoice == 2)
+	                    ? "Female"
+	                    : "Opt-out"; 
+	        userService.createAccount(fullName, email, phone, password, gender, role);
+		
+	}
+	private void login() {
+		String email = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the email address: ");
+		while (!email.matches(
+                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
+            email =
+                InputValidationUtil.readNonEmptyString(
+                    ScannerUtil.getScanner(),
+                    "Enter valid Email Address: "
+                );
+        }
+		
+		String password =
+	            InputValidationUtil.readNonEmptyString(
+	                ScannerUtil.getScanner(),
+	                "Enter the password: "
+	            );
+		try {
+			User user = userService.login(email, password);
+			if(user == null) {
+				return;
+			}
+			UserRole role = userService.getRole(user);
+			if(role == UserRole.ADMIN) {
+				AdminMenu adminMenu = new AdminMenu(user);
+				adminMenu.start();
+			}else if(role == UserRole.ATTENDEE) {
+				UserMenu userMenu = new UserMenu(user);
+				userMenu.start();
+			}else if(role == UserRole.ORGANIZER) {
+				OrganizerMenu organizerMenu = new OrganizerMenu(user);
+				organizerMenu.start();
+			}
+		} catch (AuthorizationException e) {
+			System.out.println(e);
+		} catch (AuthenticationException e) {
+			System.out.println(e);
 		}
 		
 	}

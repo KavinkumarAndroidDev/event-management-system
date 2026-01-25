@@ -43,39 +43,8 @@ public class UserServiceImpl implements UserService {
     
     //login functionality
     @Override
-    public User login() throws AuthorizationException, AuthenticationException {
+    public User login(String emailId, String password) throws AuthorizationException, AuthenticationException {
 
-        String emailId =
-            InputValidationUtil.readString(
-                ScannerUtil.getScanner(),
-                "Enter the email address: "
-            );
-
-        while (!emailId.matches(
-                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
-
-            emailId =
-                InputValidationUtil.readString(
-                    ScannerUtil.getScanner(),
-                    "Enter the valid email address: "
-                );
-        }
-
-        String password =
-            InputValidationUtil.readString(
-                ScannerUtil.getScanner(),
-                "Enter the password: "
-            );
-
-        while (!password.matches(
-                "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$")) {
-
-            password =
-                InputValidationUtil.readString(
-                    ScannerUtil.getScanner(),
-                    "Enter the password in the valid format: "
-                );
-        }
         try {
 	        User user = userDao.findByEmail(emailId.toLowerCase());
 	
@@ -92,21 +61,6 @@ public class UserServiceImpl implements UserService {
 
             System.out.println("Logged in as: " + emailId);
 
-            UserRole role = getRole(user);
-
-            if (role == UserRole.ADMIN) {
-                AdminMenu adminMenu = new AdminMenu(user);
-                adminMenu.start();
-            } else if (role == UserRole.ATTENDEE) {
-                UserMenu userMenu = new UserMenu(user);
-                userMenu.start();
-            } else if (role == UserRole.ORGANIZER) {
-                OrganizerMenu organizerMenu = new OrganizerMenu(user);
-                organizerMenu.start();
-            } else {
-                logger.warning("Unexpected role");
-            }
-
             return user;
 
         } catch (Exception e) {
@@ -117,91 +71,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createAccount(int i) {
+    public void createAccount(String fullName, String email, String phone, String password, 
+    		String gender, UserRole  role) {
 
-        String fullName =
-            InputValidationUtil.readNonEmptyString(
-                ScannerUtil.getScanner(),
-                "Enter Full Name: "
-            );
-
-        String email =
-            InputValidationUtil.readNonEmptyString(
-                ScannerUtil.getScanner(),
-                "Enter Email Address: "
-            );
-
-        while (!email.matches(
-                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
-
-            email =
-                InputValidationUtil.readNonEmptyString(
-                    ScannerUtil.getScanner(),
-                    "Enter valid Email Address: "
-                );
-        }
-        
-        String phone =
-            InputValidationUtil.readString(
-                ScannerUtil.getScanner(),
-                "Enter Phone Number: "
-            );
-        
-        if (phone.trim().isEmpty()) {
-            phone = null;
-        }else {
-        	phone = phone.replaceAll("\\D", ""); 
-            while (phone.length() != 10) {
-            	phone =InputValidationUtil.readString(ScannerUtil.getScanner(),"Enter valid phone Number: ");
-            }
-        }
-        
-        String passwordPrompt =
-            "Enter Password (Min 8 chars, 1 Digit, 1 Upper, 1 Lower, 1 Special [!@#$%^&*]): ";
-
-        String password =
-            InputValidationUtil.readNonEmptyString(
-                ScannerUtil.getScanner(),
-                passwordPrompt
-            );
-
-        while (!password.matches(
-                "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$")) {
-
-            password =
-                InputValidationUtil.readNonEmptyString(
-                    ScannerUtil.getScanner(),
-                    "Weak password! " + passwordPrompt
-                );
-        }
-
-        int genderChoice;
-        do {
-            genderChoice =
-                InputValidationUtil.readInt(
-                    ScannerUtil.getScanner(),
-                    "Enter your gender:\n1. Male\n2. Female\n3. Prefer not to say\n"
-                );
-        } while (genderChoice < 1 || genderChoice > 3);
-
-        String gender =
-            (genderChoice == 1)
-                ? "Male"
-                : (genderChoice == 2)
-                    ? "Female"
-                    : "Opt-out"; 
         try {
         List<Role> roles = roleDao.getRoles();
-        roles.sort(
-        	    (r1, r2) -> r1.getRoleName().compareToIgnoreCase(r2.getRoleName())
-        	);
-        String targetRoleName =
-            (i == 1) ? "ATTENDEE" : "ORGANIZER";
-
         Role selectedRole =
             roles.stream()
                 .filter(r ->
-                    r.getRoleName().equalsIgnoreCase(targetRoleName))
+                    r.getRoleName().equalsIgnoreCase(role.toString()))
                 .findFirst()
                 .orElse(null);
 
@@ -222,15 +100,9 @@ public class UserServiceImpl implements UserService {
                     gender
                 );
 
-                System.out.println(
-                    "Account created successfully as "
-                    + selectedRole.getRoleName()
-                    + " for: "
-                    + fullName
-                );
         } else {
             System.err.println(
-                "Error: The role '" + targetRoleName + "' was not found in the database."
+                "Error: The role '" + selectedRole.getRoleName() + "' was not found in the database."
             );
         }
         }catch(DataAccessException e) {
@@ -250,94 +122,15 @@ public class UserServiceImpl implements UserService {
 		return null;
     }
 
-    @Override
-    public void printAllAvailableEvents() {
-        eventService.printAllAvailableEvents();
-    }
+	@Override
+	public boolean checkUserExists(String email) {
+		try {
+			return userDao.checkUserExists(email);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
 
-    @Override
-    public void viewTicketOptions() {
-        eventService.viewTicketOptions();
-    }
 
-    @Override
-    public void viewEventDetails() {
-        eventService.viewEventDetails();
-    }
-
-    @Override
-    public void registerForEvent(int userId) {
-        eventService.registerForEvent(userId);
-    }
-
-    @Override
-    public void viewUpcomingEvents(int userId) {
-        eventService.viewUpcomingEvents(userId);
-    }
-
-    @Override
-    public void viewPastEvents(int userId) {
-        eventService.viewPastEvents(userId);
-    }
-
-    @Override
-    public void viewBookingDetails(int userId) {
-        eventService.viewBookingDetails(userId);
-    }
-
-    @Override
-    public void submitRating(int userId) {
-        eventService.submitRating(userId);
-    }
-
-    @Override
-    public void submitReview(int userId) {
-        eventService.submitRating(userId);
-    }
-
-    @Override
-    public void searchEvents() {
-        while (true) {
-            System.out.println(
-                "\nEnter your choice:\n"
-              + "1. Search by category\r\n"
-              + "2. Search by date\r\n"
-              + "3. Search by date range\n"
-              + "4. Search by city\r\n"
-              + "5. Filter by price\r\n"
-              + "6. Filter by availability\r\n"
-              + "7. Exit to user menu\n"
-            );
-
-            int filterChoice =
-                InputValidationUtil.readInt(
-                    ScannerUtil.getScanner(), ""
-                );
-
-            switch (filterChoice) {
-                case 1 :
-                	eventService.searchBycategory();
-                	break;
-                case 2 :
-                	eventService.searchByDate();
-                	break;
-                case 3 :
-                	eventService.searchByDateRange();
-                	break;
-                case 4 :
-                	eventService.searchByCity();
-                	break;
-                case 5 :
-                	eventService.filterByPrice();
-                	break;
-                case 6 :
-                	eventService.printAllAvailableEvents();
-                	break;
-                case 7 :
-                	return;
-                default :
-                	System.out.println("Enter the valid option");
-            }
-        }
-    }
 }

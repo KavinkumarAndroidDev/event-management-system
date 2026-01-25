@@ -5,16 +5,20 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.ems.dao.RegistrationDao;
 import com.ems.exception.DataAccessException;
 import com.ems.model.EventRegistrationReport;
 import com.ems.util.DBConnectionUtil;
 
+/**
+ * Registration DAO implementation - Database operations ONLY
+ */
 public class RegistrationDaoImpl implements RegistrationDao {
 	
-	// gets registration details for a specific event
 	@Override
 	public List<EventRegistrationReport> getEventWiseRegistrations(int eventId)
         throws DataAccessException {
@@ -60,70 +64,193 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	    return reports;
 	}
 
-	// creates a new registration entry
 	@Override
 	public int createRegistration(int userId, int eventId) throws DataAccessException {
-		String sql = "insert into registrations (user_id, event_id, registration_date, status) values (?,?,utc_timestamp(),'CONFIRMED')";
+		String sql = "insert into registrations (user_id, event_id, registration_date, status) " +
+		             "values (?, ?, utc_timestamp(), 'CONFIRMED')";
+		
 		try (Connection con = DBConnectionUtil.getConnection();
-		         PreparedStatement ps = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+		     PreparedStatement ps = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+			
 			ps.setInt(1, userId);
 			ps.setInt(2, eventId);
 			int affectedRows = ps.executeUpdate();
-			if(affectedRows > 0) {
-				try(ResultSet rs = ps.getGeneratedKeys()){
-					if(rs.next()) {
+			
+			if (affectedRows > 0) {
+				try (ResultSet rs = ps.getGeneratedKeys()) {
+					if (rs.next()) {
 						return rs.getInt(1);
 					}
 				}
 			}
-		}catch (SQLException e) {
+			
+		} catch (SQLException e) {
 			throw new DataAccessException("Error while creating registration: " + e.getMessage());
 		}
+		
 		return 0;
 	}
 
-	// adds ticket details for a registration
 	@Override
-	public void addRegistrationTickets(int regId, int ticketId, int quantity) throws DataAccessException {
-		String sql = "insert into registration_tickets (registration_id, ticket_id, quantity) values (?,?,?)";
+	public void addRegistrationTickets(int regId, int ticketId, int quantity) 
+			throws DataAccessException {
+		String sql = "insert into registration_tickets (registration_id, ticket_id, quantity) " +
+		             "values (?, ?, ?)";
+		
 		try (Connection con = DBConnectionUtil.getConnection();
-		         PreparedStatement ps = con.prepareStatement(sql)) {
+		     PreparedStatement ps = con.prepareStatement(sql)) {
+			
 			ps.setInt(1, regId);
 			ps.setInt(2, ticketId);
 			ps.setInt(3, quantity);
 			ps.executeUpdate();
+			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while updating registration tickets: " + e.getMessage());
+			throw new DataAccessException("Error while adding registration tickets: " + e.getMessage());
 		}
 	}
 
-	// removes registration entry
 	@Override
 	public void removeRegistrations(int regId) throws DataAccessException {
 		String sql = "delete from registrations where registration_id = ?";
+		
 		try (Connection con = DBConnectionUtil.getConnection();
-		         PreparedStatement ps = con.prepareStatement(sql)) {
+		     PreparedStatement ps = con.prepareStatement(sql)) {
+			
 			ps.setInt(1, regId);
 			ps.executeUpdate();
 
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching categories: " + e.getMessage());
+			throw new DataAccessException("Error while removing registration: " + e.getMessage());
 		}
 	}
 
-	// removes tickets linked to a registration
 	@Override
 	public void removeRegistrationTickets(int regId, int ticketId) throws DataAccessException {
-		String sql = "delete from registrations_tickets where registration_id = ? and ticket_id = ?";
+		String sql = "delete from registration_tickets where registration_id = ? and ticket_id = ?";
+		
 		try (Connection con = DBConnectionUtil.getConnection();
-		         PreparedStatement ps = con.prepareStatement(sql)) {
+		     PreparedStatement ps = con.prepareStatement(sql)) {
+			
 			ps.setInt(1, regId);
 			ps.setInt(2, ticketId);
 			ps.executeUpdate();
 
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while updating registration tickets: " + e.getMessage());
+			throw new DataAccessException("Error while removing registration tickets: " + e.getMessage());
 		}
-		
 	}
+	
+	@Override
+	public List<Integer> getRegisteredUserIdsByEvent(int eventId) throws DataAccessException {
+	    String sql = "select distinct user_id from registrations where event_id=?";
+	    List<Integer> userIds = new ArrayList<>();
+
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setInt(1, eventId);
+	        ResultSet rs = ps.executeQuery();
+
+	        while (rs.next()) {
+	            userIds.add(rs.getInt("user_id"));
+	        }
+
+	        return userIds;
+
+	    } catch (Exception e) {
+	        throw new DataAccessException("Unable to fetch registered users", e);
+	    }
+	}
+
+	
+	
+	//organizer functions:
+
+    public int getEventRegistrationCount(int eventId) {
+        String sql = "select count(*) from registrations where event_id=?";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, eventId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Map<String, Object>> getRegisteredUsers(int eventId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "select u.user_id,u.full_name,u.email from users u join registrations r on u.user_id=r.user_id where r.event_id=?";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, eventId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("userId", rs.getInt("user_id"));
+                m.put("name", rs.getString("full_name"));
+                m.put("email", rs.getString("email"));
+                list.add(m);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
+    public List<Map<String, Object>> getOrganizerWiseRegistrations(int organizerId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "select e.title,count(r.registration_id) total from events e left join registrations r on e.event_id=r.event_id where e.organizer_id=? group by e.event_id";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, organizerId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("event", rs.getString("title"));
+                m.put("count", rs.getInt("total"));
+                list.add(m);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
+    public List<Map<String, Object>> getTicketSales(int organizerId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "select t.ticket_type,sum(rt.quantity) sold from tickets t join registration_tickets rt on t.ticket_id=rt.ticket_id join events e on e.event_id=t.event_id where e.organizer_id=? group by t.ticket_id";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, organizerId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("ticketType", rs.getString("ticket_type"));
+                m.put("sold", rs.getInt("sold"));
+                list.add(m);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
+    public double getRevenueSummary(int organizerId) {
+        String sql = "select sum(p.amount) from payments p join registrations r on p.registration_id=r.registration_id join events e on e.event_id=r.event_id where e.organizer_id=?";
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, organizerId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getDouble(1) : 0;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

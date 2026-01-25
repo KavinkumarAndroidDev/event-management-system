@@ -15,7 +15,7 @@ public interface NotificationDao {
 	
 	 void markAllAsRead(int userId) throws DataAccessException;
 	
-	 void sendNotification(int userId, String message, String notificationType) throws DataAccessException;
+	 boolean sendNotification(int userId, String message, String notificationType) throws DataAccessException;
 	
 	 void sendSystemWideNotification(String message, String notificationType) throws DataAccessException;
 	

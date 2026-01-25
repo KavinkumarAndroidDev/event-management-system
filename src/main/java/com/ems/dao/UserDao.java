@@ -14,11 +14,13 @@ public interface UserDao {
 	
 	User findByEmail(String email)  throws DataAccessException;
 	
-	void updateUserStatus(int userId, String status)  throws DataAccessException;
+	boolean updateUserStatus(int userId, String status)  throws DataAccessException;
 	
 	List<User> findAllUsers(String userType)  throws DataAccessException;
 	
 	List<User> findAllUsers()  throws DataAccessException;
 	
 	UserRole getRole(User user)  throws DataAccessException;
+
+	boolean checkUserExists(String email) throws DataAccessException;
 }

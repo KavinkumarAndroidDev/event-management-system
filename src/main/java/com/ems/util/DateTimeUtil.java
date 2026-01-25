@@ -59,4 +59,40 @@ public final class DateTimeUtil {
         }
         return localDate;
     }
+    
+    public static LocalDateTime getLocalDateTime(String message) {
+        List<String> formats = Arrays.asList(
+            "yyyy-MM-dd HH:mm",
+            "dd-MM-yyyy HH:mm",
+            "dd/MM/yyyy HH:mm",
+            "yyyy-MM-dd HH:mm:ss",
+            "dd-MM-yyyy HH:mm:ss",
+            "dd/MM/yyyy HH:mm:ss"
+        );
+
+        LocalDateTime localDateTime = null;
+
+        while (localDateTime == null) {
+            String dateTimeString = InputValidationUtil.readString(
+                ScannerUtil.getScanner(),
+                message
+            );
+
+            for (String format : formats) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+                    localDateTime = LocalDateTime.parse(dateTimeString, formatter);
+                    break;
+                } catch (DateTimeParseException ignored) {
+                }
+            }
+
+            if (localDateTime == null) {
+                System.out.println("Invalid date time. Please use one of: " + formats);
+            }
+        }
+
+        return localDateTime;
+    }
+
 }

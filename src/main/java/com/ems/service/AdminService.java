@@ -1,30 +1,42 @@
 package com.ems.service;
 
+import java.util.List;
+
+import com.ems.enums.NotificationType;
+import com.ems.enums.UserRole;
+import com.ems.model.Category;
+import com.ems.model.User;
+
 public interface AdminService {
 
-    void getUsersList(String userType);
-    
-    void getAllUsers();
+    // users
+    List<User> getUsersList(String userType);
+    List<User> getAllUsers();
+    void changeStatus(String status, int userId);
 
-    void changeStatus(String status);
-
+    // notifications
     void sendSystemWideNotification(String message, String notificationType);
+    void sendNotificationByRole(String message, NotificationType selectedType, UserRole role);
+    void sendNotificationToUser(String message, NotificationType selectedType, int userId);
 
-    void approveEvents(int userId);
-
-    void cancelEvents();
-
-    void getEventWiseRegistrations();
-
-    void getRevenueReport();
-
-    void getOrganizerWisePerformance();
-
+    // events
+    void approveEvents(int userId, int eventId);
+    void cancelEvents(int eventId);
     void markCompletedEvents();
 
-	void sendNotificationByRole();
+    // reports
+    void getEventWiseRegistrations(int eventId);
+    void getRevenueReport();
+    void getOrganizerWisePerformance();
+    
+    //category related 
+    List<Category> getAllCategories();
 
-	void sendNotificationToUser();
+    void addCategory(String name);
 
-	void printAllEvents();
+    void updateCategory(int categoryId, String name);
+
+    void deleteCategory(int categoryId);
+
+    
 }
