@@ -205,54 +205,103 @@ public class OrganizerMenu extends BaseMenu {
 	}
 
 	// Logic implemented - venue change is not permitted
-	private void updateEventDetails() {
-		List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
-		if (events.isEmpty()) {
-			System.out.println("The organizer has'nt hosted any events");
-			return;
-		}
-		List<Event> sortedEvents = events.stream()
-				.filter(e -> (e.getStatus() == EventStatus.PUBLISHED.toString()
-						|| e.getStatus() == EventStatus.DRAFT.toString())
-						&& e.getStartDateTime().isAfter(LocalDateTime.now()))
-				.sorted(Comparator.comparing(e -> e.getStartDateTime())).collect(Collectors.toList());
-		if(sortedEvents.isEmpty()) {
-			System.out.println("The organizer has'nt have any upcoming events");
-			return;
-		}
-		MenuHelper.printEventSummaries(sortedEvents);
-		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
-				"Select an event (1-" + sortedEvents.size() + "): ");
-		while (choice < 1 || choice > sortedEvents.size()) {
-			choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
-		}
+private void updateEventDetails() {
 
-		Event selectedEvent = sortedEvents.get(choice - 1);
-		int eventId = selectedEvent.getEventId();
+    List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+    if (events.isEmpty()) {
+        System.out.println("The organizer hasn't hosted any events");
+        return;
+    }
 
-		String title = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the new title: ");
-		String description = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the new description: ");
-		List<Category> categories = eventService.getAllCategory();
-		if (categories.isEmpty()) {
-			System.out.println("There are no available category!");
-			return;
-		}
-		int defaultIndex = 1;
-		for (Category category : categories) {
-			System.out.println(defaultIndex + ". " + category.getName());
-			defaultIndex++;
-		}
-		int categoryChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Select category number: ");
-		while (categoryChoice < 1 || categoryChoice > categories.size()) {
-			categoryChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
-		}
-		Category selectedCategory = categories.get(categoryChoice - 1);
-		int categoryId = selectedCategory.getCategoryId();
+    List<Event> sortedEvents = events.stream()
+        .filter(e ->
+            (EventStatus.PUBLISHED.toString().equals(e.getStatus())
+             || EventStatus.DRAFT.toString().equals(e.getStatus()))
+            && e.getStartDateTime().isAfter(LocalDateTime.now())
+        )
+        .sorted(Comparator.comparing(Event::getStartDateTime))
+        .toList();
 
-		boolean result = organizerService.updateEventDetails(eventId, title, description, categoryId,
-				selectedEvent.getVenueId());
-		System.out.println(result ? "Updated successfully" : "Update failed");
-	}
+    if (sortedEvents.isEmpty()) {
+        System.out.println("No upcoming editable events available");
+        return;
+    }
+
+    MenuHelper.printEventSummaries(sortedEvents);
+
+    int choice = InputValidationUtil.readInt(
+        ScannerUtil.getScanner(),
+        "Select an event (1-" + sortedEvents.size() + "): "
+    );
+    while (choice < 1 || choice > sortedEvents.size()) {
+        choice = InputValidationUtil.readInt(
+            ScannerUtil.getScanner(),
+            "Enter a valid choice: "
+        );
+    }
+
+    Event selectedEvent = sortedEvents.get(choice - 1);
+
+    System.out.println("Press Enter to keep the current value");
+
+    String title = InputValidationUtil.readString(
+        ScannerUtil.getScanner(),
+        "Title (" + selectedEvent.getTitle() + "): "
+    );
+    if (title.isBlank()) {
+        title = selectedEvent.getTitle();
+    }
+
+    String description = InputValidationUtil.readString(
+        ScannerUtil.getScanner(),
+        "Description (" + selectedEvent.getDescription() + "): "
+    );
+    if (description.isBlank()) {
+        description = selectedEvent.getDescription();
+    }
+
+    List<Category> categories = eventService.getAllCategory();
+    if (categories.isEmpty()) {
+        System.out.println("No categories available");
+        return;
+    }
+
+    System.out.println("Categories (Enter 0 to keep current)");
+    int index = 1;
+    for (Category category : categories) {
+        System.out.println(index + ". " + category.getName());
+        index++;
+    }
+
+    int categoryChoice = InputValidationUtil.readInt(
+        ScannerUtil.getScanner(),
+        "Category (" + selectedEvent.getCategoryId() + "): "
+    );
+
+    int categoryId;
+    if (categoryChoice == 0) {
+        categoryId = selectedEvent.getCategoryId();
+    } else {
+        while (categoryChoice < 1 || categoryChoice > categories.size()) {
+            categoryChoice = InputValidationUtil.readInt(
+                ScannerUtil.getScanner(),
+                "Enter a valid choice: "
+            );
+        }
+        categoryId = categories.get(categoryChoice - 1).getCategoryId();
+    }
+
+    boolean result = organizerService.updateEventDetails(
+        selectedEvent.getEventId(),
+        title,
+        description,
+        categoryId,
+        selectedEvent.getVenueId()
+    );
+
+    System.out.println(result ? "Updated successfully" : "Update failed");
+}
+
 
 
 	// Logic implemented
@@ -263,8 +312,8 @@ public class OrganizerMenu extends BaseMenu {
 			return;
 		}
 		List<Event> sortedEvents = events.stream()
-				.filter(e -> (e.getStatus() == EventStatus.PUBLISHED.toString()
-						|| e.getStatus() == EventStatus.DRAFT.toString())
+				.filter(e -> (EventStatus.PUBLISHED.toString().equals(e.getStatus())
+						|| EventStatus.DRAFT.toString().equals(e.getStatus()) )
 						&& e.getStartDateTime().isAfter(LocalDateTime.now()))
 				.sorted(Comparator.comparing(e -> e.getStartDateTime())).collect(Collectors.toList());
 		if(sortedEvents.isEmpty()) {

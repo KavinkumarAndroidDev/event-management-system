@@ -9,8 +9,6 @@ import com.ems.enums.NotificationType;
 import com.ems.enums.PaymentMethod;
 import com.ems.model.Ticket;
 import com.ems.service.PaymentService;
-import com.ems.util.InputValidationUtil;
-import com.ems.util.ScannerUtil;
 
 public class PaymentServiceImpl implements PaymentService {
 

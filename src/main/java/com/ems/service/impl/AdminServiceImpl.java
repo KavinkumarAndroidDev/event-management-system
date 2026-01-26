@@ -14,7 +14,6 @@ import com.ems.model.EventRegistrationReport;
 import com.ems.model.User;
 import com.ems.model.Venue;
 import com.ems.service.AdminService;
-import com.ems.service.EventService;
 import com.ems.service.NotificationService;
 
 public class AdminServiceImpl implements AdminService {
@@ -24,7 +23,6 @@ public class AdminServiceImpl implements AdminService {
     private final NotificationDao notificationDao;
     private final RegistrationDao registrationDao;
     private final NotificationService notificationService;
-    private final EventService eventService;
     private final CategoryDao categoryDao;
     private final VenueDao venueDao;
 
@@ -36,8 +34,7 @@ public class AdminServiceImpl implements AdminService {
             RegistrationDao registrationDao,
             CategoryDao categoryDao,
             VenueDao venueDao,
-            NotificationService notificationService,
-            EventService eventService
+            NotificationService notificationService
     ) {
         this.userDao = userDao;
         this.eventDao = eventDao;
@@ -46,7 +43,6 @@ public class AdminServiceImpl implements AdminService {
         this.categoryDao = categoryDao;
         this.venueDao = venueDao;
         this.notificationService = notificationService;
-        this.eventService = eventService;
     }
 
     // shows users list based on role
@@ -67,12 +63,13 @@ public class AdminServiceImpl implements AdminService {
 
     // updates user account status
     @Override
-    public void changeStatus(String status, int userId) {
+    public boolean changeStatus(String status, int userId) {
         try {
-			userDao.updateUserStatus(userId, status);
+			return userDao.updateUserStatus(userId, status);
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
+        return false;
     }
 
     // sends system wide notification

@@ -113,7 +113,6 @@ public class UserDaoImpl implements UserDao {
 	        ps.setInt(2, userId);
 	        int rowsUpdated = ps.executeUpdate();
 
-	        // ✅ REMOVED print statements - return boolean instead
 	        rs.close();
 	        return rowsUpdated > 0;
 	        

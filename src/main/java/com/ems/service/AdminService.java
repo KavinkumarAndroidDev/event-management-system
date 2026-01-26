@@ -13,7 +13,7 @@ public interface AdminService {
     // users
     List<User> getUsersList(String userType);
     List<User> getAllUsers();
-    void changeStatus(String status, int userId);
+    boolean changeStatus(String status, int userId);
 
     // notifications
     void sendSystemWideNotification(String message, String notificationType);

@@ -89,6 +89,17 @@ public class EventServiceImpl implements EventService {
 	    }
 	    return filteredEvents;
 	}
+    
+    @Override
+    public Event getEventById(int eventId) {
+    	Event event = new Event();
+    	try {
+    		event = eventDao.getEventById(eventId);
+    	} catch (DataAccessException e) {
+	        System.err.println("Database error: " + e.getMessage());
+	    }
+    	return event;
+    }
 
     // searches events based on city
     @Override

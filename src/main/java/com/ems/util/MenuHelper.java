@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.ems.model.Category;
 import com.ems.model.Event;
+import com.ems.model.Offer;
 import com.ems.model.Ticket;
 import com.ems.model.User;
 import com.ems.model.Venue;
@@ -183,6 +184,20 @@ public class MenuHelper {
 		}
 		
 	}
+	
+	public static void displayOffers(List<Offer> offers) {
+
+	    int index = 1;
+	    for (Offer o : offers) {
+	        System.out.println(
+	            index + ". " +
+	            o.getCode() + " | " +
+	            "Discount: " + o.getDiscountPercentage() + "% | "
+	        );
+	        index++;
+	    }
+	}
+
 
     
 }

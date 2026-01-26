@@ -59,4 +59,6 @@ public interface EventService {
 	List<Event> listEventsYetToApprove();
 	
 	List<Event> listAvailableAndDraftEvents();
+
+	Event getEventById(int eventId);
 }

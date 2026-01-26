@@ -58,7 +58,7 @@ public class MainMenu {
 	                ScannerUtil.getScanner(),
 	                "Enter Full Name: "
 	            );
-		String email = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the email address: ");
+		String email = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the email address: ");
 		while (!email.matches(
                 "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
             email =
@@ -124,7 +124,7 @@ public class MainMenu {
 		
 	}
 	private void login() {
-		String email = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the email address: ");
+		String email = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the email address: ");
 		while (!email.matches(
                 "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
             email =

@@ -151,10 +151,17 @@ public class UserMenu extends BaseMenu {
         int ticketId = selectedTicket.getTicketId();
 
         int quantity = InputValidationUtil.readInt(ScannerUtil.getScanner(), "How many tickets? ");
+        while (quantity <= 0 || quantity > selectedTicket.getAvailableQuantity()) {
+            quantity = InputValidationUtil.readInt(
+                ScannerUtil.getScanner(),
+                "Enter quantity (1-" + selectedTicket.getAvailableQuantity() + "): "
+            );
+        }
+
         
         
-        
-        System.out.println("available payment method:");
+        System.out.println("\nAvailable payment methods:");
+
         PaymentMethod[] methods = PaymentMethod.values();
 
         for (int i = 0; i < methods.length; i++) {
@@ -481,7 +488,7 @@ public class UserMenu extends BaseMenu {
 	}
 
 	private void printAllAvailableEvents() {
-		List<Event> filteredEvents = eventService.getAllEvents();
+		List<Event> filteredEvents = eventService.listAvailableEvents();
 		if(filteredEvents.isEmpty()) {
 			System.out.println("There is no available events!");
 			return;
@@ -497,7 +504,7 @@ public class UserMenu extends BaseMenu {
 			System.out.println("There is no available events in the date range!");
 			return;
 		}
-		MenuHelper.printEventDetails(filteredEvents);
+		MenuHelper.printEventSummaries(filteredEvents);
 	}
 
 	private void searchByCity() {

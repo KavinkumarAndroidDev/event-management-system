@@ -4,6 +4,7 @@ import com.ems.dao.impl.*;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
+import com.ems.service.OfferService;
 import com.ems.service.PaymentService;
 import com.ems.service.UserService;
 import com.ems.service.impl.*;
@@ -15,6 +16,7 @@ public final class ApplicationUtil {
     private static final PaymentService paymentService;
     private static final UserService userService;
     private static final AdminService adminService;
+    private static final OfferService offerService;
 
     static {
         NotificationDaoImpl notificationDao = new NotificationDaoImpl();
@@ -27,6 +29,7 @@ public final class ApplicationUtil {
         UserDaoImpl userDao = new UserDaoImpl();
         RoleDaoImpl roleDao = new RoleDaoImpl();
         FeedbackDaoImpl feedbackDao = new FeedbackDaoImpl();
+        OfferDaoImpl offerDao = new OfferDaoImpl();
 
         notificationService =
             new NotificationServiceImpl(notificationDao, registrationDao);
@@ -53,8 +56,7 @@ public final class ApplicationUtil {
         userService =
             new UserServiceImpl(
                 userDao,
-                roleDao,
-                eventService
+                roleDao
             );
 
         adminService =
@@ -65,9 +67,11 @@ public final class ApplicationUtil {
                 registrationDao,
                 categoryDao,
                 venueDao,
-                notificationService,
-                eventService
+                notificationService
             );
+        offerService = 
+        		new OfferServiceImpl(
+        				offerDao);
     }
 
     public static AdminService adminService() {
@@ -84,5 +88,8 @@ public final class ApplicationUtil {
     
     public static NotificationService notificationService() {
     	return notificationService;
+    }
+    public static OfferService offerService() {
+    	return offerService;
     }
 }
