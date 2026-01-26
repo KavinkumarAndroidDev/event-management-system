@@ -4,6 +4,6 @@ import com.ems.exception.DataAccessException;
 
 public interface PaymentDao {
 
-	boolean processPayment(int regId, double totalAmount, String string) throws DataAccessException;
+	boolean processPayment(int regId, double totalAmount, String string, int offerId) throws DataAccessException;
 
 }

@@ -12,12 +12,16 @@ import com.ems.exception.DataAccessException;
 import com.ems.model.Category;
 import com.ems.util.DBConnectionUtil;
 
-
-/**
- * Category DAO implementation - Database operations ONLY
+/*
+ * Handles database operations related to categories.
+ *
+ * Responsibilities:
+ * - Retrieve category data from the database
+ * - Insert and update category records
+ * - Manage category activation state
  */
 public class CategoryDaoImpl implements CategoryDao {
-    
+
     @Override
     public Category getCategory(int categoryId) throws DataAccessException {
         String sql = "select * from categories where category_id=?";

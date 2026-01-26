@@ -12,7 +12,16 @@ import com.ems.util.InputValidationUtil;
 import com.ems.util.MenuHelper;
 import com.ems.util.ScannerUtil;
 
+/*
+ * Handles guest user console interactions.
+ *
+ * Responsibilities:
+ * - Display guest accessible menus
+ * - Allow browsing events and ticket information
+ * - Guide guests through account registration
+ */
 public class GuestMenu extends BaseMenu {
+
 	private final EventService eventService;
 	private final UserService userService;
 	public GuestMenu() {

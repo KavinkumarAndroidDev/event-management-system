@@ -10,37 +10,47 @@ import com.ems.model.Venue;
 
 public interface AdminService {
 
-    // users
-    List<User> getUsersList(String userType);
-    List<User> getAllUsers();
-    boolean changeStatus(String status, int userId);
+	// user management
+	List<User> getUsersList(String userType);
 
-    // notifications
-    void sendSystemWideNotification(String message, String notificationType);
-    void sendNotificationByRole(String message, NotificationType selectedType, UserRole role);
-    void sendNotificationToUser(String message, NotificationType selectedType, int userId);
+	List<User> getAllUsers();
 
-    // events
-    void approveEvents(int userId, int eventId);
-    void cancelEvents(int eventId);
-    void markCompletedEvents();
+	boolean changeStatus(String status, int userId);
 
-    // reports
-    void getEventWiseRegistrations(int eventId);
-    void getRevenueReport();
-    void getOrganizerWisePerformance();
-    
-    //category related 
-    List<Category> getAllCategories();
+	// notification management
+	void sendSystemWideNotification(String message, String notificationType);
 
-    void addCategory(String name);
+	void sendNotificationByRole(String message, NotificationType selectedType, UserRole role);
 
-    void updateCategory(int categoryId, String name);
+	void sendNotificationToUser(String message, NotificationType selectedType, int userId);
 
-    void deleteCategory(int categoryId);
-    
-    //Venue
+	// event management
+	void approveEvents(int userId, int eventId);
+
+	void cancelEvents(int eventId);
+
+	void markCompletedEvents();
+
+	// reports & analytics 
+	void getEventWiseRegistrations(int eventId);
+
+	void getRevenueReport();
+
+	void getOrganizerWisePerformance();
+
+	// category management
+	List<Category> getAllCategories();
+
+	void addCategory(String name);
+
+	void updateCategory(int categoryId, String name);
+
+	void deleteCategory(int categoryId);
+
+	// Venue management
 	void addVenue(Venue venue);
+
 	void updateVenue(Venue selectedVenue);
+
 	void removeVenue(int venueId);
 }

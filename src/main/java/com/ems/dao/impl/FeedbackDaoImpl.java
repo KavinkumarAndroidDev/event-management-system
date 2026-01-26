@@ -9,10 +9,15 @@ import com.ems.dao.FeedbackDao;
 import com.ems.exception.DataAccessException;
 import com.ems.util.DBConnectionUtil;
 
-/**
- * Feedback DAO implementation - Database operations ONLY
+/*
+ * Handles database operations related to event feedback.
+ *
+ * Responsibilities:
+ * - Verify user eligibility to submit feedback
+ * - Persist ratings and comments for completed events
  */
 public class FeedbackDaoImpl implements FeedbackDao {
+
 	
 	// Returns: 1 = success, 0 = no completed booking, -1 = insert failed
 	@Override

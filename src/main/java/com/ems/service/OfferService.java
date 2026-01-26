@@ -8,20 +8,21 @@ import com.ems.model.Offer;
 
 public interface OfferService {
 
+    // offers
     List<Offer> getAllOffers();
 
     int createOffer(
-    	    int eventId,
-    	    String code,
-    	    Integer discount,
-    	    LocalDateTime from,
-    	    LocalDateTime to
-    	);
+        int eventId,
+        String code,
+        Integer discount,
+        LocalDateTime from,
+        LocalDateTime to
+    );
 
     void assignOfferToEvent(int offerId, int eventId);
 
     void toggleOfferStatus(int offerId, LocalDateTime validDate);
 
+    // reports
     Map<String, Integer> getOfferUsageReport();
 }
-

@@ -3,6 +3,7 @@ package com.ems.dao.impl;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -17,7 +18,17 @@ import com.ems.exception.DataAccessException;
 import com.ems.model.Offer;
 import com.ems.util.DBConnectionUtil;
 
+/*
+ * Handles database operations related to offers.
+ *
+ * Responsibilities:
+ * - Retrieve available offers
+ * - Persist offer creation and updates
+ * - Associate offers with events
+ * - Generate offer usage reports
+ */
 public class OfferDaoImpl implements OfferDao {
+
 
     @Override
     public List<Offer> getAllOffers() throws DataAccessException {
@@ -55,19 +66,19 @@ public class OfferDaoImpl implements OfferDao {
     @Override
     public int createOffer(Offer offer) throws DataAccessException {
         String sql =
-            "insert into offers (code, discount_percentage, valid_from, valid_to) " +
-            "values (?, ?, ?, ?)";
+            "insert into offers (code, discount_percentage, valid_from, valid_to, event_id) " +
+            "values (?, ?, ?, ?, ?)";
 
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setString(1, offer.getCode());
+            ps.setString(1, offer.getCode().toUpperCase());
             ps.setObject(2, offer.getDiscountPercentage());
             ps.setTimestamp(3,
                 offer.getValidFrom() != null ? Timestamp.valueOf(offer.getValidFrom()) : null);
             ps.setTimestamp(4,
                 offer.getValidTo() != null ? Timestamp.valueOf(offer.getValidTo()) : null);
-
+            ps.setInt(5, offer.getEventId());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -135,4 +146,78 @@ public class OfferDaoImpl implements OfferDao {
 
         return report;
     }
+
+	@Override
+	public Offer getValidOfferForEvent(int eventId, String code) throws DataAccessException {
+	
+	    String sql =
+	        "SELECT * FROM offers " +
+	        "WHERE event_id = ? " +
+	        "AND UPPER(code) = ? " +
+	        "AND (valid_from IS NULL OR valid_from <= NOW()) " +
+	        "AND (valid_to IS NULL OR valid_to >= NOW())";
+	
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	
+	        ps.setInt(1, eventId);
+	        ps.setString(2, code.trim().toUpperCase());
+	
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (rs.next()) {
+	                Offer offer = new Offer();
+	                offer.setOfferId(rs.getInt("offer_id"));
+	                offer.setEventId(rs.getInt("event_id"));
+	                offer.setCode(rs.getString("code"));
+	                offer.setDiscountPercentage(rs.getInt("discount_percentage"));
+	
+	                if (rs.getTimestamp("valid_from") != null) {
+	                    offer.setValidFrom(
+	                        rs.getTimestamp("valid_from").toLocalDateTime()
+	                    );
+	                }
+	
+	                if (rs.getTimestamp("valid_to") != null) {
+	                    offer.setValidTo(
+	                        rs.getTimestamp("valid_to").toLocalDateTime()
+	                    );
+	                }
+	
+	                return offer;
+	            }
+	        }
+	
+	    } catch (SQLException e) {
+	        throw new DataAccessException("Failed to fetch offer for the event", e);
+	    }
+	
+	    return null;
+	}
+
+
+	@Override
+	public void recordOfferUsage(
+	        int offerId,
+	        int userId,
+	        int registrationId
+	) throws DataAccessException {
+
+	    String sql =
+	        "INSERT INTO offer_usage (offer_id, user_id, registration_id, used_at) " +
+	        "VALUES (?, ?, ?, NOW())";
+
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setInt(1, offerId);
+	        ps.setInt(2, userId);
+	        ps.setInt(3, registrationId);
+
+	        ps.executeUpdate();
+
+	    } catch (SQLException e) {
+	        throw new DataAccessException("Failed to record offer usage", e);
+	    }
+	}
+
 }

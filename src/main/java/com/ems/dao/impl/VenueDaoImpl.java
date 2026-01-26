@@ -18,7 +18,16 @@ import com.ems.model.Venue;
 import com.ems.util.DBConnectionUtil;
 import com.ems.util.DateTimeUtil;
 
+/*
+ * Handles database operations related to venues.
+ *
+ * Responsibilities:
+ * - Retrieve venue details and availability information
+ * - Persist venue creation and updates
+ * - Manage venue activation state
+ */
 public class VenueDaoImpl implements VenueDao {
+
 
     @Override
     public String getVenueName(int venueId) throws DataAccessException{

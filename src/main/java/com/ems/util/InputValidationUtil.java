@@ -2,9 +2,18 @@ package com.ems.util;
 
 import java.util.Scanner;
 
-// TODO: This is a utility class with only static methods.
-// It should be declared 'final' and have a private constructor to prevent instantiation.
+/*
+ * Provides reusable console input helpers with built-in validation.
+ *
+ * Responsibilities:
+ * - Safely read primitive and wrapper values from user input
+ * - Enforce basic input constraints at the UI boundary
+ * - Prevent invalid data from propagating into service and DAO layers
+ *
+ * Centralizes input handling to keep menu code clean and consistent.
+ */
 public final class InputValidationUtil {
+
 	
 	private InputValidationUtil() {
 		

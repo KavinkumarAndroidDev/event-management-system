@@ -9,8 +9,19 @@ import com.ems.service.PaymentService;
 import com.ems.service.UserService;
 import com.ems.service.impl.*;
 
+/*
+ * Centralized factory for application-wide service instances.
+ *
+ * Responsibilities:
+ * - Create and wire DAO and Service dependencies
+ * - Provide shared singleton service objects
+ * - Act as a lightweight dependency container
+ *
+ * This avoids repeated object creation and keeps
+ * service initialization consistent across menus.
+ */
 public final class ApplicationUtil {
-	//So basically application util class helps to share the service 
+
     private static final EventService eventService;
     private static final NotificationService notificationService;
     private static final PaymentService paymentService;
@@ -40,7 +51,8 @@ public final class ApplicationUtil {
                 ticketDao,
                 paymentDao,
                 notificationDao,
-                eventDao
+                eventDao,
+                offerDao
             );
 
         eventService =

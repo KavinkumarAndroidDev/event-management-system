@@ -8,8 +8,18 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import com.ems.exception.DataAccessException;
-
+/*
+ * Provides a centralized mechanism for creating database connections.
+ *
+ * Responsibilities:
+ * - Load database configuration from properties file
+ * - Create JDBC connections using configured credentials
+ * - Wrap low-level SQL and IO errors as data access exceptions
+ *
+ * Keeps connection setup isolated from DAO logic.
+ */
 public class DBConnectionUtil {
+
 
 	private DBConnectionUtil() {}
 	public static Connection getConnection() throws DataAccessException{

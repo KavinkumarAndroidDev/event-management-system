@@ -9,6 +9,7 @@ import com.ems.model.Ticket;
 
 public interface OrganizerService {
 
+    // event creation & management
     int createEvent(Event event);
 
     boolean updateEventDetails(int eventId, String title, String description, int categoryId, int venueId);
@@ -21,6 +22,8 @@ public interface OrganizerService {
 
     boolean cancelEvent(int eventId);
 
+    
+    // ticket management
     boolean createTicket(Ticket ticket);
 
     boolean updateTicketPrice(int ticketId, double price);
@@ -29,6 +32,8 @@ public interface OrganizerService {
 
     List<Ticket> viewTicketAvailability(int eventId);
 
+    
+    // registrations & reports
     int viewEventRegistrations(int eventId);
 
     List<Map<String, Object>> viewRegisteredUsers(int eventId);
@@ -39,9 +44,13 @@ public interface OrganizerService {
 
     double getRevenueSummary(int organizerId);
 
+    
+    // notifications
     void sendEventUpdate(int eventId, String message);
 
     void sendScheduleChange(int eventId, String message);
+
     
+    // organizer data
     List<Event> getOrganizerEvents(int organizerId);
 }

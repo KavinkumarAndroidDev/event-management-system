@@ -12,10 +12,14 @@ import com.ems.exception.DataAccessException;
 import com.ems.model.Role;
 import com.ems.util.DBConnectionUtil;
 
-/**
- * Role DAO implementation - Database operations ONLY
+/*
+ * Handles database operations related to roles.
+ *
+ * Responsibilities:
+ * - Retrieve active roles from the system
  */
 public class RoleDaoImpl implements RoleDao {
+
 	
 	@Override
 	public List<Role> getRoles() throws DataAccessException {

@@ -10,7 +10,19 @@ import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 
+/*
+ * Utility methods for date and time handling across the application.
+ *
+ * Responsibilities:
+ * - Convert between local time and UTC
+ * - Parse and format dates and date-time values
+ * - Provide consistent date-time input handling for console interactions
+ *
+ * Centralizes date logic to avoid duplication
+ * and inconsistent time conversions.
+ */
 public final class DateTimeUtil {
+
 	private DateTimeUtil() {
 		
 	}

@@ -15,10 +15,17 @@ import com.ems.model.Notification;
 import com.ems.util.DBConnectionUtil;
 import com.ems.util.DateTimeUtil;
 
-/**
- * Notification DAO implementation - Database operations ONLY
+/*
+ * 
+ * Handles database operations related to notifications.
+ *
+ * Responsibilities:
+ * - Persist system, role based, and user specific notifications
+ * - Retrieve notifications for users
+ * - Update notification read status
  */
 public class NotificationDaoImpl implements NotificationDao {
+
 	
 	@Override
 	public void sendSystemWideNotification(String message, String notificationType) 

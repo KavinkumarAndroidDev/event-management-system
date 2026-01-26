@@ -22,6 +22,14 @@ import com.ems.util.ScannerUtil;
 import com.ems.util.ApplicationUtil;
 import com.ems.util.DateTimeUtil;
 
+/*
+ * Handles administrator related console interactions.
+ *
+ * Responsibilities:
+ * - Display admin menus and navigation flows
+ * - Collect and validate user input
+ * - Delegate administrative operations to services
+ */
 public class AdminMenu extends BaseMenu {
 
 	private final AdminService adminService;
@@ -165,16 +173,16 @@ public class AdminMenu extends BaseMenu {
 
 		User selectedUser = users.get(choice - 1);
 		char approveChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(),
-				"Confirm change status to "+ status +" for user " +selectedUser.getFullName() +" (Y/N)\n");
-		if(approveChoice == 'Y' || approveChoice == 'y') {
+				"Confirm change status to " + status + " for user " + selectedUser.getFullName() + " (Y/N)\n");
+		if (approveChoice == 'Y' || approveChoice == 'y') {
 			boolean isSuccess = adminService.changeStatus(status, selectedUser.getUserId());
 
-			if(isSuccess) {
+			if (isSuccess) {
 				System.out.println("User status updated to " + status);
-			}else {
+			} else {
 				System.out.println("Failed to update status");
 			}
-		}else {
+		} else {
 			System.out.println("Process aborted");
 		}
 	}
@@ -234,7 +242,7 @@ public class AdminMenu extends BaseMenu {
 			case 4: {
 				List<Event> events = eventService.listEventsYetToApprove();
 
-				if (events.isEmpty()) {
+				if (events == null || events.isEmpty()) {
 					System.out.println("No events pending approval");
 					break;
 				}
@@ -249,11 +257,12 @@ public class AdminMenu extends BaseMenu {
 				}
 
 				Event selectedEvent = events.get(eventChoice - 1);
-				char approveChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(), "Approve this event? (Y/N)\n");
-				if(approveChoice == 'Y' || approveChoice == 'y') {
+				char approveChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(),
+						"Approve this event? (Y/N)\n");
+				if (approveChoice == 'Y' || approveChoice == 'y') {
 					adminService.approveEvents(loggedInUser.getUserId(), selectedEvent.getEventId());
 					System.out.println("Event approved successfully");
-				}else {
+				} else {
 					System.out.println("Process aborted");
 				}
 				break;
@@ -278,14 +287,13 @@ public class AdminMenu extends BaseMenu {
 
 				Event selectedEvent = events.get(eventChoice - 1);
 
-				
-				
-				char cancelChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(), "Cancel this event? (Y/N)\n");
-				if(cancelChoice == 'Y' || cancelChoice == 'y') {
+				char cancelChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(),
+						"Cancel this event? (Y/N)\n");
+				if (cancelChoice == 'Y' || cancelChoice == 'y') {
 					adminService.cancelEvents(selectedEvent.getEventId());
 
 					System.out.println("Event cancelled successfully");
-				}else {
+				} else {
 					System.out.println("Process aborted");
 				}
 				break;
@@ -588,12 +596,15 @@ public class AdminMenu extends BaseMenu {
 			case 2: {
 				Venue venue = new Venue();
 
-				venue.setName(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the venue name: "));
+				venue.setName(
+						InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the venue name: "));
 				venue.setStreet(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the street: "));
 				venue.setCity(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the city: "));
 				venue.setState(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the state: "));
-				venue.setPincode(InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the pincode: "));
-				venue.setMaxCapacity(InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the maximum capacity: "));
+				venue.setPincode(
+						InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the pincode: "));
+				venue.setMaxCapacity(
+						InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the maximum capacity: "));
 
 				adminService.addVenue(venue);
 				System.out.println("Venue added successfully");
@@ -712,404 +723,311 @@ public class AdminMenu extends BaseMenu {
 
 		return venues.get(choice - 1);
 	}
+
 	private void ticketRegistrationManagementMenu() {
-	    while (true) {
-	        System.out.println(
-	            "\nTicket & Registration Management\n" +
-	            "1. View tickets by event\n" +
-	            "2. View ticket availability summary\n" +
-	            "3. View registrations by event\n" +
-	            "4. View registrations by user\n" +
-	            "5. Cancel a registration\n" +
-	            "6. Restore cancelled registration\n" +
-	            "7. Back\n" +
-	            ">"
-	        );
+		while (true) {
+			System.out.println("\nTicket & Registration Management\n" + "1. View tickets by event\n"
+					+ "2. View ticket availability summary\n" + "3. View registrations by event\n"
+					+ "4. View registrations by user\n" + "5. Cancel a registration\n"
+					+ "6. Restore cancelled registration\n" + "7. Back\n" + ">");
 
-	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
-	        switch (choice) {
+			switch (choice) {
 
-	        case 1: {
-	            List<Event> events = eventService.listAvailableEvents();
-	            if (events.isEmpty()) {
-	                System.out.println("No available events");
-	                break;
-	            }
+			case 1: {
+				List<Event> events = eventService.listAvailableEvents();
+				if (events.isEmpty()) {
+					System.out.println("No available events");
+					break;
+				}
 
-	            MenuHelper.printEventSummaries(events);
+				MenuHelper.printEventSummaries(events);
 
-	            int eChoice = InputValidationUtil.readInt(
-	                ScannerUtil.getScanner(),
-	                "Select an event (1-" + events.size() + "): "
-	            );
-	            while (eChoice < 1 || eChoice > events.size()) {
-	                eChoice = InputValidationUtil.readInt(
-	                    ScannerUtil.getScanner(),
-	                    "Enter a valid choice: "
-	                );
-	            }
+				int eChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+						"Select an event (1-" + events.size() + "): ");
+				while (eChoice < 1 || eChoice > events.size()) {
+					eChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
+				}
 
-	            Event selectedEvent = events.get(eChoice - 1);
-	            List<Ticket> tickets =
-	                eventService.getTicketTypes(selectedEvent.getEventId());
+				Event selectedEvent = events.get(eChoice - 1);
+				List<Ticket> tickets = eventService.getTicketTypes(selectedEvent.getEventId());
 
-	            if (tickets.isEmpty()) {
-	                System.out.println("No tickets found for this event");
-	                break;
-	            }
+				if (tickets.isEmpty()) {
+					System.out.println("No tickets found for this event");
+					break;
+				}
 
-	            int index = 1;
-	            for (Ticket t : tickets) {
-	                System.out.println(
-	                    index + ". " +
-	                    t.getTicketType() +
-	                    " | Price: ₹" + t.getPrice() +
-	                    " | Available: " + t.getAvailableQuantity() +
-	                    "/" + t.getTotalQuantity()
-	                );
-	                index++;
-	            }
-	            break;
-	        }
+				int index = 1;
+				for (Ticket t : tickets) {
+					System.out.println(index + ". " + t.getTicketType() + " | Price: ₹" + t.getPrice()
+							+ " | Available: " + t.getAvailableQuantity() + "/" + t.getTotalQuantity());
+					index++;
+				}
+				break;
+			}
 
-	        case 2: {
-	            List<Event> events = eventService.listAvailableEvents();
-	            if (events.isEmpty()) {
-	                System.out.println("No available events");
-	                break;
-	            }
+			case 2: {
+				List<Event> events = eventService.listAvailableEvents();
+				if (events.isEmpty()) {
+					System.out.println("No available events");
+					break;
+				}
 
-	            MenuHelper.printEventSummaries(events);
+				MenuHelper.printEventSummaries(events);
 
-	            int eChoice = InputValidationUtil.readInt(
-	                ScannerUtil.getScanner(),
-	                "Select an event (1-" + events.size() + "): "
-	            );
-	            while (eChoice < 1 || eChoice > events.size()) {
-	                eChoice = InputValidationUtil.readInt(
-	                    ScannerUtil.getScanner(),
-	                    "Enter a valid choice: "
-	                );
-	            }
+				int eChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+						"Select an event (1-" + events.size() + "): ");
+				while (eChoice < 1 || eChoice > events.size()) {
+					eChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
+				}
 
-	            Event selectedEvent = events.get(eChoice - 1);
-	            List<Ticket> tickets =
-	                eventService.getTicketTypes(selectedEvent.getEventId());
+				Event selectedEvent = events.get(eChoice - 1);
+				List<Ticket> tickets = eventService.getTicketTypes(selectedEvent.getEventId());
 
-	            int total = 0;
-	            int available = 0;
+				int total = 0;
+				int available = 0;
 
-	            for (Ticket t : tickets) {
-	                total += t.getTotalQuantity();
-	                available += t.getAvailableQuantity();
-	            }
+				for (Ticket t : tickets) {
+					total += t.getTotalQuantity();
+					available += t.getAvailableQuantity();
+				}
 
-	            System.out.println(
-	                "Event Capacity Summary\n" +
-	                "Total Tickets: " + total + "\n" +
-	                "Available Tickets: " + available
-	            );
-	            break;
-	        }
+				System.out.println("Event Capacity Summary\n" + "Total Tickets: " + total + "\n" + "Available Tickets: "
+						+ available);
+				break;
+			}
 
-	        case 3: {
-	            List<Event> events = eventService.listAvailableEvents();
-	            if (events.isEmpty()) {
-	                System.out.println("No available events");
-	                break;
-	            }
+			case 3: {
+				List<Event> events = eventService.listAvailableEvents();
+				if (events.isEmpty()) {
+					System.out.println("No available events");
+					break;
+				}
 
-	            MenuHelper.printEventSummaries(events);
+				MenuHelper.printEventSummaries(events);
 
-	            int eChoice = InputValidationUtil.readInt(
-	                ScannerUtil.getScanner(),
-	                "Select an event (1-" + events.size() + "): "
-	            );
-	            while (eChoice < 1 || eChoice > events.size()) {
-	                eChoice = InputValidationUtil.readInt(
-	                    ScannerUtil.getScanner(),
-	                    "Enter a valid choice: "
-	                );
-	            }
+				int eChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+						"Select an event (1-" + events.size() + "): ");
+				while (eChoice < 1 || eChoice > events.size()) {
+					eChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
+				}
 
-	            Event selectedEvent = events.get(eChoice - 1);
-	            adminService.getEventWiseRegistrations(
-	                selectedEvent.getEventId()
-	            );
-	            break;
-	        }
+				Event selectedEvent = events.get(eChoice - 1);
+				adminService.getEventWiseRegistrations(selectedEvent.getEventId());
+				break;
+			}
 
-	        case 4:
-	            System.out.println("Feature coming soon");
-	            break;
+			case 4:
+				System.out.println("Feature coming soon");
+				break;
 
-	        case 5:
-	            System.out.println("Cancellation flow will be added soon");
-	            break;
+			case 5:
+				System.out.println("Cancellation flow will be added soon");
+				break;
 
-	        case 6:
-	            System.out.println("Restore flow will be added soon");
-	            break;
+			case 6:
+				System.out.println("Restore flow will be added soon");
+				break;
 
-	        case 7:
-	            return;
+			case 7:
+				return;
 
-	        default:
-	            System.out.println("Invalid option");
-	        }
-	    }
+			default:
+				System.out.println("Invalid option");
+			}
+		}
 	}
-
 
 	private void paymentRevenueManagementMenu() {
-	    while (true) {
-	        System.out.println(
-	            "\nPayment & Revenue Management\n" +
-	            "1. View payments by event\n" +
-	            "2. View payments by user\n" +
-	            "3. View failed payments\n" +
-	            "4. View payment summary\n" +
-	            "5. Initiate refund\n" +
-	            "6. Back\n" +
-	            ">"
-	        );
+		while (true) {
+			System.out.println("\nPayment & Revenue Management\n" + "1. View payments by event\n"
+					+ "2. View payments by user\n" + "3. View failed payments\n" + "4. View payment summary\n"
+					+ "5. Initiate refund\n" + "6. Back\n" + ">");
 
-	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
-	        switch (choice) {
-	        case 6:
-	            return;
+			switch (choice) {
+			case 6:
+				return;
 
-	        default:
-	            System.out.println("This feature will be available soon");
-	        }
-	    }
+			default:
+				System.out.println("This feature will be available soon");
+			}
+		}
 	}
-
 
 	private void offerPromotionManagementMenu() {
-	    while (true) {
-	        System.out.println(
-	            "\nOffer & Promotion Management\n" +
-	            "1. View all offers\n" +
-	            "2. Create new offer\n" +
-	            "3. Activate or deactivate offer\n" +
-	            "4. View offer usage report\n" +
-	            "5. Back\n" +
-	            ">"
-	        );
+		while (true) {
+			System.out.println("\nOffer & Promotion Management\n" + "1. View all offers\n" + "2. Create new offer\n"
+					+ "3. Activate or deactivate offer\n" + "4. View offer usage report\n" + "5. Back\n" + ">");
 
-	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
-	        switch (choice) {
-	        case 1:
-	            List<Offer> offers = offerService.getAllOffers();
-	            if (offers.isEmpty()) {
-	                System.out.println("No offers available");
-	            } else {
-	                MenuHelper.displayOffers(offers);
-	            }
-	            break;
+			switch (choice) {
+			case 1:
+				List<Offer> offers = offerService.getAllOffers();
+				if (offers.isEmpty()) {
+					System.out.println("No offers available");
+				} else {
+					MenuHelper.displayOffers(offers);
+				}
+				break;
 
-	        case 2:
-	            createOffer();
-	            break;
-	        case 3:
-	            toggleOfferStatus();
-	            break;
+			case 2:
+				createOffer();
+				break;
+			case 3:
+				toggleOfferStatus();
+				break;
 
-	        case 4:
-	            Map<String, Integer> report = offerService.getOfferUsageReport();
-	            report.forEach(
-	                (code, count) ->
-	                    System.out.println(code + " | Used: " + count)
-	            );
-	            break;
+			case 4:
+				Map<String, Integer> report = offerService.getOfferUsageReport();
+				report.forEach((code, count) -> System.out.println(code + " | Used: " + count));
+				break;
 
-	        case 5:
-	            return;
+			case 5:
+				return;
 
-	        default:
-	            System.out.println("Invalid option");
-	        }
-	    }
+			default:
+				System.out.println("Invalid option");
+			}
+		}
 	}
+
 	private void createOffer() {
 
-	    List<Event> events = eventService.listAvailableEvents();
+		List<Event> events = eventService.listAvailableEvents();
 
-	    if (events.isEmpty()) {
-	        System.out.println("No events available");
-	        return;
-	    }
+		if (events.isEmpty()) {
+			System.out.println("No events available");
+			return;
+		}
 
-	    MenuHelper.printEventSummaries(events);
+		MenuHelper.printEventSummaries(events);
 
-	    int eChoice = InputValidationUtil.readInt(
-	        ScannerUtil.getScanner(),
-	        "Select event (1-" + events.size() + "): "
-	    );
+		int eChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Select event (1-" + events.size() + "): ");
 
-	    while (eChoice < 1 || eChoice > events.size()) {
-	        eChoice = InputValidationUtil.readInt(
-	            ScannerUtil.getScanner(),
-	            "Enter a valid choice: "
-	        );
-	    }
+		while (eChoice < 1 || eChoice > events.size()) {
+			eChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
+		}
 
-	    Event event = events.get(eChoice - 1);
+		Event event = events.get(eChoice - 1);
 
-	    String code = InputValidationUtil.readNonEmptyString(
-	        ScannerUtil.getScanner(),
-	        "Offer code: "
-	    );
+		String code = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the offer code: ");
 
-	    int discount = InputValidationUtil.readInt(
-	        ScannerUtil.getScanner(),
-	        "Discount percentage: "
-	    );
+		int discount = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the discount percentage: ");
 
-	    LocalDateTime from =
-	        DateTimeUtil.getLocalDateTime(
-	            "Valid from (dd-MM-yyyy HH:mm): "
-	        );
+		/*
+		 * Offer start date must: - Not be in the past - Not exceed the event start time
+		 * 
+		 * This ensures offers are only active before the event begins.
+		 */
+		LocalDateTime from = DateTimeUtil.getLocalDateTime("Enter the valid from (dd-MM-yyyy HH:mm): ");
 
-	    LocalDateTime to =
-	        DateTimeUtil.getLocalDateTime(
-	            "Valid to (dd-MM-yyyy HH:mm): "
-	        );
+		while (from.isBefore(LocalDateTime.now()) || from.isAfter(event.getStartDateTime())) {
 
-	    if (to.isAfter(event.getStartDateTime()) || from.isAfter(event.getStartDateTime())) {
-	        System.out.println("Offer validity cannot exceed event start time");
-	        return;
-	    }
+			from = DateTimeUtil.getLocalDateTime("Enter the valid from (dd-MM-yyyy HH:mm): ");
+		}
 
-	    int offerId = offerService.createOffer(
-	        event.getEventId(),
-	        code,
-	        discount,
-	        from,
-	        to
-	    );
+		/*
+		 * Offer end date must: - Not be in the past - Be after the offer start date -
+		 * Not exceed the event start time
+		 * 
+		 * This prevents invalid or overlapping offer periods.
+		 */
+		LocalDateTime to = DateTimeUtil.getLocalDateTime("Enter the valid to (dd-MM-yyyy HH:mm): ");
 
-	    System.out.println("Offer created with ID: " + offerId);
+		while (to.isBefore(LocalDateTime.now()) || to.isBefore(from) || to.isAfter(event.getStartDateTime())) {
+
+			to = DateTimeUtil.getLocalDateTime("Enter the valid to (dd-MM-yyyy HH:mm): ");
+		}
+
+		int offerId = offerService.createOffer(event.getEventId(), code, discount, from, to);
+
+		System.out.println("Offer created with ID: " + offerId);
 	}
-
-
 
 	private void toggleOfferStatus() {
 
-	    System.out.println(
-	        "\n1. Activate offer\n" +
-	        "2. Deactivate offer\n" +
-	        "3. Back\n" +
-	        ">"
-	    );
+		System.out.println("\n1. Activate offer\n" + "2. Deactivate offer\n" + "3. Back\n" + ">");
 
-	    int option = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
+		int option = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
-	    if (option == 3) {
-	        return;
-	    }
+		if (option == 3) {
+			return;
+		}
 
-	    LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now();
 
-	    List<Offer> offers = offerService.getAllOffers();
+		List<Offer> offers = offerService.getAllOffers();
 
-	    if (offers.isEmpty()) {
-	        System.out.println("No offers available");
-	        return;
-	    }
+		if (offers.isEmpty()) {
+			System.out.println("No offers available");
+			return;
+		}
 
-	    List<Offer> filtered;
-	    if (option == 1) {
-	        filtered = offers.stream()
-	            .filter(o ->
-	                o.getEventId() != 0 &&
-	                o.getValidTo() != null &&
-	                o.getValidTo().isBefore(now)
-	            )
-	            .toList();
-	    } else if (option == 2) {
-	        filtered = offers.stream()
-	            .filter(o ->
-	                o.getValidTo() != null &&
-	                o.getValidTo().isAfter(now)
-	            )
-	            .toList();
-	    } else {
-	        System.out.println("Invalid option");
-	        return;
-	    }
+		List<Offer> filtered;
+		if (option == 1) {
+			filtered = offers.stream()
+					.filter(o -> o.getEventId() != 0 && o.getValidTo() != null && o.getValidTo().isBefore(now))
+					.toList();
+		} else if (option == 2) {
+			filtered = offers.stream().filter(o -> o.getValidTo() != null && o.getValidTo().isAfter(now)).toList();
+		} else {
+			System.out.println("Invalid option");
+			return;
+		}
 
-	    if (filtered.isEmpty()) {
-	        System.out.println("No applicable offers found");
-	        return;
-	    }
+		if (filtered.isEmpty()) {
+			System.out.println("No applicable offers found");
+			return;
+		}
 
-	    MenuHelper.displayOffers(filtered);
+		MenuHelper.displayOffers(filtered);
 
-	    int choice = InputValidationUtil.readInt(
-	        ScannerUtil.getScanner(),
-	        "Select offer (1-" + filtered.size() + "): "
-	    );
+		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+				"Select offer (1-" + filtered.size() + "): ");
 
-	    while (choice < 1 || choice > filtered.size()) {
-	        choice = InputValidationUtil.readInt(
-	            ScannerUtil.getScanner(),
-	            "Enter a valid choice: "
-	        );
-	    }
+		while (choice < 1 || choice > filtered.size()) {
+			choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter a valid choice: ");
+		}
 
-	    Offer selectedOffer = filtered.get(choice - 1);
+		Offer selectedOffer = filtered.get(choice - 1);
 
-	    LocalDateTime newValidTo;
+		LocalDateTime newValidTo;
 
-	    if (option == 1) {
-	        newValidTo = DateTimeUtil.getLocalDateTime(
-	            "Activate until (dd-MM-yyyy HH:mm): "
-	        );
-	    } else {
-	        newValidTo = now;
-	    }
-	    Event event = eventService.getEventById(selectedOffer.getEventId());
-	    if (event == null) {
-	        System.out.println("No event found for the offer!");
-	        return;
-	    }
-	    if (newValidTo.isAfter(event.getStartDateTime())) {
-	        System.out.println("Offer validity cannot exceed event start time");
-	        return;
-	    }
+		if (option == 1) {
+			newValidTo = DateTimeUtil.getLocalDateTime("Activate until (dd-MM-yyyy HH:mm): ");
+		} else {
+			newValidTo = now;
+		}
+		Event event = eventService.getEventById(selectedOffer.getEventId());
+		if (event == null) {
+			System.out.println("No event found for the offer!");
+			return;
+		}
+		if (newValidTo.isAfter(event.getStartDateTime())) {
+			System.out.println("Offer validity cannot exceed event start time");
+			return;
+		}
 
+		char updateChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(),
+				"Are you sure you want to update offer status (Y/N)\n");
+		if (updateChoice == 'Y' || updateChoice == 'y') {
+			offerService.toggleOfferStatus(selectedOffer.getOfferId(), newValidTo);
 
-	    char updateChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(),
-	    		"Are you sure you want to update offer status (Y/N)\n");
-	    if(updateChoice == 'Y' || updateChoice == 'y') {
-	    	offerService.toggleOfferStatus(
-	    	        selectedOffer.getOfferId(),
-	    	        newValidTo
-	    	    );
+			System.out.println(option == 1 ? "Offer activated" : "Offer deactivated");
+		} else {
+			System.out.println("Process aborted!");
+		}
 
-	    	    System.out.println(
-	    	        option == 1 ? "Offer activated" : "Offer deactivated"
-	    	    );
-	    }else {
-	    	System.out.println("Process aborted!");
-	    }
-
-	    
 	}
-
-
-
-
 
 	private void feedbackModerationMenu() {
 		while (true) {
-			System.out
-					.println("\nFeedback Moderation\n" + "1. View feedback by event\n" + "2. View feedback by organizer\n"
+			System.out.println(
+					"\nFeedback Moderation\n" + "1. View feedback by event\n" + "2. View feedback by organizer\n"
 							+ "3. Delete feedback\n" + "4. Flag feedback as reviewed\n" + "5. Back\n" + ">");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");

@@ -2,13 +2,13 @@ package com.ems.service;
 
 public interface NotificationService {
 
-    void sendSystemWideNotification(String message, String notificationType);
+	// send notifications
+	void sendSystemWideNotification(String message, String notificationType);
 
-    void displayUnreadNotifications(int userId);
+	void sendEventNotification(int eventId, String message, String type);
 
-    void displayAllNotifications(int userId);
+	// read notifications
+	void displayUnreadNotifications(int userId);
 
-	void sendEventNotification(int eventId, String message, String string);
-	
-
+	void displayAllNotifications(int userId);
 }

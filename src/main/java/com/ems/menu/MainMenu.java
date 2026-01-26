@@ -9,7 +9,16 @@ import com.ems.util.ApplicationUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
 
+/*
+ * Handles the main application entry menu.
+ *
+ * Responsibilities:
+ * - Display initial application options
+ * - Handle user login and registration flows
+ * - Route users to role specific menus or guest access
+ */
 public class MainMenu {
+
 	private final UserService userService;
 
 	public MainMenu() {

@@ -11,7 +11,18 @@ import com.ems.model.User;
 import com.ems.model.Venue;
 import com.ems.service.EventService;
 
+/*
+ * Provides reusable console display helpers for menu-driven flows.
+ *
+ * Responsibilities:
+ * - Format and render domain objects for console output
+ * - Centralize presentation logic for menus
+ * - Keep menu classes focused on navigation and user interaction
+ *
+ * Acts as a lightweight view layer for the CLI application.
+ */
 public class MenuHelper {
+
 	private static EventService eventService = ApplicationUtil.eventService();
 	
 

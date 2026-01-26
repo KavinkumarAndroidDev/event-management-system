@@ -4,7 +4,18 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import com.ems.exception.InvalidPasswordFormatException;
 
+/*
+ * Provides password hashing and verification utilities.
+ *
+ * Responsibilities:
+ * - Enforce password strength requirements
+ * - Securely hash passwords using BCrypt
+ * - Verify user credentials against stored hashes
+ *
+ * Centralizes credential handling to ensure consistent security rules.
+ */
 public final class PasswordUtil {
+
 	private PasswordUtil(){
 		
 	}

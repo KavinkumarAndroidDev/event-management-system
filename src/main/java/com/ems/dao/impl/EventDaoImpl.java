@@ -1,6 +1,7 @@
 package com.ems.dao.impl;
 
 import java.sql.Connection;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,8 +22,17 @@ import com.ems.model.Event;
 import com.ems.model.UserEventRegistration;
 import com.ems.util.DBConnectionUtil;
 import com.ems.util.DateTimeUtil;
-
+/*
+ * Handles database operations related to events.
+ *
+ * Responsibilities:
+ * - Retrieve event data for listings, details, and reports
+ * - Persist event creation and updates
+ * - Manage event status transitions and approvals
+ * - Fetch registration, booking, and revenue related data
+ */
 public class EventDaoImpl implements EventDao {
+
 
 	// lists all future published events with available tickets
 	@Override
@@ -83,7 +93,7 @@ public class EventDaoImpl implements EventDao {
 		List<Event> events = new ArrayList<>();
 		String sql = "select distinct e.* " + "from events e " + "inner join tickets t on e.event_id = t.event_id "
 				+ "where e.status in (?, ?) " + "and t.available_quantity > 0 "
-				+ "AND e.start_datetime > UTC_TIMESTAMP()";
+				+ "AND e.start_datetime > UTC_TIMESTAMP() and e.approved_at = null";
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -268,18 +278,17 @@ public class EventDaoImpl implements EventDao {
 	// approves an event
 	@Override
 	public boolean approveEvent(int eventId, int userId) throws DataAccessException {
-		String sql = "update events set approved_by = ?, updated_at = ?, approved_at = ? where event_id = ? and start_datetime > ?";
+		String sql = "update events set status = ? ,approved_by = ?, updated_at = ?, approved_at = ? where event_id = ? and start_datetime > ?";
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-
-			ps.setInt(1, userId);
-			ps.setTimestamp(2, Timestamp.from(DateTimeUtil.getCurrentUtc()));
+			ps.setString(1, "draft");
+			ps.setInt(2, userId);
 			ps.setTimestamp(3, Timestamp.from(DateTimeUtil.getCurrentUtc()));
-			ps.setInt(4, eventId);
-			ps.setTimestamp(5, Timestamp.from(DateTimeUtil.getCurrentUtc()));
+			ps.setTimestamp(4, Timestamp.from(DateTimeUtil.getCurrentUtc()));
+			ps.setInt(5, eventId);
+			ps.setTimestamp(6, Timestamp.from(DateTimeUtil.getCurrentUtc()));
 			int rowsUpdated = ps.executeUpdate();
 			
-			// ✅ REMOVED print statements - Service/Menu will handle this
 			return rowsUpdated > 0;
 			
 		} catch (SQLException e) {
@@ -300,7 +309,6 @@ public class EventDaoImpl implements EventDao {
 			ps.setTimestamp(4, Timestamp.from(DateTimeUtil.getCurrentUtc()));
 			int rowsUpdated = ps.executeUpdate();
 			
-			// ✅ REMOVED print statements - Service/Menu will handle this
 			return rowsUpdated > 0;
 			
 		} catch (SQLException e) {

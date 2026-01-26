@@ -20,7 +20,16 @@ import com.ems.util.InputValidationUtil;
 import com.ems.util.MenuHelper;
 import com.ems.util.ScannerUtil;
 
+/*
+ * Handles authenticated user console interactions.
+ *
+ * Responsibilities:
+ * - Display user menus and navigation flows
+ * - Allow event browsing, searching, and registration
+ * - Manage user registrations, notifications, and feedback
+ */
 public class UserMenu extends BaseMenu {
+
 	private final NotificationService notificationService;
 	private final EventService eventService;
 
@@ -185,7 +194,19 @@ public class UserMenu extends BaseMenu {
 
         PaymentMethod selectedMethod = methods[paymentChoice - 1];
         
-        boolean success = eventService.registerForEvent(loggedInUser.getUserId(), eventId, ticketId, quantity, selectedTicket.getPrice(), selectedMethod);
+        String offerCode = InputValidationUtil.readString(
+        	    ScannerUtil.getScanner(),
+        	    "Enter offer code (Press Enter to skip): "
+        	);
+
+        	if (offerCode.isBlank()) {
+        	    offerCode = null;
+        	}else {
+        		offerCode = offerCode.trim().toUpperCase();
+        	}
+
+        
+        boolean success = eventService.registerForEvent(loggedInUser.getUserId(), eventId, ticketId, quantity, selectedTicket.getPrice(), selectedMethod, offerCode);
         if (success) {
             System.out.println("Registration successful! Enjoy your event.");
         } else {

@@ -17,10 +17,16 @@ import com.ems.model.User;
 import com.ems.util.DBConnectionUtil;
 import com.ems.util.DateTimeUtil;
 
-/**
- * User DAO implementation - Database operations ONLY
+/*
+ * Handles database operations related to users.
+ *
+ * Responsibilities:
+ * - Persist and retrieve user accounts
+ * - Update user status and role related data
+ * - Fetch user information for administrative and authentication use cases
  */
 public class UserDaoImpl implements UserDao {
+
 	
 	@Override
 	public void createUser(String fullName, String email, String phone, String passwordHash, int roleId, 

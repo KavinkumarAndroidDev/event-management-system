@@ -14,10 +14,16 @@ import com.ems.exception.DataAccessException;
 import com.ems.model.EventRegistrationReport;
 import com.ems.util.DBConnectionUtil;
 
-/**
- * Registration DAO implementation - Database operations ONLY
+/*
+ * Handles database operations related to event registrations.
+ *
+ * Responsibilities:
+ * - Persist and remove event registrations and ticket allocations
+ * - Retrieve registration data for events and users
+ * - Generate registration and sales related reports
  */
 public class RegistrationDaoImpl implements RegistrationDao {
+
 	
 	@Override
 	public List<EventRegistrationReport> getEventWiseRegistrations(int eventId)

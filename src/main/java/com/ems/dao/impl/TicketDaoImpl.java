@@ -12,10 +12,16 @@ import com.ems.exception.DataAccessException;
 import com.ems.model.Ticket;
 import com.ems.util.DBConnectionUtil;
 
-/**
- * Ticket DAO implementation - Database operations ONLY
+/*
+ * Handles database operations related to tickets.
+ *
+ * Responsibilities:
+ * - Retrieve ticket availability and ticket details
+ * - Persist ticket creation and updates
+ * - Manage ticket quantity and pricing data
  */
 public class TicketDaoImpl implements TicketDao {
+
 	
 	@Override
 	public int getAvailableTickets(int eventId) throws DataAccessException {

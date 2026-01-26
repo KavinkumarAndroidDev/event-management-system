@@ -15,50 +15,77 @@ import com.ems.model.Venue;
 
 public interface EventService {
 
-    // tickets
-    List<Ticket> getTicketTypes(int eventId);
-
-    // event browsing & filtering
-    List<Event> filterByPrice(double minPrice, double maxPrice);
-    List<Event> searchByCity(int venueId);
-    List<Event> searchByDate(LocalDate localDate);
-    List<Event> searchByDateRange(LocalDate startDate, LocalDate endDate);
-    List<Event> searchBycategory(int selectedCategoryId);
-
-    // registration
-    boolean registerForEvent(int userId, int eventId, int ticketId, int quantity, double d, PaymentMethod paymentMethod);
-
-    // user events
-    List<UserEventRegistration> viewUpcomingEvents(int userId);
-    List<UserEventRegistration> viewPastEvents(int userId);
-    List<BookingDetail> viewBookingDetails(int userId);
-
-    // feedback
-    void submitRating(int userId, int eventId, int rating, String comments);
-
-    // admin / common
-    List<Event> getAllEvents();
-    Category getCategory(int eventId);
-    List<Category> getAllCategory();
-    Map<Integer, String> getAllCities();
+	// ticket information
+	List<Ticket> getTicketTypes(int eventId);
 
 	int getAvailableTickets(int eventId);
 
+	
+	// event filtering
+	List<Event> filterByPrice(double minPrice, double maxPrice);
+
+	List<Event> searchByCity(int venueId);
+
+	List<Event> searchByDate(LocalDate localDate);
+
+	List<Event> searchByDateRange(LocalDate startDate, LocalDate endDate);
+
+	List<Event> searchBycategory(int selectedCategoryId);
+
+	
+	// event registration and booking
+	boolean registerForEvent(
+		    int userId,
+		    int eventId,
+		    int ticketId,
+		    int quantity,
+		    double price,
+		    PaymentMethod paymentMethod,
+		    String offerCode
+		);
+
+	List<BookingDetail> viewBookingDetails(int userId);
+
+	
+	// user event history
+	List<UserEventRegistration> viewUpcomingEvents(int userId);
+
+	List<UserEventRegistration> viewPastEvents(int userId);
+
+	
+	// feedback
+	void submitRating(int userId, int eventId, int rating, String comments);
+
+	
+	// Event listing & retrival
+	List<Event> getAllEvents();
+
+	List<Event> listAvailableEvents();
+
+	List<Event> listEventsYetToApprove();
+
+	List<Event> listAvailableAndDraftEvents();
+
+	Event getEventById(int eventId);
+
+	
+	// Category & city lookups
+	Category getCategory(int eventId);
+
+	List<Category> getAllCategory();
+
+	Map<Integer, String> getAllCities();
+
+	
+	// Venue information & availability
 	String getVenueName(int venueId);
 
 	String getVenueAddress(int venueId);
 
-	List<Event> listAvailableEvents();
-
 	List<Venue> getAllVenues();
-
-	boolean isVenueAvailable(int venueId, LocalDateTime startTime, LocalDateTime endTime);
 
 	Venue getVenueById(int venueId);
 
-	List<Event> listEventsYetToApprove();
-	
-	List<Event> listAvailableAndDraftEvents();
+	boolean isVenueAvailable(int venueId, LocalDateTime startTime, LocalDateTime endTime);
 
-	Event getEventById(int eventId);
 }
