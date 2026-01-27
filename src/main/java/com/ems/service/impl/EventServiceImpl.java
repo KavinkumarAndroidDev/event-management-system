@@ -20,6 +20,7 @@ import com.ems.model.UserEventRegistration;
 import com.ems.model.Venue;
 import com.ems.service.EventService;
 import com.ems.service.PaymentService;
+import com.ems.service.SystemLogService;
 import com.ems.util.DateTimeUtil;
 
 /*
@@ -40,19 +41,21 @@ public class EventServiceImpl implements EventService {
 	private final TicketDao ticketDao;
 	private final PaymentService paymentService;
 	private final FeedbackDao feedbackDao;
+	private final SystemLogService systemLogService;
 
 	/*
 	 * Initializes EventService with required data access and payment dependencies.
 	 */
 	
 	public EventServiceImpl(EventDao eventDao, CategoryDao categoryDao, VenueDao venueDao, TicketDao ticketDao,
-			PaymentService paymentService, FeedbackDao feedbackDao) {
+			PaymentService paymentService, FeedbackDao feedbackDao, SystemLogService systemLogService) {
 		this.eventDao = eventDao;
 		this.categoryDao = categoryDao;
 		this.venueDao = venueDao;
 		this.ticketDao = ticketDao;
 		this.paymentService = paymentService;
 		this.feedbackDao = feedbackDao;
+		this.systemLogService = systemLogService;
 	}
 
 	/*
@@ -94,7 +97,7 @@ public class EventServiceImpl implements EventService {
 			return filteredEvents;
 
 		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
+			System.out.println("Database error: " + e.getMessage());
 		}
 		return filteredEvents;
 	}
@@ -108,7 +111,7 @@ public class EventServiceImpl implements EventService {
 		try {
 			event = eventDao.getEventById(eventId);
 		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
+			System.out.println("Database error: " + e.getMessage());
 		}
 		return event;
 	}
@@ -124,7 +127,7 @@ public class EventServiceImpl implements EventService {
 			filteredEvents = allEvents.stream().filter(e -> e.getVenueId() == venueId).collect(Collectors.toList());
 			return filteredEvents;
 		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
+			System.out.println("Database error: " + e.getMessage());
 		}
 		return filteredEvents;
 	}
@@ -140,7 +143,7 @@ public class EventServiceImpl implements EventService {
 			filteredEvents = allEvents.stream().filter(e -> e.getStartDateTime().toLocalDate().isBefore(localDate))
 					.collect(Collectors.toList());
 		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
+			System.out.println("Database error: " + e.getMessage());
 		}
 		return filteredEvents;
 	}
@@ -168,7 +171,7 @@ public class EventServiceImpl implements EventService {
 
 			return filteredEvents;
 		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
+			System.out.println("Database error: " + e.getMessage());
 		}
 		return filteredEvents;
 	}
@@ -186,7 +189,7 @@ public class EventServiceImpl implements EventService {
 					.collect(Collectors.toList());
 
 		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
+			System.out.println("Database error: " + e.getMessage());
 		}
 		return filteredEvents;
 
@@ -208,15 +211,29 @@ public class EventServiceImpl implements EventService {
 	        String offerCode) {
 
 	    try {
-	        return paymentService.processRegistration(
-	            userId,
-	            eventId,
-	            ticketId,
-	            quantity,
-	            price,
-	            paymentMethod,
-	            offerCode
-	        );
+	    	boolean success = paymentService.processRegistration(
+	    		    userId,
+	    		    eventId,
+	    		    ticketId,
+	    		    quantity,
+	    		    price,
+	    		    paymentMethod,
+	    		    offerCode
+	    		);
+
+	    		if (success) {
+	    		    systemLogService.log(
+	    		        userId,
+	    		        "REGISTER",
+	    		        "EVENT",
+	    		        eventId,
+	    		        "User registered for event using ticket " + ticketId +
+	    		        (offerCode != null ? " with offer code " + offerCode : "")
+	    		    );
+	    		}
+
+	    		return success;
+
 	    } catch (Exception e) {
 	        System.out.println("Error during registration: " + e.getMessage());
 	        return false;
@@ -282,6 +299,15 @@ public class EventServiceImpl implements EventService {
 				comments = null;
 			}
 			feedbackDao.submitRating(eventId, userId, rating, comments);
+
+			systemLogService.log(
+			    userId,
+			    "SUBMIT_FEEDBACK",
+			    "EVENT",
+			    eventId,
+			    "User submitted rating: " + rating
+			);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -292,7 +318,7 @@ public class EventServiceImpl implements EventService {
 	 */
 	@Override
 	public List<Event> getAllEvents() {
-		List<Event> events = null;
+		List<Event> events = new ArrayList<>();
 		try {
 			events = eventDao.listAllEvents();
 		} catch (DataAccessException e) {
@@ -300,7 +326,7 @@ public class EventServiceImpl implements EventService {
 		}
 		if (events.isEmpty()) {
 			System.out.println("There are no events!");
-			return null;
+			return events;
 		}
 		return events;
 	}

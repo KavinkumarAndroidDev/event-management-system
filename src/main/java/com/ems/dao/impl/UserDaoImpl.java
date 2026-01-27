@@ -82,7 +82,12 @@ public class UserDaoImpl implements UserDao {
 	        			    rs.getTimestamp("updated_at") == null
 	        			        ? null
 	        			        : rs.getTimestamp("updated_at").toLocalDateTime(),
-	        			    rs.getString("gender")
+	        			    rs.getString("gender"),
+	        			    rs.getInt("failed_attempts"),
+	        			    rs.getTimestamp("last_login") == null
+	        			        ? null
+	        			        : rs.getTimestamp("last_login").toLocalDateTime()
+
 	        			);
 	        	}
 	        }
@@ -154,7 +159,12 @@ public class UserDaoImpl implements UserDao {
 					    rs.getTimestamp("updated_at") == null
 					        ? null
 					        : rs.getTimestamp("updated_at").toLocalDateTime(),
-					    rs.getString("gender")
+					    rs.getString("gender"),
+					    rs.getInt("failed_attempts"),
+					    rs.getTimestamp("last_login") == null
+					        ? null
+					        : rs.getTimestamp("last_login").toLocalDateTime()
+
 					);
 	            users.add(user); 
 	        }
@@ -223,7 +233,12 @@ public class UserDaoImpl implements UserDao {
 					    rs.getTimestamp("updated_at") == null
 					        ? null
 					        : rs.getTimestamp("updated_at").toLocalDateTime(),
-					    rs.getString("gender")
+					    rs.getString("gender"),
+					    rs.getInt("failed_attempts"),
+					    rs.getTimestamp("last_login") == null
+					        ? null
+					        : rs.getTimestamp("last_login").toLocalDateTime()
+
 					);
 	            users.add(user); 
 	        }
@@ -252,4 +267,30 @@ public class UserDaoImpl implements UserDao {
 		}
 		return false;
 	}
+	
+	
+	@Override
+	public void incrementFailedAttempts(int userId) throws DataAccessException {
+	    String sql = "update users set failed_attempts = failed_attempts + 1 where user_id = ?";
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	        ps.setInt(1, userId);
+	        ps.executeUpdate();
+	    } catch (SQLException e) {
+	        throw new DataAccessException(e.getMessage());
+	    }
+	}
+
+	@Override
+	public void resetFailedAttempts(int userId) throws DataAccessException {
+	    String sql = "update users set failed_attempts = 0, last_login = now() where user_id = ?";
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	        ps.setInt(1, userId);
+	        ps.executeUpdate();
+	    } catch (SQLException e) {
+	        throw new DataAccessException(e.getMessage());
+	    }
+	}
+
 }

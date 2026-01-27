@@ -8,15 +8,12 @@ import java.util.Map;
 import com.ems.dao.EventDao;
 import com.ems.dao.RegistrationDao;
 import com.ems.dao.TicketDao;
-import com.ems.dao.impl.EventDaoImpl;
-import com.ems.dao.impl.RegistrationDaoImpl;
-import com.ems.dao.impl.TicketDaoImpl;
 import com.ems.exception.DataAccessException;
 import com.ems.model.Event;
 import com.ems.model.Ticket;
 import com.ems.service.NotificationService;
 import com.ems.service.OrganizerService;
-import com.ems.util.ApplicationUtil;
+import com.ems.service.SystemLogService;
 
 /*
  * Handles organizer related business operations.
@@ -29,10 +26,20 @@ import com.ems.util.ApplicationUtil;
  */
 public class OrganizerServiceImpl implements OrganizerService {
 
-	private final EventDao eventDao = new EventDaoImpl();
-	private final TicketDao ticketDao = new TicketDaoImpl();
-	private final RegistrationDao registrationDao = new RegistrationDaoImpl();
-	private final NotificationService notificationService = ApplicationUtil.notificationService();
+	private final EventDao eventDao;
+	private final TicketDao ticketDao;
+	private final RegistrationDao registrationDao;
+	private final NotificationService notificationService;
+	private final SystemLogService systemLogService;
+	
+	public OrganizerServiceImpl(EventDao eventDao, TicketDao ticketDao, RegistrationDao registrationDao,
+			NotificationService notificationService, SystemLogService systemLogService) {
+		this.eventDao = eventDao;
+		this.ticketDao = ticketDao;
+		this.registrationDao = registrationDao;
+		this.notificationService = notificationService;
+		this.systemLogService = systemLogService;
+	}
 
 	/*
 	 * Creates a new event in DRAFT state.
@@ -42,7 +49,19 @@ public class OrganizerServiceImpl implements OrganizerService {
 	public int createEvent(Event event) {
 		event.setStatus("DRAFT");
 		try {
-			return eventDao.createEvent(event);
+
+			int eventId = eventDao.createEvent(event);
+
+			systemLogService.log(
+			    event.getOrganizerId(),
+			    "CREATE",
+			    "EVENT",
+			    eventId,
+			    "Event created in DRAFT state"
+			);
+
+			return eventId;
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -56,7 +75,20 @@ public class OrganizerServiceImpl implements OrganizerService {
 	 */
 	public boolean updateEventDetails(int eventId, String title, String description, int categoryId, int venueId) {
 		try {
-			return eventDao.updateEventDetails(eventId, title, description, categoryId, venueId);
+			boolean updated = eventDao.updateEventDetails(eventId, title, description, categoryId, venueId);
+
+			if (updated) {
+			    systemLogService.log(
+			        null,
+			        "UPDATE",
+			        "EVENT",
+			        eventId,
+			        "Event details updated"
+			    );
+			}
+
+			return updated;
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -70,7 +102,20 @@ public class OrganizerServiceImpl implements OrganizerService {
 	 */
 	public boolean updateEventSchedule(int eventId, LocalDateTime start, LocalDateTime end) {
 		try {
-			return eventDao.updateEventSchedule(eventId, start, end);
+			boolean updated = eventDao.updateEventSchedule(eventId, start, end);
+
+			if (updated) {
+			    systemLogService.log(
+			        null,
+			        "UPDATE",
+			        "EVENT",
+			        eventId,
+			        "Event schedule updated to " + start + " - " + end
+			    );
+			}
+
+			return updated;
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -82,7 +127,20 @@ public class OrganizerServiceImpl implements OrganizerService {
 	 */
 	public boolean updateEventCapacity(int eventId, int capacity) {
 		try {
-			return eventDao.updateEventCapacity(eventId, capacity);
+			boolean updated = eventDao.updateEventCapacity(eventId, capacity);
+
+			if (updated) {
+			    systemLogService.log(
+			        null,
+			        "UPDATE",
+			        "EVENT",
+			        eventId,
+			        "Event capacity updated to " + capacity
+			    );
+			}
+
+			return updated;
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -94,7 +152,20 @@ public class OrganizerServiceImpl implements OrganizerService {
 	 */
 	public boolean publishEvent(int eventId) {
 		try {
-			return eventDao.updateEventStatus(eventId, "PUBLISHED");
+			boolean published = eventDao.updateEventStatus(eventId, "PUBLISHED");
+
+			if (published) {
+			    systemLogService.log(
+			        null,
+			        "PUBLISH",
+			        "EVENT",
+			        eventId,
+			        "Event published"
+			    );
+			}
+
+			return published;
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -108,7 +179,20 @@ public class OrganizerServiceImpl implements OrganizerService {
 	 */
 	public boolean cancelEvent(int eventId) {
 		try {
-			return eventDao.updateEventStatus(eventId, "CANCELLED");
+			boolean cancelled = eventDao.updateEventStatus(eventId, "CANCELLED");
+
+			if (cancelled) {
+			    systemLogService.log(
+			        null,
+			        "CANCEL",
+			        "EVENT",
+			        eventId,
+			        "Event cancelled by organizer"
+			    );
+			}
+
+			return cancelled;
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -121,29 +205,88 @@ public class OrganizerServiceImpl implements OrganizerService {
 	 * Rule: - Available quantity is initialized to total quantity
 	 */
 	public boolean createTicket(Ticket ticket) {
-		ticket.setAvailableQuantity(ticket.getTotalQuantity());
-		return ticketDao.createTicket(ticket);
+		try {
+			ticket.setAvailableQuantity(ticket.getTotalQuantity());
+			boolean created = ticketDao.createTicket(ticket);
+
+
+			if (created) {
+			    systemLogService.log(
+			        null,
+			        "CREATE",
+			        "TICKET",
+			        ticket.getEventId(),
+			        "Ticket type created: " + ticket.getTicketType()
+			    );
+			}
+
+			return created;
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
 	}
 
 	/*
 	 * Updates the price of an existing ticket type.
 	 */
 	public boolean updateTicketPrice(int ticketId, double price) {
-		return ticketDao.updateTicketPrice(ticketId, price);
+		try {
+			boolean updated = ticketDao.updateTicketPrice(ticketId, price);
+
+			if (updated) {
+			    systemLogService.log(
+			        null,
+			        "UPDATE",
+			        "TICKET",
+			        ticketId,
+			        "Ticket price updated to ₹" + price
+			    );
+			}
+
+			return updated;
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
 	}
 
 	/*
 	 * Updates the total quantity of tickets available.
 	 */
 	public boolean updateTicketQuantity(int ticketId, int quantity) {
-		return ticketDao.updateTicketQuantity(ticketId, quantity);
+		try {
+			boolean updated = ticketDao.updateTicketQuantity(ticketId, quantity);
+
+			if (updated) {
+			    systemLogService.log(
+			        null,
+			        "UPDATE",
+			        "TICKET",
+			        ticketId,
+			        "Ticket quantity updated to " + quantity
+			    );
+			}
+
+			return updated;
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+
+
 	}
 
 	/*
 	 * Retrieves current ticket availability for an event.
 	 */
 	public List<Ticket> viewTicketAvailability(int eventId) {
-		return ticketDao.getTicketsByEvent(eventId);
+		try {
+			return ticketDao.getTicketsByEvent(eventId);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return new ArrayList<>();
 	}
 
 	/*

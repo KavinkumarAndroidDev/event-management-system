@@ -8,6 +8,7 @@ import com.ems.dao.RegistrationDao;
 import com.ems.exception.DataAccessException;
 import com.ems.model.Notification;
 import com.ems.service.NotificationService;
+import com.ems.service.SystemLogService;
 
 /*
  * Handles notification related business operations.
@@ -21,13 +22,15 @@ public class NotificationServiceImpl implements NotificationService {
 
 	private final NotificationDao notificationDao;
 	private final RegistrationDao registrationDao;
+	private final SystemLogService systemLogService;
 
 	/*
 	 * Initializes notification service with required data access dependencies.
 	 */
-	public NotificationServiceImpl(NotificationDao notificationDao, RegistrationDao registrationDao) {
+	public NotificationServiceImpl(NotificationDao notificationDao, RegistrationDao registrationDao, SystemLogService systemLogService) {
 		this.notificationDao = notificationDao;
 		this.registrationDao = registrationDao;
+		this.systemLogService = systemLogService;
 	}
 
 	/*
@@ -39,6 +42,14 @@ public class NotificationServiceImpl implements NotificationService {
 	public void sendSystemWideNotification(String message, String notificationType) {
 		try {
 			notificationDao.sendSystemWideNotification(message, notificationType);
+			
+			systemLogService.log(
+				    null,
+				    "SEND_NOTIFICATION",
+				    "SYSTEM",
+				    null,
+				    "System-wide notification sent"
+				);
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -111,6 +122,14 @@ public class NotificationServiceImpl implements NotificationService {
 			for (Integer userId : userIds) {
 				notificationDao.sendNotification(userId, message, type);
 			}
+			systemLogService.log(
+				    null,
+				    "SEND_NOTIFICATION",
+				    "EVENT",
+				    eventId,
+				    "Event notification sent to registered users"
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}

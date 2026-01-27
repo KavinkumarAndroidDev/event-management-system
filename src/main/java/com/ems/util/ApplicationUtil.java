@@ -5,7 +5,9 @@ import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
 import com.ems.service.OfferService;
+import com.ems.service.OrganizerService;
 import com.ems.service.PaymentService;
+import com.ems.service.SystemLogService;
 import com.ems.service.UserService;
 import com.ems.service.impl.*;
 
@@ -28,6 +30,8 @@ public final class ApplicationUtil {
     private static final UserService userService;
     private static final AdminService adminService;
     private static final OfferService offerService;
+    private static final SystemLogService systemLogService;
+    private static final OrganizerService organizerService;
 
     static {
         NotificationDaoImpl notificationDao = new NotificationDaoImpl();
@@ -41,9 +45,13 @@ public final class ApplicationUtil {
         RoleDaoImpl roleDao = new RoleDaoImpl();
         FeedbackDaoImpl feedbackDao = new FeedbackDaoImpl();
         OfferDaoImpl offerDao = new OfferDaoImpl();
-
+        SystemLogDaoImpl systemLogDao = new SystemLogDaoImpl();
+        
+        systemLogService = new SystemLogServiceImpl(systemLogDao);
         notificationService =
-            new NotificationServiceImpl(notificationDao, registrationDao);
+            new NotificationServiceImpl(notificationDao, registrationDao, systemLogService);
+        organizerService = new OrganizerServiceImpl(eventDao, ticketDao, registrationDao, notificationService, systemLogService);
+
 
         paymentService =
             new PaymentServiceImpl(
@@ -52,7 +60,8 @@ public final class ApplicationUtil {
                 paymentDao,
                 notificationDao,
                 eventDao,
-                offerDao
+                offerDao,
+                systemLogService
             );
 
         eventService =
@@ -62,13 +71,15 @@ public final class ApplicationUtil {
                 venueDao,
                 ticketDao,
                 paymentService,
-                feedbackDao
+                feedbackDao,
+                systemLogService
             );
 
         userService =
             new UserServiceImpl(
                 userDao,
-                roleDao
+                roleDao,
+                systemLogService
             );
 
         adminService =
@@ -79,11 +90,13 @@ public final class ApplicationUtil {
                 registrationDao,
                 categoryDao,
                 venueDao,
-                notificationService
+                notificationService,
+                systemLogService
             );
         offerService = 
         		new OfferServiceImpl(
-        				offerDao);
+        				offerDao,systemLogService);
+        
     }
 
     public static AdminService adminService() {
@@ -104,4 +117,8 @@ public final class ApplicationUtil {
     public static OfferService offerService() {
     	return offerService;
     }
+
+	public static OrganizerService organizerService() {
+		return organizerService;
+	}
 }

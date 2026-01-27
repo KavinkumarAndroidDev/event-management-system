@@ -1,6 +1,8 @@
 package com.ems.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +10,7 @@ import com.ems.dao.OfferDao;
 import com.ems.exception.DataAccessException;
 import com.ems.model.Offer;
 import com.ems.service.OfferService;
+import com.ems.service.SystemLogService;
 import com.ems.util.DateTimeUtil;
 
 /*
@@ -21,12 +24,15 @@ import com.ems.util.DateTimeUtil;
 public class OfferServiceImpl implements OfferService {
 
 	private final OfferDao offerDao;
+	private final SystemLogService systemLogService;
+
 
 	/*
 	 * Initializes offer service with required data access dependency.
 	 */
-	public OfferServiceImpl(OfferDao offerDao) {
+	public OfferServiceImpl(OfferDao offerDao, SystemLogService systemLogService) {
 		this.offerDao = offerDao;
+		this.systemLogService = systemLogService;
 	}
 
 	/*
@@ -39,8 +45,9 @@ public class OfferServiceImpl implements OfferService {
 		try {
 			return offerDao.getAllOffers();
 		} catch (DataAccessException e) {
-			throw new RuntimeException(e.getMessage());
+			System.out.println(e.getMessage());;
 		}
+		return new ArrayList<>();
 	}
 
 	/*
@@ -59,25 +66,22 @@ public class OfferServiceImpl implements OfferService {
 		offer.setValidTo(to);
 
 		try {
-			return offerDao.createOffer(offer);
+			int offerId = offerDao.createOffer(offer);
+
+			systemLogService.log(
+			    null,
+			    "CREATE",
+			    "OFFER",
+			    offerId,
+			    "Offer created with code: " + code
+			);
+
+			return offerId;
+
 		} catch (DataAccessException e) {
-			System.out.println(e);
+			System.out.println(e.getMessage());
 		}
 		return 0;
-	}
-
-	/*
-	 * Assigns an existing offer to a specific event.
-	 *
-	 * Used when offers are created independently and linked later.
-	 */
-	@Override
-	public void assignOfferToEvent(int offerId, int eventId) {
-		try {
-			offerDao.assignOfferToEvent(offerId, eventId);
-		} catch (DataAccessException e) {
-			throw new RuntimeException(e.getMessage());
-		}
 	}
 
 	/*
@@ -88,10 +92,22 @@ public class OfferServiceImpl implements OfferService {
 	@Override
 	public void toggleOfferStatus(int offerId, LocalDateTime validDate) {
 		try {
-			offerDao.updateOfferActiveStatus(offerId, DateTimeUtil.convertLocalDefaultToUtc(validDate));
+			offerDao.updateOfferActiveStatus(
+				    offerId,
+				    DateTimeUtil.convertLocalDefaultToUtc(validDate)
+				);
+
+				systemLogService.log(
+				    null,
+				    "UPDATE",
+				    "OFFER",
+				    offerId,
+				    "Offer validity updated. New valid_to: " + validDate
+				);
+
 
 		} catch (DataAccessException e) {
-			throw new RuntimeException(e.getMessage());
+			System.out.println(e.getMessage());;
 		}
 	}
 
@@ -105,7 +121,8 @@ public class OfferServiceImpl implements OfferService {
 		try {
 			return offerDao.getOfferUsageReport();
 		} catch (DataAccessException e) {
-			throw new RuntimeException(e.getMessage());
+			System.out.println(e.getMessage());;
 		}
+		return new HashMap<>();
 	}
 }

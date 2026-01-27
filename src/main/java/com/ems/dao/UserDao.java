@@ -23,4 +23,9 @@ public interface UserDao {
 	UserRole getRole(User user)  throws DataAccessException;
 
 	boolean checkUserExists(String email) throws DataAccessException;
+	
+	void incrementFailedAttempts(int userId) throws DataAccessException;
+	
+	void resetFailedAttempts(int userId) throws DataAccessException;
+
 }

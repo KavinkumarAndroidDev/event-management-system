@@ -12,6 +12,7 @@ import com.ems.exception.InvalidPasswordFormatException;
 import com.ems.exception.AuthenticationException;
 import com.ems.model.Role;
 import com.ems.model.User;
+import com.ems.service.SystemLogService;
 import com.ems.service.UserService;
 import com.ems.util.PasswordUtil;
 
@@ -28,10 +29,12 @@ public class UserServiceImpl implements UserService {
 
 	private final UserDao userDao;
 	private final RoleDao roleDao;
+	private final SystemLogService systemLogService;
 
-	public UserServiceImpl(UserDao userDao, RoleDao roleDao) {
+	public UserServiceImpl(UserDao userDao, RoleDao roleDao, SystemLogService systemLogService) {
 		this.userDao = userDao;
 		this.roleDao = roleDao;
+		this.systemLogService = systemLogService;
 	}
 
 	/*
@@ -41,34 +44,69 @@ public class UserServiceImpl implements UserService {
 	 * accounts are not allowed to log in
 	 */
 	@Override
-	public User login(String emailId, String password) throws AuthorizationException, AuthenticationException {
+	public User login(String emailId, String password)
+	        throws AuthorizationException, AuthenticationException {
 
-		try {
-			User user = userDao.findByEmail(emailId.toLowerCase());
+	    try {
+	        User user = userDao.findByEmail(emailId.toLowerCase());
 
-			if (user == null) {
-				throw new AuthorizationException("Invalid email address!");
-			}
-			if (!PasswordUtil.verifyPassword(password, user.getPasswordHash())) {
+	        if (user == null) {
+	            throw new AuthorizationException("Invalid email address!");
+	        }
 
-				throw new AuthenticationException("Invalid credentials");
-			}
-			// Suspended users are blocked from accessing the system
-			if (user.getStatus().toString().equalsIgnoreCase("suspended")) {
-				throw new AuthorizationException(
-						"\nYour account has been suspended!\ncontact admin@ems.com for more info");
-			}
+	        if ("SUSPENDED".equalsIgnoreCase(user.getStatus())) {
+	        	systemLogService.log(
+                	    user.getUserId(),
+                	    "LOGIN_BLOCKED",
+                	    "USER",
+                	    user.getUserId(),
+                	    "Login attempt blocked. Account is suspended"
+                	);
+	            throw new AuthorizationException(
+	                "\nYour account has been suspended!\ncontact admin@ems.com for more info"
+	            );
+	        }
 
-			System.out.println("Logged in as: " + emailId);
+	        if (!PasswordUtil.verifyPassword(password, user.getPasswordHash())) {
+	        	systemLogService.log(
+	        		    user.getUserId(),
+	        		    "LOGIN_FAILED",
+	        		    "USER",
+	        		    user.getUserId(),
+	        		    "Invalid password attempt"
+	        		);
 
-			return user;
+	            userDao.incrementFailedAttempts(user.getUserId());
 
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
+	            if (user.getFailedAttempts() + 1 >= 3) {
+	                userDao.updateUserStatus(user.getUserId(), "SUSPENDED");
+	                systemLogService.log(
+	                	    user.getUserId(),
+	                	    "ACCOUNT_SUSPENDED",
+	                	    "USER",
+	                	    user.getUserId(),
+	                	    "Account suspended due to multiple failed login attempts"
+	                	);
 
-		return null;
+
+	                throw new AuthorizationException(
+	                    "Account suspended due to multiple failed login attempts\ncontact admin@ems.com for more info"
+	                );
+	            }
+
+	            throw new AuthenticationException("Invalid credentials");
+	        }
+
+	        userDao.resetFailedAttempts(user.getUserId());
+
+	        System.out.println("Logged in as: " + emailId);
+	        return user;
+
+	    } catch (DataAccessException e) {
+	        throw new AuthenticationException("Login failed");
+	    }
 	}
+
 
 	/*
 	 * Creates a new user account with the specified role.

@@ -11,6 +11,7 @@ import com.ems.enums.PaymentMethod;
 import com.ems.model.Offer;
 import com.ems.model.Ticket;
 import com.ems.service.PaymentService;
+import com.ems.service.SystemLogService;
 
 /*
  * Handles payment and registration processing.
@@ -28,16 +29,18 @@ public class PaymentServiceImpl implements PaymentService {
 	private final NotificationDao notificationDao;
 	private final EventDao eventDao;
 	private final OfferDao offerDao;
+	private final SystemLogService systemLogService;
 
 
 	public PaymentServiceImpl(RegistrationDao registrationDao, TicketDao ticketDao, PaymentDao paymentDao,
-			NotificationDao notificationDao, EventDao eventDao, OfferDao offerDao) {
+			NotificationDao notificationDao, EventDao eventDao, OfferDao offerDao, SystemLogService systemLogService) {
 		this.registrationDao = registrationDao;
 		this.ticketDao = ticketDao;
 		this.paymentDao = paymentDao;
 		this.notificationDao = notificationDao;
 		this.eventDao = eventDao;
 		this.offerDao = offerDao;
+		this.systemLogService = systemLogService;
 	}
 
 	/*
@@ -61,17 +64,21 @@ public class PaymentServiceImpl implements PaymentService {
 				return false;
 			}
 			
-			Offer offer = offerDao.getValidOfferForEvent(eventId, offerCode);
+			Offer offer = null;
 			double discountPercentage = 0;
 
 			if (offerCode != null && !offerCode.isBlank()) {
-				offer = offerDao.getValidOfferForEvent(eventId, offerCode);
-				if (offer == null) {
-					System.out.println("Invalid or expired offer code");
-					return false;
-				}
-				discountPercentage = offer.getDiscountPercentage();
+			    offer = offerDao.getValidOfferForEvent(eventId, offerCode);
+			    if (offer == null) {
+			        System.out.println("Invalid or expired offer code");
+			        return false;
+			    }
+			    discountPercentage = offer.getDiscountPercentage() != null
+			            ? offer.getDiscountPercentage()
+			            : 0;
+
 			}
+
 
 
 			
@@ -83,19 +90,50 @@ public class PaymentServiceImpl implements PaymentService {
 			double finalAmount = baseAmount - discountAmount;
 
 			boolean paymentSuccess = paymentDao.processPayment(regId, finalAmount, selectedMethod.toString(), offer != null ? offer.getOfferId() : null);
+
 			// Rollback registration if payment fails
 			if (!paymentSuccess) {
-				registrationDao.removeRegistrations(regId);
 				registrationDao.removeRegistrationTickets(regId, ticketId);
+				registrationDao.removeRegistrations(regId);
+				systemLogService.log(
+					    userId,
+					    "PAYMENT_FAILED",
+					    "EVENT",
+					    eventId,
+					    "Payment failed for registration ID " + regId
+					);
+
 				return false;
 			}
+			if (offer != null) {
+			    offerDao.recordOfferUsage(
+			        offer.getOfferId(),
+			        userId,
+			        regId
+			    );
+			}
+
 			// Deduct confirmed ticket quantity after successful payment
 			ticketDao.updateAvailableQuantity(ticketId, -quantity);
 
-			String notificationMessage = "your registration for " + eventDao.getEventName(eventId) + " is confirmed. ";
+			String notificationMessage =
+				    "Your registration for " +
+				    eventDao.getEventName(eventId) +
+				    " is confirmed. Amount paid: ₹" +
+				    finalAmount;
 
 			notificationDao.sendNotification(userId, notificationMessage, NotificationType.EVENT.toString());
+			
+			systemLogService.log(
+				    userId,
+				    "REGISTER_SUCCESS",
+				    "EVENT",
+				    eventId,
+				    "Registered successfully. Amount paid: ₹" + finalAmount +
+				    (offer != null ? ", Offer used: " + offer.getCode() : "")
+				);
 
+			
 			return true;
 
 		} catch (Exception e) {

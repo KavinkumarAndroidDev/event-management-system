@@ -30,7 +30,7 @@ public class OrganizerMenu extends BaseMenu {
 
 	public OrganizerMenu(User user) {
 		super(user);
-		this.organizerService = new OrganizerServiceImpl();
+		this.organizerService = ApplicationUtil.organizerService();
 		this.notificationService = ApplicationUtil.notificationService();
 		this.eventService = ApplicationUtil.eventService();
 	}

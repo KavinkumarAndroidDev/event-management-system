@@ -19,8 +19,6 @@ public interface OfferService {
         LocalDateTime to
     );
 
-    void assignOfferToEvent(int offerId, int eventId);
-
     void toggleOfferStatus(int offerId, LocalDateTime validDate);
 
     // reports

@@ -15,6 +15,7 @@ import com.ems.model.User;
 import com.ems.model.Venue;
 import com.ems.service.AdminService;
 import com.ems.service.NotificationService;
+import com.ems.service.SystemLogService;
 
 /*
  * Handles administrative business operations.
@@ -34,13 +35,14 @@ public class AdminServiceImpl implements AdminService {
 	private final NotificationService notificationService;
 	private final CategoryDao categoryDao;
 	private final VenueDao venueDao;
+	private final SystemLogService systemLogService;
 
 	/*
 	 * Creates AdminService with required data access and notification dependencies.
 	 */
 	public AdminServiceImpl(UserDao userDao, EventDao eventDao, NotificationDao notificationDao,
 			RegistrationDao registrationDao, CategoryDao categoryDao, VenueDao venueDao,
-			NotificationService notificationService) {
+			NotificationService notificationService, SystemLogService systemLogService) {
 		this.userDao = userDao;
 		this.eventDao = eventDao;
 		this.notificationDao = notificationDao;
@@ -48,6 +50,7 @@ public class AdminServiceImpl implements AdminService {
 		this.categoryDao = categoryDao;
 		this.venueDao = venueDao;
 		this.notificationService = notificationService;
+		this.systemLogService = systemLogService;
 	}
 
 	/*
@@ -77,7 +80,17 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	public boolean changeStatus(String status, int userId) {
 		try {
-			return userDao.updateUserStatus(userId, status);
+			boolean updated = userDao.updateUserStatus(userId, status);
+			if (updated) {
+				systemLogService.log(
+					null,                     
+					"UPDATE_STATUS",
+					"USER",
+					userId,
+					"User status changed to " + status
+				);
+			}
+			return updated;
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -90,6 +103,13 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	public void sendSystemWideNotification(String message, String notificationType) {
 		notificationService.sendSystemWideNotification(message, notificationType);
+		systemLogService.log(
+				null,
+				"SEND_NOTIFICATION",
+				"SYSTEM",
+				null,
+				"System-wide notification sent"
+			);
 	}
 
 	/*
@@ -104,6 +124,13 @@ public class AdminServiceImpl implements AdminService {
 			if (isApproved) {
 				notificationDao.sendNotification(eventDao.getOrganizerId(eventId),
 						"Your event: " + eventId + " has been approved!", "EVENT");
+				systemLogService.log(
+						userId,
+						"APPROVE",
+						"EVENT",
+						eventId,
+						"Event approved by admin"
+					);
 			}
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
@@ -123,6 +150,13 @@ public class AdminServiceImpl implements AdminService {
 			if (isCancelled) {
 				notificationDao.sendNotification(eventDao.getOrganizerId(eventId),
 						"Your event: " + eventId + " has been cancelled!", "EVENT");
+				systemLogService.log(
+						null,
+						"CANCEL",
+						"EVENT",
+						eventId,
+						"Event cancelled by admin"
+					);
 			}
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
@@ -216,6 +250,14 @@ public class AdminServiceImpl implements AdminService {
 	public void sendNotificationByRole(String message, NotificationType selectedType, UserRole role) {
 		try {
 			notificationDao.sendNotificationByRole(message, selectedType.toString(), role.toString());
+			systemLogService.log(
+					null,
+					"SEND_NOTIFICATION",
+					"ROLE",
+					null,
+					"Notification sent to role: " + role
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -228,6 +270,15 @@ public class AdminServiceImpl implements AdminService {
 	public void sendNotificationToUser(String message, NotificationType selectedType, int userId) {
 		try {
 			notificationDao.sendNotification(userId, message, selectedType.toString());
+			
+			systemLogService.log(
+					null,
+					"SEND_NOTIFICATION",
+					"USER",
+					userId,
+					"Notification sent to user"
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -273,6 +324,15 @@ public class AdminServiceImpl implements AdminService {
 	public void addCategory(String name) {
 		try {
 			categoryDao.addCategory(name);
+			
+			systemLogService.log(
+					null,
+					"CREATE",
+					"CATEGORY",
+					null,
+					"Category created: " + name
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -282,6 +342,15 @@ public class AdminServiceImpl implements AdminService {
 	public void updateCategory(int categoryId, String name) {
 		try {
 			categoryDao.updateCategoryName(categoryId, name);
+			
+			systemLogService.log(
+					null,
+					"UPDATE",
+					"CATEGORY",
+					categoryId,
+					"Category name updated"
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -291,6 +360,15 @@ public class AdminServiceImpl implements AdminService {
 	public void deleteCategory(int categoryId) {
 		try {
 			categoryDao.deactivateCategory(categoryId);
+			
+			systemLogService.log(
+					null,
+					"DELETE",
+					"CATEGORY",
+					categoryId,
+					"Category deactivated"
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -316,6 +394,14 @@ public class AdminServiceImpl implements AdminService {
 	public void addVenue(Venue venue) {
 		try {
 			venueDao.addVenue(venue);
+			systemLogService.log(
+					null,
+					"CREATE",
+					"VENUE",
+					null,
+					"Venue added: " + venue.getName()
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -325,6 +411,15 @@ public class AdminServiceImpl implements AdminService {
 	public void updateVenue(Venue venue) {
 		try {
 			venueDao.updateVenue(venue);
+			
+			systemLogService.log(
+					null,
+					"UPDATE",
+					"VENUE",
+					venue.getVenueId(),
+					"Venue updated"
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
@@ -334,6 +429,15 @@ public class AdminServiceImpl implements AdminService {
 	public void removeVenue(int venueId) {
 		try {
 			venueDao.deactivateVenue(venueId);
+			
+			systemLogService.log(
+					null,
+					"DELETE",
+					"VENUE",
+					venueId,
+					"Venue removed"
+				);
+
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
