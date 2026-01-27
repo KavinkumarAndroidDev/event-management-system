@@ -9,6 +9,7 @@ import com.ems.enums.UserRole;
 import com.ems.model.Category;
 import com.ems.model.Event;
 import com.ems.model.Offer;
+import com.ems.model.OrganizerEventSummary;
 import com.ems.model.Ticket;
 import com.ems.model.User;
 import com.ems.model.Venue;
@@ -16,6 +17,8 @@ import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
 import com.ems.service.OfferService;
+import com.ems.service.OrganizerService;
+import com.ems.service.SystemLogService;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.MenuHelper;
 import com.ems.util.ScannerUtil;
@@ -36,6 +39,8 @@ public class AdminMenu extends BaseMenu {
 	private final EventService eventService;
 	private final NotificationService notificationService;
 	private final OfferService offerService;
+	private final OrganizerService organizerService;
+	private final SystemLogService systemLogService;
 
 	public AdminMenu(User user) {
 		super(user);
@@ -43,6 +48,8 @@ public class AdminMenu extends BaseMenu {
 		this.adminService = ApplicationUtil.adminService();
 		this.eventService = ApplicationUtil.eventService();
 		this.offerService = ApplicationUtil.offerService();
+		this.organizerService = ApplicationUtil.organizerService();
+		this.systemLogService = ApplicationUtil.systemLogService();
 	}
 
 	public void start() {
@@ -52,7 +59,7 @@ public class AdminMenu extends BaseMenu {
 					+ "3. Category Management\n" + "4. Venue Management\n" + "5. Ticket & Registration Management\n"
 					+ "6. Payment & Revenue Management\n" + "7. Offer & Promotion Management\n"
 					+ "8. Reports & Analytics\n" + "9. Notifications\n" + "10. Feedback Moderation\n"
-					+ "11. Role Management\n" + "12. Logout\n" + ">");
+					+ "11. Role Management\n" + "12. View system logs\n" + "13. Logout\n>" );
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
@@ -91,6 +98,9 @@ public class AdminMenu extends BaseMenu {
 				roleManagementMenu();
 				break;
 			case 12:
+				systemLogService.printAllLogs();
+				break;
+			case 13:
 				adminService.markCompletedEvents();
 				if (confirmLogout()) {
 					System.out.println("Logging out...");
@@ -98,7 +108,7 @@ public class AdminMenu extends BaseMenu {
 				}
 				break;
 			default:
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 				break;
 			}
 		}
@@ -116,7 +126,7 @@ public class AdminMenu extends BaseMenu {
 			case 1: {
 				List<User> attendees = adminService.getUsersList("Attendee");
 				if (attendees.isEmpty()) {
-					System.out.println("No users registered");
+					System.out.println("No users found at the moment.");
 				} else {
 					MenuHelper.displayUsers(attendees);
 				}
@@ -126,7 +136,7 @@ public class AdminMenu extends BaseMenu {
 			case 2: {
 				List<User> organizers = adminService.getUsersList("Organizer");
 				if (organizers.isEmpty()) {
-					System.out.println("No organizers registered");
+					System.out.println("No organizers found.");
 				} else {
 					MenuHelper.displayUsers(organizers);
 				}
@@ -148,7 +158,7 @@ public class AdminMenu extends BaseMenu {
 			}
 
 			default: {
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 			}
 			}
 		}
@@ -173,17 +183,17 @@ public class AdminMenu extends BaseMenu {
 
 		User selectedUser = users.get(choice - 1);
 		char approveChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(),
-				"Confirm change status to " + status + " for user " + selectedUser.getFullName() + " (Y/N)\n");
+				"Do you want to change the status to " + status + " for user " + selectedUser.getFullName() + " (Y/N)\n");
 		if (approveChoice == 'Y' || approveChoice == 'y') {
 			boolean isSuccess = adminService.changeStatus(status, selectedUser.getUserId());
 
 			if (isSuccess) {
-				System.out.println("User status updated to " + status);
+				System.out.println("User status updated successfully.");
 			} else {
-				System.out.println("Failed to update status");
+				System.out.println("Unable to update user status. Please try again.");
 			}
 		} else {
-			System.out.println("Process aborted");
+			System.out.println("Action cancelled by user.");
 		}
 	}
 
@@ -200,7 +210,7 @@ public class AdminMenu extends BaseMenu {
 			case 1: {
 				List<Event> events = eventService.getAllEvents();
 				if (events.isEmpty()) {
-					System.out.println("No available events");
+					System.out.println("No events available at the moment.");
 				} else {
 					MenuHelper.printEventSummaries(events);
 				}
@@ -224,7 +234,7 @@ public class AdminMenu extends BaseMenu {
 				List<Ticket> tickets = eventService.getTicketTypes(selectedEvent.getEventId());
 
 				if (tickets.isEmpty()) {
-					System.out.println("No ticket types for this event");
+					System.out.println("No ticket options are available for this event.");
 					break;
 				}
 
@@ -243,7 +253,7 @@ public class AdminMenu extends BaseMenu {
 				List<Event> events = eventService.listEventsYetToApprove();
 
 				if (events == null || events.isEmpty()) {
-					System.out.println("No events pending approval");
+					System.out.println("There are no events waiting for approval.");
 					break;
 				}
 
@@ -261,9 +271,9 @@ public class AdminMenu extends BaseMenu {
 						"Approve this event? (Y/N)\n");
 				if (approveChoice == 'Y' || approveChoice == 'y') {
 					adminService.approveEvents(loggedInUser.getUserId(), selectedEvent.getEventId());
-					System.out.println("Event approved successfully");
+					System.out.println("Event approved successfully and the organizer has been notified.");
 				} else {
-					System.out.println("Process aborted");
+					System.out.println("Action cancelled by user.");
 				}
 				break;
 			}
@@ -292,9 +302,9 @@ public class AdminMenu extends BaseMenu {
 				if (cancelChoice == 'Y' || cancelChoice == 'y') {
 					adminService.cancelEvents(selectedEvent.getEventId());
 
-					System.out.println("Event cancelled successfully");
+					System.out.println("Event cancelled successfully.");
 				} else {
-					System.out.println("Process aborted");
+					System.out.println("Action cancelled by user.");
 				}
 				break;
 			}
@@ -304,7 +314,7 @@ public class AdminMenu extends BaseMenu {
 			}
 
 			default: {
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 			}
 			}
 		}
@@ -325,16 +335,48 @@ public class AdminMenu extends BaseMenu {
 
 				adminService.getEventWiseRegistrations(selectedEvent.getEventId());
 				break;
-			case 2:
-				adminService.getOrganizerWisePerformance();
-				break;
+			case 2:{
+					List<User> user = adminService.getUsersList(UserRole.ORGANIZER.toString());
+					MenuHelper.displayUsers(user);
+					int organizerChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the valid choice (1 - " + user.size() +")");
+					while(organizerChoice < 1 || organizerChoice > user.size()) {
+						organizerChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the valid choice (1 - " + user.size() +")");
+					}
+					List<OrganizerEventSummary> list =
+				            organizerService.getOrganizerEventSummary(user.get(organizerChoice).getUserId());
+
+				    if (list.isEmpty()) {
+				        System.out.println("No event conducted by the organizer!");
+				        return;
+				    }
+
+				    System.out.println("\nOrganizer Events Summary");
+
+				    String currentStatus = "";
+
+				    for (OrganizerEventSummary s : list) {
+				    	
+				        if (!s.getStatus().equals(currentStatus)) {
+				            currentStatus = s.getStatus();
+				            System.out.println("\n[" + currentStatus + "]");
+				        }
+
+				        System.out.println(
+				        	    s.getTitle()
+				        	    + " | Tickets Booked: " + s.getBookedTickets()
+				        	    + " out of " + s.getTotalTickets()
+				        	);
+
+				    }
+				    break;
+				}
 			case 3:
 				adminService.getRevenueReport();
 				break;
 			case 4:
 				return;
 			default:
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 				break;
 			}
 		}
@@ -386,7 +428,7 @@ public class AdminMenu extends BaseMenu {
 			}
 
 			default: {
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 			}
 			}
 		}
@@ -424,7 +466,7 @@ public class AdminMenu extends BaseMenu {
 		} else if (typeChoice == 3) {
 			type = NotificationType.PAYMENT;
 		} else {
-			System.out.println("Invalid notification type");
+			System.out.println("Invalid notification type selected.");
 			return;
 		}
 
@@ -432,7 +474,7 @@ public class AdminMenu extends BaseMenu {
 
 		adminService.sendNotificationToUser(message, type, selectedUser.getUserId());
 
-		System.out.println("Notification sent successfully");
+		System.out.println("Notification sent successfully.");
 	}
 
 	private void sendNotificationByRole() {
@@ -448,7 +490,7 @@ public class AdminMenu extends BaseMenu {
 		} else if (roleChoice == 2) {
 			role = UserRole.ORGANIZER;
 		} else {
-			System.out.println("Invalid role selection");
+			System.out.println("Invalid role selected. Please try again.");
 			return;
 		}
 
@@ -465,7 +507,7 @@ public class AdminMenu extends BaseMenu {
 		} else if (typeChoice == 3) {
 			type = NotificationType.PAYMENT;
 		} else {
-			System.out.println("Invalid notification type");
+			System.out.println("Invalid notification type selected.");
 			return;
 		}
 
@@ -473,7 +515,7 @@ public class AdminMenu extends BaseMenu {
 
 		adminService.sendNotificationByRole(message, type, role);
 
-		System.out.println("Notification sent successfully");
+		System.out.println("Notification sent successfully.");
 	}
 
 	private void categoryManagementMenu() {
@@ -490,7 +532,7 @@ public class AdminMenu extends BaseMenu {
 				List<Category> categories = adminService.getAllCategories();
 
 				if (categories.isEmpty()) {
-					System.out.println("No categories available");
+					System.out.println("No categories found.");
 					return;
 				}
 
@@ -502,7 +544,7 @@ public class AdminMenu extends BaseMenu {
 				String name = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter category name: ");
 
 				adminService.addCategory(name);
-				System.out.println("Category added successfully");
+				System.out.println("Category added successfully.");
 				break;
 			}
 
@@ -529,7 +571,7 @@ public class AdminMenu extends BaseMenu {
 						"Are you sure you want to delete this category (Y/N): ");
 
 				if (Character.toUpperCase(confirm) != 'Y') {
-					System.out.println("Delete aborted");
+					System.out.println("Category deletion cancelled.");
 					return;
 				}
 
@@ -544,7 +586,7 @@ public class AdminMenu extends BaseMenu {
 			}
 
 			default: {
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 			}
 			}
 		}
@@ -555,7 +597,7 @@ public class AdminMenu extends BaseMenu {
 		List<Category> categories = adminService.getAllCategories();
 
 		if (categories.isEmpty()) {
-			System.out.println("No categories available");
+			System.out.println("No categories found.");
 			return null;
 		}
 
@@ -586,7 +628,7 @@ public class AdminMenu extends BaseMenu {
 				List<Venue> venues = eventService.getAllVenues();
 
 				if (venues.isEmpty()) {
-					System.out.println("No venues available");
+					System.out.println("No venues found.");
 				} else {
 					MenuHelper.displayVenues(venues);
 				}
@@ -607,7 +649,7 @@ public class AdminMenu extends BaseMenu {
 						InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the maximum capacity: "));
 
 				adminService.addVenue(venue);
-				System.out.println("Venue added successfully");
+				System.out.println("Venue added successfully.");
 				break;
 			}
 
@@ -668,12 +710,12 @@ public class AdminMenu extends BaseMenu {
 						"Are you sure you want to remove this venue (Y/N): ");
 
 				if (Character.toUpperCase(confirm) != 'Y') {
-					System.out.println("Removal aborted");
+					System.out.println("Venue removal cancelled.");
 					break;
 				}
 
 				adminService.removeVenue(selectedVenue.getVenueId());
-				System.out.println("Venue removed successfully");
+				System.out.println("Venue removed successfully.");
 				break;
 			}
 
@@ -697,7 +739,7 @@ public class AdminMenu extends BaseMenu {
 			}
 
 			default: {
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 			}
 			}
 		}
@@ -708,7 +750,7 @@ public class AdminMenu extends BaseMenu {
 		List<Venue> venues = eventService.getAllVenues();
 
 		if (venues.isEmpty()) {
-			System.out.println("No venues available");
+			System.out.println("No venues found.");
 			return null;
 		}
 
@@ -738,7 +780,7 @@ public class AdminMenu extends BaseMenu {
 			case 1: {
 				List<Event> events = eventService.listAvailableEvents();
 				if (events.isEmpty()) {
-					System.out.println("No available events");
+					System.out.println("No events available at the moment.");
 					break;
 				}
 
@@ -770,7 +812,7 @@ public class AdminMenu extends BaseMenu {
 			case 2: {
 				List<Event> events = eventService.listAvailableEvents();
 				if (events.isEmpty()) {
-					System.out.println("No available events");
+					System.out.println("No events available at the moment.");
 					break;
 				}
 
@@ -801,7 +843,7 @@ public class AdminMenu extends BaseMenu {
 			case 3: {
 				List<Event> events = eventService.listAvailableEvents();
 				if (events.isEmpty()) {
-					System.out.println("No available events");
+					System.out.println("No events available at the moment.");
 					break;
 				}
 
@@ -834,7 +876,7 @@ public class AdminMenu extends BaseMenu {
 				return;
 
 			default:
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 			}
 		}
 	}
@@ -852,7 +894,7 @@ public class AdminMenu extends BaseMenu {
 				return;
 
 			default:
-				System.out.println("This feature will be available soon");
+				System.out.println("This feature is under development and will be available soon.");
 			}
 		}
 	}
@@ -868,7 +910,7 @@ public class AdminMenu extends BaseMenu {
 			case 1:
 				List<Offer> offers = offerService.getAllOffers();
 				if (offers.isEmpty()) {
-					System.out.println("No offers available");
+					System.out.println("No offers found.");
 				} else {
 					MenuHelper.displayOffers(offers);
 				}
@@ -890,7 +932,7 @@ public class AdminMenu extends BaseMenu {
 				return;
 
 			default:
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select a valid menu number.");
 			}
 		}
 	}
@@ -945,7 +987,7 @@ public class AdminMenu extends BaseMenu {
 
 		int offerId = offerService.createOffer(event.getEventId(), code, discount, from, to);
 
-		System.out.println("Offer created with ID: " + offerId);
+		System.out.println("Offer created successfully. Offer ID: " + offerId);
 	}
 
 	private void toggleOfferStatus() {
@@ -963,7 +1005,7 @@ public class AdminMenu extends BaseMenu {
 		List<Offer> offers = offerService.getAllOffers();
 
 		if (offers.isEmpty()) {
-			System.out.println("No offers available");
+			System.out.println("No offers found.");
 			return;
 		}
 
@@ -975,7 +1017,7 @@ public class AdminMenu extends BaseMenu {
 		} else if (option == 2) {
 			filtered = offers.stream().filter(o -> o.getValidTo() != null && o.getValidTo().isAfter(now)).toList();
 		} else {
-			System.out.println("Invalid option");
+			System.out.println("Invalid option. Please select a valid menu number.");
 			return;
 		}
 
@@ -1008,7 +1050,7 @@ public class AdminMenu extends BaseMenu {
 			return;
 		}
 		if (newValidTo.isAfter(event.getStartDateTime())) {
-			System.out.println("Offer validity cannot exceed event start time");
+			System.out.println("Offer validity must end before the event starts.");
 			return;
 		}
 
@@ -1017,7 +1059,7 @@ public class AdminMenu extends BaseMenu {
 		if (updateChoice == 'Y' || updateChoice == 'y') {
 			offerService.toggleOfferStatus(selectedOffer.getOfferId(), newValidTo);
 
-			System.out.println(option == 1 ? "Offer activated" : "Offer deactivated");
+			System.out.println(option == 1 ? "Offer activated successfully." : "Offer deactivated successfully.");
 		} else {
 			System.out.println("Process aborted!");
 		}
@@ -1036,7 +1078,7 @@ public class AdminMenu extends BaseMenu {
 			case 5:
 				return;
 			default:
-				System.out.println("This feature will be available soon");
+				System.out.println("This feature is under development and will be available soon.");
 			}
 		}
 
@@ -1053,13 +1095,13 @@ public class AdminMenu extends BaseMenu {
 			case 6:
 				return;
 			default:
-				System.out.println("This feature will be available soon");
+				System.out.println("This feature is under development and will be available soon.");
 			}
 		}
 	}
 
 	private boolean confirmLogout() {
-		char choice = InputValidationUtil.readChar(ScannerUtil.getScanner(), "Are you sure to logout (Y/N): ");
+		char choice = InputValidationUtil.readChar(ScannerUtil.getScanner(), "Are you sure you want to log out? (Y/N): ");
 		return Character.toUpperCase(choice) == 'Y';
 	}
 
@@ -1068,7 +1110,7 @@ public class AdminMenu extends BaseMenu {
 		List<Event> events = eventService.getAllEvents();
 
 		if (events.isEmpty()) {
-			System.out.println("No available events");
+			System.out.println("No events available at the moment.");
 			return null;
 		}
 

@@ -173,7 +173,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	
 	//organizer functions:
 
-    public int getEventRegistrationCount(int eventId) {
+    public int getEventRegistrationCount(int eventId) throws DataAccessException {
         String sql = "select count(*) from registrations where event_id=?";
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -182,11 +182,11 @@ public class RegistrationDaoImpl implements RegistrationDao {
             ResultSet rs = ps.executeQuery();
             return rs.next() ? rs.getInt(1) : 0;
         } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+	        throw new DataAccessException("Unable to fetch registered count");
+	    }
     }
 
-    public List<Map<String, Object>> getRegisteredUsers(int eventId) {
+    public List<Map<String, Object>> getRegisteredUsers(int eventId) throws DataAccessException {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql = "select u.user_id,u.full_name,u.email from users u join registrations r on u.user_id=r.user_id where r.event_id=?";
         try (Connection con = DBConnectionUtil.getConnection();
@@ -202,12 +202,12 @@ public class RegistrationDaoImpl implements RegistrationDao {
                 list.add(m);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+	        throw new DataAccessException("Unable to fetch registered users");
+	    }
         return list;
     }
 
-    public List<Map<String, Object>> getOrganizerWiseRegistrations(int organizerId) {
+    public List<Map<String, Object>> getOrganizerWiseRegistrations(int organizerId) throws DataAccessException {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql = "select e.title,count(r.registration_id) total from events e left join registrations r on e.event_id=r.event_id where e.organizer_id=? group by e.event_id";
         try (Connection con = DBConnectionUtil.getConnection();
@@ -222,12 +222,12 @@ public class RegistrationDaoImpl implements RegistrationDao {
                 list.add(m);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+	        throw new DataAccessException("Unable to fetch organizer wise registrations");
+	    }
         return list;
     }
 
-    public List<Map<String, Object>> getTicketSales(int organizerId) {
+    public List<Map<String, Object>> getTicketSales(int organizerId) throws DataAccessException {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql = "select t.ticket_type,sum(rt.quantity) sold from tickets t join registration_tickets rt on t.ticket_id=rt.ticket_id join events e on e.event_id=t.event_id where e.organizer_id=? group by t.ticket_id";
         try (Connection con = DBConnectionUtil.getConnection();
@@ -242,12 +242,12 @@ public class RegistrationDaoImpl implements RegistrationDao {
                 list.add(m);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+	        throw new DataAccessException("Unable to fetch ticket sales");
+	    }
         return list;
     }
 
-    public double getRevenueSummary(int organizerId) {
+    public double getRevenueSummary(int organizerId) throws DataAccessException {
         String sql = "select sum(p.amount) from payments p join registrations r on p.registration_id=r.registration_id join events e on e.event_id=r.event_id where e.organizer_id=?";
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -256,7 +256,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
             ResultSet rs = ps.executeQuery();
             return rs.next() ? rs.getDouble(1) : 0;
         } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+	        throw new DataAccessException("Unable to fetch revenue summary");
+	    }
     }
 }

@@ -56,4 +56,7 @@ public interface OrganizerService {
     
     // organizer data
     List<Event> getOrganizerEvents(int organizerId);
+    
+    Event getOrganizerEventById(int organizerId, int eventId);
+
 }

@@ -56,9 +56,12 @@ public class EventDaoImpl implements EventDao {
 	@Override
 	public List<Event> listAvailableAndDraftEvents() throws DataAccessException {
 		List<Event> events = new ArrayList<>();
-		String sql = "select distinct e.* " + "from events e " + "inner join tickets t on e.event_id = t.event_id "
-				+ "where e.status in (?, ?) " + "and t.available_quantity > 0 "
-				+ "AND e.start_datetime > UTC_TIMESTAMP()";
+		String sql =
+			    "SELECT DISTINCT e.* " +
+			    "FROM events e " +
+			    "WHERE e.status IN (?, ?) " +
+			    "AND e.start_datetime > UTC_TIMESTAMP()";
+
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -92,21 +95,23 @@ public class EventDaoImpl implements EventDao {
 	@Override
 	public List<Event> listEventsYetToApprove() throws DataAccessException {
 		List<Event> events = new ArrayList<>();
-		String sql = "select distinct e.* " + "from events e " + "inner join tickets t on e.event_id = t.event_id "
-				+ "where e.status in (?, ?) " + "and t.available_quantity > 0 "
-				+ "AND e.start_datetime > UTC_TIMESTAMP() and e.approved_at = null";
+		String sql =
+		        "SELECT e.* " +
+		        "FROM events e " +
+		        "WHERE e.status in (?, ?)" +
+		        "AND e.approved_at IS NULL " +
+		        "AND e.start_datetime > UTC_TIMESTAMP()";
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-
 			ps.setString(1, "DRAFT");
 			ps.setString(2, "CANCELLED");
 			ResultSet rs = ps.executeQuery();
 			events = getEventList(rs);
 			rs.close();
+			return events;
 		} catch (SQLException e) {
 			throw new DataAccessException("Error fetching yet to approve events");
 		}
-		return events;
 	}
 
 	@Override
@@ -524,17 +529,25 @@ public class EventDaoImpl implements EventDao {
 
 	@Override
 	public List<OrganizerEventSummary> getEventSummaryByOrganizer(int organizerId) throws DataAccessException {
-		String sql = "SELECT  "
-				+ "    e.event_id, "
-				+ "    e.title, "
-				+ "    e.status, "
-				+ "    COALESCE(SUM(t.total_quantity), 0) AS total_tickets, "
-				+ "    COALESCE(SUM(t.total_quantity - t.available_quantity), 0) AS booked_tickets "
-				+ "FROM events e "
-				+ "LEFT JOIN tickets t ON e.event_id = t.event_id "
-				+ "WHERE e.organizer_id = ? "
-				+ "GROUP BY e.event_id, e.title, e.status "
-				+ "ORDER BY e.status, e.start_datetime; ";
+		String sql = "SELECT "
+		        + "    e.event_id, "
+		        + "    e.title, "
+		        + "    e.status, "
+		        + "    e.start_datetime, "
+		        + "    COALESCE(SUM(t.total_quantity), 0) AS total_tickets, "
+		        + "    COALESCE(SUM(t.total_quantity - t.available_quantity), 0) AS booked_tickets "
+		        + "FROM events e "
+		        + "LEFT JOIN tickets t ON e.event_id = t.event_id "
+		        + "WHERE e.organizer_id = ? "
+		        + "GROUP BY "
+		        + "    e.event_id, "
+		        + "    e.title, "
+		        + "    e.status, "
+		        + "    e.start_datetime "
+		        + "ORDER BY "
+		        + "    e.status, "
+		        + "    e.start_datetime;";
+
 		List<OrganizerEventSummary> eventSummaries = new ArrayList<>();
 		try (Connection con = DBConnectionUtil.getConnection();
 	             PreparedStatement ps = con.prepareStatement(sql)) {
@@ -542,14 +555,15 @@ public class EventDaoImpl implements EventDao {
 	            ps.setInt(1, organizerId);
 	            ResultSet rs = ps.executeQuery();
 	            while (rs.next()) {
-	            	OrganizerEventSummary eventSummary = new OrganizerEventSummary();
-	            	eventSummary.setBookedTickets(rs.getInt("booked_tickets"));
-	            	eventSummary.setEventId(rs.getInt("event_id"));
-	            	eventSummary.setStatus(rs.getString("status"));
-	            	eventSummary.setTitle(rs.getString("title"));
-	            	eventSummary.setTotalTickets(rs.getInt("total_ticekts"));
-	            	eventSummaries.add(eventSummary);
+	                OrganizerEventSummary eventSummary = new OrganizerEventSummary();
+	                eventSummary.setEventId(rs.getInt("event_id"));
+	                eventSummary.setTitle(rs.getString("title"));
+	                eventSummary.setStatus(rs.getString("status"));
+	                eventSummary.setTotalTickets(rs.getInt("total_tickets"));
+	                eventSummary.setBookedTickets(rs.getInt("booked_tickets"));
+	                eventSummaries.add(eventSummary);
 	            }
+
 	        } catch (SQLException e) {
 				throw new DataAccessException("Failed to fetch organizer events");
 			}

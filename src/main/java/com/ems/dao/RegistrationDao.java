@@ -19,15 +19,15 @@ public interface RegistrationDao {
 	void removeRegistrationTickets(int regId, int ticketId) throws DataAccessException;
 	
 	//Organizer functions:
-    int getEventRegistrationCount(int eventId);
+    int getEventRegistrationCount(int eventId) throws DataAccessException;
 
-    List<Map<String, Object>> getRegisteredUsers(int eventId);
+    List<Map<String, Object>> getRegisteredUsers(int eventId) throws DataAccessException;
 
-    List<Map<String, Object>> getOrganizerWiseRegistrations(int organizerId);
+    List<Map<String, Object>> getOrganizerWiseRegistrations(int organizerId) throws DataAccessException;
 
-    List<Map<String, Object>> getTicketSales(int organizerId);
+    List<Map<String, Object>> getTicketSales(int organizerId) throws DataAccessException;
 
-    double getRevenueSummary(int organizerId);
+    double getRevenueSummary(int organizerId) throws DataAccessException;
     
     List<Integer> getRegisteredUserIdsByEvent(int eventId) throws DataAccessException;
 

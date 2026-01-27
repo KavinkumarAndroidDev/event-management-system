@@ -36,8 +36,8 @@ public class GuestMenu extends BaseMenu {
 					+ "1. Browse Events\n" 
 			        + "2. Register account\n"
 			        + "3. Exit Guest Mode\n"
-			        + "Guest accounts have limited access.\n"
-			        + "Please register or log in to use all features.\n"
+			        + "\nNote: Guest users have limited access.\n"
+			        + "Register or log in to unlock all features.\n"
 			        + "\n>");
 			int input = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 			switch(input) {
@@ -48,10 +48,10 @@ public class GuestMenu extends BaseMenu {
 				createAccount(UserRole.ATTENDEE);
 				break;
 			case 3:
-			    System.out.println("Exiting Guest Mode...");
+			    System.out.println("Exiting guest mode. Returning to main menu...\n");
 			    return;   
 			default:
-				System.out.println("Enter the valid option");
+				System.out.println("Please select a valid option from the menu.");
 				break;
 			}
 			
@@ -66,6 +66,8 @@ public class GuestMenu extends BaseMenu {
 		String email = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the email address: ");
 		while (!email.matches(
                 "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
+			System.out.println("Invalid email format.\n"
+					+ "Example: name@example.com\n");
             email =
                 InputValidationUtil.readNonEmptyString(
                     ScannerUtil.getScanner(),
@@ -73,6 +75,8 @@ public class GuestMenu extends BaseMenu {
                 );
         }
 		while(userService.checkUserExists(email)) {
+			System.out.println("This email is already registered.\n"
+					+ "Please try a different email.\n");
 			email =
 	                InputValidationUtil.readNonEmptyString(
 	                    ScannerUtil.getScanner(),
@@ -82,7 +86,7 @@ public class GuestMenu extends BaseMenu {
 		String phone =
 	            InputValidationUtil.readString(
 	                ScannerUtil.getScanner(),
-	                "Enter Phone Number: "
+	                "Enter phone number (optional):\n"
 	            );
 	        
 	        if (phone.trim().isEmpty()) {
@@ -94,7 +98,9 @@ public class GuestMenu extends BaseMenu {
 	            }
 	        }
 		String passwordPrompt =
-	            "Enter Password (Min 8 chars, 1 Digit, 1 Upper, 1 Lower, 1 Special [!@#$%^&*]): ";
+	            "Create a password:\n"
+	            + "Minimum 8 characters\n"
+	            + "At least 1 uppercase, 1 lowercase, 1 number, 1 special character\n";
 
 	        String password =
 	            InputValidationUtil.readNonEmptyString(
@@ -156,7 +162,7 @@ public class GuestMenu extends BaseMenu {
 	private void printAllAvailableEvents() {
 		List<Event> filteredEvents = eventService.getAllEvents();
 		if(filteredEvents.isEmpty()) {
-			System.out.println("There is no available events!");
+			System.out.println("No events are available at the moment.\n");
 			return;
 		}
 		MenuHelper.printEventSummaries(filteredEvents);
@@ -165,7 +171,7 @@ public class GuestMenu extends BaseMenu {
 	private void viewEventDetails() {
     	List<Event> events = eventService.listAvailableEvents();
     	if (events.isEmpty()) {
-		    System.out.println("There are no available events!");
+		    System.out.println("No events are available at the moment.\n");
 		    return;
 		}
 		
@@ -188,7 +194,7 @@ public class GuestMenu extends BaseMenu {
 	private void viewTicketOptions() {
 		List<Event> events = eventService.listAvailableEvents();
 		if (events.isEmpty()) {
-		    System.out.println("There are no available events!");
+		    System.out.println("No events are available at the moment.\n");
 		    return;
 		}
 		
@@ -209,7 +215,7 @@ public class GuestMenu extends BaseMenu {
 		List<Ticket> tickets = eventService.getTicketTypes(eventId);
 		
 		if(!tickets.isEmpty()) {
-			System.out.println("\nAvailable ticekt types: ");			
+			System.out.println("\nAvailable ticket types: ");			
 			
 			int displayIndex = 1;
 	        for (Ticket ticket: tickets) {

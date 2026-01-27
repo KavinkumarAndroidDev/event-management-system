@@ -1,6 +1,9 @@
 package com.ems.dao;
 
+import java.util.List;
+
 import com.ems.exception.DataAccessException;
+import com.ems.model.SystemLog;
 
 public interface SystemLogDao {
 
@@ -11,4 +14,6 @@ public interface SystemLogDao {
 		Integer entityId,
 		String message
 	) throws DataAccessException;
+	
+	List<SystemLog> findAll() throws DataAccessException;
 }

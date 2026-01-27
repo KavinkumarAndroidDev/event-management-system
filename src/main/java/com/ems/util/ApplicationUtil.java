@@ -1,6 +1,17 @@
 package com.ems.util;
 
-import com.ems.dao.impl.*;
+import com.ems.dao.impl.CategoryDaoImpl;
+import com.ems.dao.impl.EventDaoImpl;
+import com.ems.dao.impl.FeedbackDaoImpl;
+import com.ems.dao.impl.NotificationDaoImpl;
+import com.ems.dao.impl.OfferDaoImpl;
+import com.ems.dao.impl.PaymentDaoImpl;
+import com.ems.dao.impl.RegistrationDaoImpl;
+import com.ems.dao.impl.RoleDaoImpl;
+import com.ems.dao.impl.SystemLogDaoImpl;
+import com.ems.dao.impl.TicketDaoImpl;
+import com.ems.dao.impl.UserDaoImpl;
+import com.ems.dao.impl.VenueDaoImpl;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
@@ -120,5 +131,8 @@ public final class ApplicationUtil {
 
 	public static OrganizerService organizerService() {
 		return organizerService;
+	}
+	public static SystemLogService systemLogService() {
+		return systemLogService;
 	}
 }

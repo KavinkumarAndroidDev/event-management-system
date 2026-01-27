@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
 	        User user = userDao.findByEmail(emailId.toLowerCase());
 
 	        if (user == null) {
-	            throw new AuthorizationException("Invalid email address!");
+	            throw new AuthorizationException("Account not found. Please register first.");
 	        }
 
 	        if ("SUSPENDED".equalsIgnoreCase(user.getStatus())) {

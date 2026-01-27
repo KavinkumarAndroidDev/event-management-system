@@ -44,7 +44,7 @@ public class UserMenu extends BaseMenu {
 		notificationService.displayUnreadNotifications(loggedInUser.getUserId());
 
 		while (true) {
-			System.out.println("\nUser Menu\n" + "1. Browse Events\n" + "2. Search & Filter Events\n"
+			System.out.println("\nUser Menu\n\n" + "1. Browse Events\n" + "2. Search & Filter Events\n"
 					+ "3. My Registrations\n" + "4. Notifications\n" + "5. Feedback\n" + "6. Logout\n" + ">");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
@@ -72,7 +72,7 @@ public class UserMenu extends BaseMenu {
 				}
 				break;
 			default:
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select from the menu.");
 			}
 		}
 	}
@@ -80,7 +80,7 @@ public class UserMenu extends BaseMenu {
 	private void browseEventsMenu() {
 
 		while (true) {
-			System.out.println("\nBrowse Events\n" + "1. View all available events\n" + "2. View event details\n"
+			System.out.println("\nBrowse Events\n\n" + "1. View all available events\n" + "2. View event details\n"
 					+ "3. View ticket options\n" + "4. Register for event\n" + "5. Back" + "\n>");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
@@ -101,7 +101,7 @@ public class UserMenu extends BaseMenu {
 			case 5:
 				return;
 			default:
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select from the menu.");
 			}
 		}
 	}
@@ -109,14 +109,14 @@ public class UserMenu extends BaseMenu {
 	private void registerForEvent() {
 		List<Event> events = eventService.listAvailableEvents();
         if (events == null || events.isEmpty()) {
-            System.out.println("There are no available events!");
+            System.out.println("No events available at the moment.");
             return;
         }
 
         MenuHelper.printEventSummaries(events);
         int choice = InputValidationUtil.readInt(
         		ScannerUtil.getScanner(),
-        		"Select an event (1-" + events.size() + "): "
+        		"Select an event number (1-" + events.size() + "): "
         );
         while (choice < 1 || choice > events.size()) {
         	choice = InputValidationUtil.readInt(
@@ -159,7 +159,7 @@ public class UserMenu extends BaseMenu {
         Ticket selectedTicket = tickets.get(ticketChoice - 1);
         int ticketId = selectedTicket.getTicketId();
 
-        int quantity = InputValidationUtil.readInt(ScannerUtil.getScanner(), "How many tickets? ");
+        int quantity = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter number of tickets: ");
         while (quantity <= 0 || quantity > selectedTicket.getAvailableQuantity()) {
             quantity = InputValidationUtil.readInt(
                 ScannerUtil.getScanner(),
@@ -185,7 +185,7 @@ public class UserMenu extends BaseMenu {
         );
 
         while (paymentChoice < 1 || paymentChoice > methods.length) {
-            System.out.println("Invalid payment method selected");
+            System.out.println("Please select a valid payment method.");
             paymentChoice = InputValidationUtil.readInt(
                 ScannerUtil.getScanner(),
                 "Enter choice (1-" + methods.length + "): "
@@ -196,7 +196,7 @@ public class UserMenu extends BaseMenu {
         
         String offerCode = InputValidationUtil.readString(
         	    ScannerUtil.getScanner(),
-        	    "Enter offer code (Press Enter to skip): "
+        	    "Enter offer code (press Enter to skip): "
         	);
 
         	if (offerCode.isBlank()) {
@@ -208,9 +208,9 @@ public class UserMenu extends BaseMenu {
         
         boolean success = eventService.registerForEvent(loggedInUser.getUserId(), eventId, ticketId, quantity, selectedTicket.getPrice(), selectedMethod, offerCode);
         if (success) {
-            System.out.println("Registration successful! Enjoy your event.");
+            System.out.println("Registration successful. Your tickets are confirmed.");
         } else {
-            System.out.println("Registration failed. Please check ticket availability.");
+            System.out.println("Registration failed. Please check availability or try again.\n");
         }
 	}
 
@@ -218,14 +218,14 @@ public class UserMenu extends BaseMenu {
 	private void viewTicketOptions() {
 		List<Event> events = eventService.listAvailableEvents();
 		if (events.isEmpty()) {
-		    System.out.println("There are no available events!");
+		    System.out.println("No events available at the moment.");
 		    return;
 		}
 		
     	MenuHelper.printEventSummaries(events);
     	int choice = InputValidationUtil.readInt(
 	    	    ScannerUtil.getScanner(),
-	    	    "Select an event (1-" + events.size() + "): "
+	    	    "Select an event number (1-" + events.size() + "): "
     	);
     	while (choice < 1 || choice > events.size()) {
     	    choice = InputValidationUtil.readInt(
@@ -239,7 +239,7 @@ public class UserMenu extends BaseMenu {
 		List<Ticket> tickets = eventService.getTicketTypes(eventId);
 		
 		if(!tickets.isEmpty()) {
-			System.out.println("\nAvailable ticekt types: ");			
+			System.out.println("\nAvailable ticket types: ");			
 			
 			int displayIndex = 1;
 	        for (Ticket ticket: tickets) {
@@ -253,7 +253,7 @@ public class UserMenu extends BaseMenu {
 	                displayIndex++;
 	        }
 		}else {
-			System.out.println("No ticket types for the given event id");
+			System.out.println("No ticket types available for this event.\n");
 			return;
 		}
 		
@@ -262,14 +262,14 @@ public class UserMenu extends BaseMenu {
 	private void viewEventDetails() {
     	List<Event> events = eventService.listAvailableEvents();
     	if (events.isEmpty()) {
-		    System.out.println("There are no available events!");
+		    System.out.println("No events available at the moment.");
 		    return;
 		}
 		
     	MenuHelper.printEventSummaries(events);
     	int choice = InputValidationUtil.readInt(
 	    	    ScannerUtil.getScanner(),
-	    	    "Select an event (1-" + events.size() + "): "
+	    	    "Select an event number (1-" + events.size() + "): "
     	);
     	while (choice < 1 || choice > events.size()) {
     	    choice = InputValidationUtil.readInt(
@@ -284,7 +284,7 @@ public class UserMenu extends BaseMenu {
 
 	private void registrationMenu() {
 		while (true) {
-			System.out.println("\nMy Registrations\n" + "1. View upcoming events\n" + "2. View past events\n"
+			System.out.println("\nMy Registrations\n\n" + "1. View upcoming events\n" + "2. View past events\n"
 					+ "3. View booking details\n" + "4. Back\n" + ">");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
@@ -302,7 +302,7 @@ public class UserMenu extends BaseMenu {
 			case 4:
 				return;
 			default:
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select from the menu.");
 			}
 		}
 	}
@@ -310,9 +310,10 @@ public class UserMenu extends BaseMenu {
 	private void viewBookingDetails() {
 		List<BookingDetail> bookingDetails = eventService.viewBookingDetails(loggedInUser.getUserId());
 		if (bookingDetails.isEmpty()) {
-            System.out.println("No bookings found");
+            System.out.println("You have no bookings yet.");
             return;
         }
+		System.out.println("Booking Details\n");
 
         for (BookingDetail b : bookingDetails) {
             System.out.println("------------------------------------------");
@@ -328,7 +329,7 @@ public class UserMenu extends BaseMenu {
 	private void viewUpcomingEvents() {
 		List<UserEventRegistration> upcoming = eventService.viewUpcomingEvents(loggedInUser.getUserId());
 		if (upcoming.isEmpty()) {
-            System.out.println("No upcoming events!");
+            System.out.println("You have no upcoming events.");
             return;
         }
 
@@ -351,7 +352,7 @@ public class UserMenu extends BaseMenu {
 	private void viewPastEvents() {
 		List<UserEventRegistration> past = eventService.viewPastEvents(loggedInUser.getUserId());
 		if (past.isEmpty()) {
-            System.out.println("No past events!");
+            System.out.println("You have no past events.");
             return;
         }
 
@@ -373,7 +374,7 @@ public class UserMenu extends BaseMenu {
 	private void feedbackMenu() {
 
 		while (true) {
-			System.out.println("\nFeedback\n" + "1. Submit rating\n" + "2. Back\n"+ ">");
+			System.out.println("\nFeedback\n\n" + "1. Submit rating\n" + "2. Back\n"+ ">");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
@@ -384,7 +385,7 @@ public class UserMenu extends BaseMenu {
 			case 2:
 				return;
 			default:
-				System.out.println("Invalid option");
+				System.out.println("Invalid option. Please select from the menu.");
 			}
 		}
 	}
@@ -418,7 +419,7 @@ public class UserMenu extends BaseMenu {
 
 		int choice = InputValidationUtil.readInt(
 		    ScannerUtil.getScanner(),
-		    "Select an event (1-" + past.size() + "): "
+		    "Select an event number (1-" + past.size() + "): "
 		);
 
 		while (choice < 1 || choice > past.size()) {
@@ -430,19 +431,19 @@ public class UserMenu extends BaseMenu {
 
 		int eventId = past.get(choice - 1).getEventId();
 
-		int rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the rating (1-5): ");
+		int rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Rate the event (1-5): ");
 		while(rating >5 || rating <1) {
-			rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the rating (1-5): ");
+			rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Rate the event (1-5): ");
 		}
 		String comments = InputValidationUtil.readString(
 				ScannerUtil.getScanner(),
-				"Enter the feedback:\n(Optional, Press enter to skip)"
+				"Enter feedback (optional, press Enter to skip):\n"
 		);
 		if(comments.trim().isBlank()) {
 			comments = null;
 		}
 		eventService.submitRating(loggedInUser.getUserId(), eventId, rating, comments);
-		
+		System.out.println("Thank you for your feedback.\n");
 	}
 
 	public void searchEvents() {
@@ -475,7 +476,7 @@ public class UserMenu extends BaseMenu {
 			case 7:
 				return;
 			default:
-				System.out.println("Enter the valid option");
+				System.out.println("Please enter a valid choice.");
 			}
 		}
 	}
@@ -483,7 +484,7 @@ public class UserMenu extends BaseMenu {
 	private void searchBycategory() {
 		List<Category> categories = eventService.getAllCategory();
 		if(categories.isEmpty()) {
-			System.out.println("There are no available category!");
+			System.out.println("No categories available.");
 			return;
 		}
 		int defaultIndex = 1;
@@ -502,7 +503,7 @@ public class UserMenu extends BaseMenu {
 		int categoryId = selectedCategory.getCategoryId();
 		List<Event> events = eventService.searchBycategory(categoryId);
 		if(events.isEmpty()) {
-			System.out.println("There is no events on the category: " + selectedCategory.getName());
+			System.out.println("No events found in this category.: " + selectedCategory.getName());
 			return;
 		}
 		MenuHelper.printEventSummaries(events);
@@ -522,7 +523,7 @@ public class UserMenu extends BaseMenu {
 	    LocalDate endDate = DateTimeUtil.getLocalDate("Enter end date (dd-mm-yyyy):");
 	    List<Event> filteredEvents = eventService.searchByDateRange(startDate, endDate);
 	    if(filteredEvents.isEmpty()) {
-			System.out.println("There is no available events in the date range!");
+			System.out.println("No events found in the selected date range.");
 			return;
 		}
 		MenuHelper.printEventSummaries(filteredEvents);
@@ -531,7 +532,7 @@ public class UserMenu extends BaseMenu {
 	private void searchByCity() {
 		Map<Integer, String> cities = eventService.getAllCities();
 		if(cities.isEmpty()) {
-			System.out.println("There are no available city!");
+			System.out.println("No cities available.");
 			return;
 		}
 		List<Integer> dbKeys = new ArrayList<>(cities.keySet());
@@ -549,7 +550,7 @@ public class UserMenu extends BaseMenu {
 
 		List<Event> filteredEvents = eventService.searchByCity(selectedCityId);
 		if(filteredEvents.isEmpty()) {
-			System.out.println("There is no available events in the selected city!");
+			System.out.println("No events found in the selected city.");
 			return;
 		}
 		MenuHelper.printEventDetails(filteredEvents);
@@ -568,14 +569,14 @@ public class UserMenu extends BaseMenu {
 		double maxPrice = InputValidationUtil.readDouble(ScannerUtil.getScanner(), "Enter the maximum price: ");
 		List<Event> filteredEvents = eventService.filterByPrice(minPrice, maxPrice);
 		if(filteredEvents.isEmpty()) {
-			System.out.println("There is no available events in the selected price range!");
+			System.out.println("No events found in the selected price range.");
 			return;
 		}
 		MenuHelper.printEventDetails(filteredEvents);
 	}
 
 	private boolean confirmLogout() {
-		char choice = InputValidationUtil.readChar(ScannerUtil.getScanner(), "Are you sure to logout (Y/N): ");
+		char choice = InputValidationUtil.readChar(ScannerUtil.getScanner(), "Are you sure you want to logout? (Y/N): ");
 		return Character.toUpperCase(choice) == 'Y';
 	}
 }

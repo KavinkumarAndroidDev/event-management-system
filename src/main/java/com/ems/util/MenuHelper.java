@@ -199,12 +199,17 @@ public class MenuHelper {
 	public static void displayOffers(List<Offer> offers) {
 
 	    int index = 1;
+	    System.out.println("\nAvailable offers");
 	    for (Offer o : offers) {
+	    	Event event = eventService.getEventById(o.getEventId());
 	        System.out.println(
-	            index + ". " +
-	            o.getCode() + " | " +
-	            "Discount: " + o.getDiscountPercentage() + "% | "
+	        			index + ". " 
+	            		+"Event: " + event.getTitle()  
+	            		+ "\nOffer code: " + o.getCode()
+	            		+ "\nDiscount: " + o.getDiscountPercentage() + "%"
+	            		+ "\nValidity: " + DateTimeUtil.formatDateTime(o.getValidFrom()) + " to " + DateTimeUtil.formatDateTime(o.getValidTo())
 	        );
+	        System.out.println("----------------------------------------------");
 	        index++;
 	    }
 	}

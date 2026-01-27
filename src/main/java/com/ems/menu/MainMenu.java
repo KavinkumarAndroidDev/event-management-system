@@ -70,6 +70,8 @@ public class MainMenu {
 		String email = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the email address: ");
 		while (!email.matches(
                 "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
+			System.out.println("Invalid email format.\n"
+					+ "Example: name@example.com\n");
             email =
                 InputValidationUtil.readNonEmptyString(
                     ScannerUtil.getScanner(),
@@ -77,6 +79,8 @@ public class MainMenu {
                 );
         }
 		while(userService.checkUserExists(email)) {
+			System.out.println("This email is already registered.\n"
+					+ "Please try a different email.\n");
 			email =
 	                InputValidationUtil.readNonEmptyString(
 	                    ScannerUtil.getScanner(),
@@ -86,7 +90,7 @@ public class MainMenu {
 		String phone =
 	            InputValidationUtil.readString(
 	                ScannerUtil.getScanner(),
-	                "Enter Phone Number: "
+	                "Enter phone number (optional):\n"
 	            );
 	        
 	        if (phone.trim().isEmpty()) {
@@ -98,7 +102,9 @@ public class MainMenu {
 	            }
 	        }
 		String passwordPrompt =
-	            "Enter Password (Min 8 chars, 1 Digit, 1 Upper, 1 Lower, 1 Special [!@#$%^&*]): ";
+	            "Create a password:\n"
+	            + "Minimum 8 characters\n"
+	            + "At least 1 uppercase, 1 lowercase, 1 number, 1 special character\n";
 
 	        String password =
 	            InputValidationUtil.readNonEmptyString(
@@ -132,6 +138,7 @@ public class MainMenu {
 	        userService.createAccount(fullName, email, phone, password, gender, role);
 		
 	}
+	
 	private void login() {
 		String email = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the email address: ");
 		while (!email.matches(
@@ -165,9 +172,9 @@ public class MainMenu {
 				organizerMenu.start();
 			}
 		} catch (AuthorizationException e) {
-			System.out.println(e);
+			System.out.println(e.getMessage());
 		} catch (AuthenticationException e) {
-			System.out.println(e);
+			System.out.println(e.getMessage());
 		}
 		
 	}

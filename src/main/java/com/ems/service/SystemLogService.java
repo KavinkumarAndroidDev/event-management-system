@@ -9,4 +9,6 @@ public interface SystemLogService {
 		Integer entityId,
 		String message
 	);
+
+	void printAllLogs();
 }

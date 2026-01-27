@@ -2,8 +2,6 @@ package com.ems.model;
 
 import java.time.LocalDateTime;
 
-// TODO: Implement the Comparable<User> interface to enable natural sorting of users.
-// The compareTo method should be implemented to sort users based on their fullName.
 public class User {
 
 	private final int userId;

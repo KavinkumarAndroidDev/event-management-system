@@ -67,7 +67,7 @@ public class AdminServiceImpl implements AdminService {
 		}
 
 		if (users == null || users.isEmpty()) {
-			System.out.println("No users found.");
+			System.out.println("No users available for the selected role");
 		}
 		return users;
 	}

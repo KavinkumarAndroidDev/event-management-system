@@ -1,7 +1,6 @@
 package com.ems.model;
 
-// TODO: Implement the Comparable<Ticket> interface to enable natural sorting of tickets.
-// The compareTo method should be implemented to sort tickets based on their price.
+
 public class Ticket {
 	private int ticketId;
 	private int eventId;
