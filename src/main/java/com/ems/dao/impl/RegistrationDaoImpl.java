@@ -12,6 +12,8 @@ import java.util.Map;
 import com.ems.dao.RegistrationDao;
 import com.ems.exception.DataAccessException;
 import com.ems.model.EventRegistrationReport;
+import com.ems.model.Registration;
+import com.ems.model.RegistrationTicket;
 import com.ems.util.DBConnectionUtil;
 
 /*
@@ -259,4 +261,86 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	        throw new DataAccessException("Unable to fetch revenue summary");
 	    }
     }
+
+    @Override
+    public Registration getById(int registrationId) throws DataAccessException {
+
+        String sql = "SELECT registration_id, user_id, event_id, registration_date, status "
+                   + "FROM registrations "
+                   + "WHERE registration_id = ?";
+
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, registrationId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                if (!rs.next()) {
+                    return null; // or throw custom NotFoundException
+                }
+
+                return new Registration(
+                    rs.getInt("registration_id"),
+                    rs.getInt("user_id"),
+                    rs.getInt("event_id"),
+                    rs.getTimestamp("registration_date").toLocalDateTime(),
+                    rs.getString("status")
+                );
+            }
+
+        } catch (SQLException e) {
+            throw new DataAccessException("Unable to fetch registration with id: " + registrationId);
+        }
+    }
+
+
+	@Override
+	public void updateStatus(int registrationId, String string) throws DataAccessException {
+		String sql = "update registrations "
+				+ "set status = ? "
+				+ "where registration_id = ?";
+		try (Connection con = DBConnectionUtil.getConnection();
+	             PreparedStatement ps = con.prepareStatement(sql)) {
+
+	            ps.setString(1, string);
+	            ps.setInt(2, registrationId);
+	            ps.executeUpdate();
+	        } catch (Exception e) {
+		        throw new DataAccessException("Unable to update registration status");
+		    }
+		
+	}
+
+	@Override
+	public List<RegistrationTicket> getRegistrationTickets(int registrationId)
+	        throws DataAccessException {
+
+	    String sql = "select ticket_id, quantity " +
+	                 "from registration_tickets " +
+	                 "where registration_id = ?";
+
+	    List<RegistrationTicket> tickets = new ArrayList<>();
+
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setInt(1, registrationId);
+
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                RegistrationTicket rt = new RegistrationTicket();
+	                rt.setTicketId(rs.getInt("ticket_id"));
+	                rt.setQuantity(rs.getInt("quantity"));
+	                tickets.add(rt);
+	            }
+	        }
+
+	    } catch (SQLException e) {
+	        throw new DataAccessException("Error fetching registration tickets");
+	    }
+
+	    return tickets;
+	}
+
 }

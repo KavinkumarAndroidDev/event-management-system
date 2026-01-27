@@ -81,9 +81,9 @@ public final class ApplicationUtil {
                 categoryDao,
                 venueDao,
                 ticketDao,
-                paymentService,
+                registrationDao, paymentDao, paymentService,
                 feedbackDao,
-                systemLogService
+                systemLogService, notificationDao
             );
 
         userService =

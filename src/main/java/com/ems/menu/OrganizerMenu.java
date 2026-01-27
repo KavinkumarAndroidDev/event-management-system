@@ -822,7 +822,7 @@ private void updateEventDetails() {
 					return;
 
 				List<Map<String, Object>> users = organizerService.viewRegisteredUsers(selectedEvent.getEventId());
-				if(users != null || !users.isEmpty()) {
+				if(users != null && !users.isEmpty()) {
 					System.out.println("Registered Users\n");
 				}
 				users.forEach(

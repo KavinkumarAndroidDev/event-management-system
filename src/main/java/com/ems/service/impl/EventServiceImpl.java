@@ -10,10 +10,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.ems.dao.*;
+import com.ems.enums.NotificationType;
 import com.ems.enums.PaymentMethod;
 import com.ems.exception.DataAccessException;
 import com.ems.model.BookingDetail;
 import com.ems.model.Event;
+import com.ems.model.Registration;
+import com.ems.model.RegistrationTicket;
 import com.ems.model.Ticket;
 import com.ems.model.Category;
 import com.ems.model.UserEventRegistration;
@@ -37,18 +40,21 @@ public class EventServiceImpl implements EventService {
 
 	private final EventDao eventDao;
 	private final CategoryDao categoryDao;
+	private final PaymentDao paymentDao;
 	private final VenueDao venueDao;
 	private final TicketDao ticketDao;
 	private final PaymentService paymentService;
 	private final FeedbackDao feedbackDao;
+	private final RegistrationDao registrationDao;
 	private final SystemLogService systemLogService;
+	private final NotificationDao notificationDao;
 
 	/*
 	 * Initializes EventService with required data access and payment dependencies.
 	 */
 	
-	public EventServiceImpl(EventDao eventDao, CategoryDao categoryDao, VenueDao venueDao, TicketDao ticketDao,
-			PaymentService paymentService, FeedbackDao feedbackDao, SystemLogService systemLogService) {
+	public EventServiceImpl(EventDao eventDao, CategoryDao categoryDao, VenueDao venueDao, TicketDao ticketDao, RegistrationDao registrationDao,
+			PaymentDao paymentDao, PaymentService paymentService, FeedbackDao feedbackDao, SystemLogService systemLogService, NotificationDao notificationDao) {
 		this.eventDao = eventDao;
 		this.categoryDao = categoryDao;
 		this.venueDao = venueDao;
@@ -56,6 +62,9 @@ public class EventServiceImpl implements EventService {
 		this.paymentService = paymentService;
 		this.feedbackDao = feedbackDao;
 		this.systemLogService = systemLogService;
+		this.registrationDao = registrationDao;
+		this.paymentDao = paymentDao;
+		this.notificationDao = notificationDao;
 	}
 
 	/*
@@ -509,5 +518,57 @@ public class EventServiceImpl implements EventService {
 		}
 		return events;
 	}
+	
+	@Override
+	public boolean cancelRegistration(int userId, int registrationId) {
+		try {
+			Registration reg = registrationDao.getById(registrationId);
+	        if (reg == null || reg.getUserId() !=userId) {
+	            return false;
+	        }
+	        if (!"CONFIRMED".equals(reg.getStatus())) {
+	            return false;
+	        }
+
+	        // 2. Cancel registration
+	        registrationDao.updateStatus(registrationId, "CANCELLED");
+
+	        // 3. Restore ticket quantities
+	        List<RegistrationTicket> tickets =
+	            registrationDao.getRegistrationTickets(registrationId);
+
+	        for (RegistrationTicket rt : tickets) {
+	            ticketDao.updateAvailableQuantity(
+	                rt.getTicketId(),
+	                rt.getQuantity()
+	            );
+	        }
+
+	        // 4. Refund payment
+	        paymentDao.updatePaymentStatus(
+	            registrationId
+	        );
+
+	        // 5. Log + notify
+	        systemLogService.log(
+	            userId,
+	            "REGISTRATION_CANCELLED",
+	            "EVENT",
+	            reg.getEventId(),
+	            "Registration cancelled and refund initiated"
+	        );
+	        
+	        notificationDao.sendNotification(
+	            userId,
+	            "Your registration has been cancelled. Refund will be processed.",
+	            NotificationType.EVENT.name()
+	        );
+	        return true;
+		}catch(DataAccessException e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
 
 }

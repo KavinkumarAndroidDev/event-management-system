@@ -88,4 +88,6 @@ public interface EventService {
 
 	boolean isVenueAvailable(int venueId, LocalDateTime startTime, LocalDateTime endTime);
 
+	boolean cancelRegistration(int userId, int registrationId);
+
 }

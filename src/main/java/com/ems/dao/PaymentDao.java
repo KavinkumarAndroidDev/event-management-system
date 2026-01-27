@@ -6,4 +6,6 @@ public interface PaymentDao {
 
 	boolean processPayment(int regId, double totalAmount, String string, int offerId) throws DataAccessException;
 
+	void updatePaymentStatus(int registrationId) throws DataAccessException;
+
 }

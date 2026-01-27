@@ -17,6 +17,9 @@ public class RegistrationTicket {
 		this.ticketId = ticketId;
 		this.quantity = quantity;
 	}
+	public RegistrationTicket() {
+		// TODO Auto-generated constructor stub
+	}
 	public int getId() {
 		return id;
 	}

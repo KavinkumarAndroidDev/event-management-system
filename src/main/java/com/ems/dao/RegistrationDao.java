@@ -5,6 +5,8 @@ import java.util.Map;
 
 import com.ems.exception.DataAccessException;
 import com.ems.model.EventRegistrationReport;
+import com.ems.model.Registration;
+import com.ems.model.RegistrationTicket;
 
 public interface RegistrationDao {
 
@@ -30,6 +32,13 @@ public interface RegistrationDao {
     double getRevenueSummary(int organizerId) throws DataAccessException;
     
     List<Integer> getRegisteredUserIdsByEvent(int eventId) throws DataAccessException;
+
+	Registration getById(int registrationId) throws DataAccessException;
+
+	void updateStatus(int registrationId, String string)  throws DataAccessException;
+
+	List<RegistrationTicket> getRegistrationTickets(int registrationId)  throws DataAccessException;
+
 
 
 }

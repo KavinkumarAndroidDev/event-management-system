@@ -285,7 +285,7 @@ public class UserMenu extends BaseMenu {
 	private void registrationMenu() {
 		while (true) {
 			System.out.println("\nMy Registrations\n\n" + "1. View upcoming events\n" + "2. View past events\n"
-					+ "3. View booking details\n" + "4. Back\n" + ">");
+					+ "3. View booking details\n" + "4. Cancel registration\n" + "5. Back\n" + ">");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
@@ -300,6 +300,9 @@ public class UserMenu extends BaseMenu {
 				viewBookingDetails();
 				break;
 			case 4:
+				cancelRegistration();
+				break;
+			case 5:
 				return;
 			default:
 				System.out.println("Invalid option. Please select from the menu.");
@@ -369,6 +372,36 @@ public class UserMenu extends BaseMenu {
                 );
         	displayIndex++;
         }
+	}
+	private void cancelRegistration() {
+		List<UserEventRegistration> upcoming = eventService.viewUpcomingEvents(loggedInUser.getUserId());
+		if (upcoming.isEmpty()) {
+            System.out.println("You have no upcoming events.");
+            return;
+        }
+
+        System.out.println("--- Upcoming Events: " + upcoming.size() + " ---");
+        int displayIndex = 1;
+        for (UserEventRegistration r : upcoming) {
+        	System.out.println(
+                    displayIndex + " | " +
+                    r.getTitle() + " | " +
+                    r.getCategory() + " | " +
+                    DateTimeUtil.formatDateTime(r.getStartDateTime()) +
+                    " | Tickets booked: " + r.getTicketsPurchased() +
+                    " | Status: " + r.getRegistrationStatus()
+                );
+
+                displayIndex++;
+        }
+        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+    		    "Select a registration number (1-" + upcoming.size() + "): ");
+        while(choice < 1 || choice > upcoming.size()) {
+        	choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
+        		    "Select a registration number (1-" + upcoming.size() + "): ");
+        }
+        UserEventRegistration registration = upcoming.get(choice-1);
+        eventService.cancelRegistration(loggedInUser.getUserId(), registration.getRegistrationId());
 	}
 
 	private void feedbackMenu() {

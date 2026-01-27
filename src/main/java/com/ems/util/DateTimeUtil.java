@@ -1,5 +1,6 @@
 package com.ems.util;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,8 +42,8 @@ public final class DateTimeUtil {
         return utcInstant.atZone(ZoneId.systemDefault());
     }
 	
-	public static Instant convertLocalToUtc(ZonedDateTime localZonedDateTime) {
-        return localZonedDateTime.toInstant();
+	public static Instant convertLocalToUtc(Timestamp timestamp) {
+        return timestamp.toInstant();
     }
     
     public static Instant convertLocalDefaultToUtc(LocalDateTime localDateTime) {
