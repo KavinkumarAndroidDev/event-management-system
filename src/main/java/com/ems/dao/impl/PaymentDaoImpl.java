@@ -40,7 +40,7 @@ public class PaymentDaoImpl implements PaymentDao {
 			return true;
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Database error while processing payment: " + e.getMessage());
+			throw new DataAccessException("Database error while processing payment");
 		}
 	}
 }

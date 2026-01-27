@@ -40,7 +40,7 @@ public class RoleDaoImpl implements RoleDao {
 			}
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching roles: " + e.getMessage());
+			throw new DataAccessException("Error while fetching roles");
 		}
 		
 		return roles;

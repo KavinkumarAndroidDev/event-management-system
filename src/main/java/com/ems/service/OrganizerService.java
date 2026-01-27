@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ems.model.Event;
+import com.ems.model.OrganizerEventSummary;
 import com.ems.model.Ticket;
 
 public interface OrganizerService {
@@ -43,6 +44,8 @@ public interface OrganizerService {
     List<Map<String, Object>> getTicketSales(int organizerId);
 
     double getRevenueSummary(int organizerId);
+    
+    List<OrganizerEventSummary> getOrganizerEventSummary(int organizerId);
 
     
     // notifications

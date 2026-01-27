@@ -9,13 +9,13 @@ import java.util.stream.Collectors;
 import com.ems.enums.EventStatus;
 import com.ems.model.Category;
 import com.ems.model.Event;
+import com.ems.model.OrganizerEventSummary;
 import com.ems.model.Ticket;
 import com.ems.model.User;
 import com.ems.model.Venue;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
 import com.ems.service.OrganizerService;
-import com.ems.service.impl.OrganizerServiceImpl;
 import com.ems.util.ApplicationUtil;
 import com.ems.util.DateTimeUtil;
 import com.ems.util.InputValidationUtil;
@@ -776,7 +776,7 @@ private void updateEventDetails() {
 
 		while (true) {
 			System.out.println("\nReports\n" + "1. View event registrations\n" + "2. View ticket sales\n"
-					+ "3. View revenue summary\n" + "4. Back\n\n>");
+					+ "3. View revenue summary\n" + "4. View my events summary\n"+ "5. Back\n\n>");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
@@ -797,12 +797,44 @@ private void updateEventDetails() {
 				break;
 			}
 			case 4: {
+				viewMyEventsSummary();
+			}
+			case 5:{
 				return;
 			}
 			default:
 				System.out.println("Invalid option");
 			}
 		}
+	}
+	
+	private void viewMyEventsSummary() {
+
+	    List<OrganizerEventSummary> list =
+	            organizerService.getOrganizerEventSummary(loggedInUser.getUserId());
+
+	    if (list.isEmpty()) {
+	        System.out.println("You have not created any events");
+	        return;
+	    }
+
+	    System.out.println("\nMy Events Summary\n");
+
+	    String currentStatus = "";
+
+	    for (OrganizerEventSummary s : list) {
+
+	        if (!s.getStatus().equals(currentStatus)) {
+	            currentStatus = s.getStatus();
+	            System.out.println("\n[" + currentStatus + "]");
+	        }
+
+	        System.out.println(
+	            s.getTitle()
+	            + " | Booked: " + s.getBookedTickets()
+	            + "/" + s.getTotalTickets()
+	        );
+	    }
 	}
 
 	private void notificationMenu() {

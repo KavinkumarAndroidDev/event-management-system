@@ -7,6 +7,7 @@ import java.util.Map;
 import com.ems.exception.DataAccessException;
 import com.ems.model.BookingDetail;
 import com.ems.model.Event;
+import com.ems.model.OrganizerEventSummary;
 import com.ems.model.UserEventRegistration;
 
 public interface EventDao {
@@ -51,5 +52,7 @@ public interface EventDao {
 	 boolean updateEventStatus(int eventId, String status) throws DataAccessException;
 
 	 List<Event> getEventsByOrganizer(int organizerId) throws DataAccessException;
+	 
+	 List<OrganizerEventSummary> getEventSummaryByOrganizer(int organizerId) throws DataAccessException;
 
 }

@@ -78,9 +78,6 @@ public class NotificationServiceImpl implements NotificationService {
 						System.out.println(e.getMessage());
 					}
 				});
-			} else {
-				System.out.println("No unread notifications");
-				return;
 			}
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());

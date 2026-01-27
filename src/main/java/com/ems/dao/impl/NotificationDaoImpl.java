@@ -42,7 +42,7 @@ public class NotificationDaoImpl implements NotificationDao {
 			ps.executeUpdate();
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Database error while sending system notification: " + e.getMessage());
+			throw new DataAccessException("Database error while sending system notification");
 		}
 	}
 	
@@ -72,7 +72,7 @@ public class NotificationDaoImpl implements NotificationDao {
 			rs.close();
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Database error while reading notification: " + e.getMessage());
+			throw new DataAccessException("Database error while reading notification");
 		}
 		
 		return notifications;
@@ -88,7 +88,7 @@ public class NotificationDaoImpl implements NotificationDao {
 			ps.executeUpdate();
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Database error while marking notification as read: " + e.getMessage());
+			throw new DataAccessException("Database error while marking notification as read");
 		}
 	}
 	
@@ -118,7 +118,7 @@ public class NotificationDaoImpl implements NotificationDao {
 			rs.close();
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Database error while reading notifications: " + e.getMessage());
+			throw new DataAccessException("Database error while reading notifications");
 		}
 		
 		return notifications;
@@ -136,7 +136,7 @@ public class NotificationDaoImpl implements NotificationDao {
 	        ps.executeUpdate();
 	        
 	    } catch (SQLException e) {
-	    	throw new DataAccessException("Database error while updating notifications: " + e.getMessage());
+	    	throw new DataAccessException("Database error while updating notifications");
 	    }
 	}
 	
@@ -160,7 +160,7 @@ public class NotificationDaoImpl implements NotificationDao {
 			return affectedRows > 0;
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Database error while sending notification: " + e.getMessage());
+			throw new DataAccessException("Database error while sending notification");
 		}
 	}
 
@@ -180,7 +180,7 @@ public class NotificationDaoImpl implements NotificationDao {
 			ps.executeUpdate();
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Database error while sending role-based notification: " + e.getMessage());
+			throw new DataAccessException("Database error while sending role-based notification");
 		}
 	}
 }

@@ -10,6 +10,7 @@ import com.ems.dao.RegistrationDao;
 import com.ems.dao.TicketDao;
 import com.ems.exception.DataAccessException;
 import com.ems.model.Event;
+import com.ems.model.OrganizerEventSummary;
 import com.ems.model.Ticket;
 import com.ems.service.NotificationService;
 import com.ems.service.OrganizerService;
@@ -349,4 +350,14 @@ public class OrganizerServiceImpl implements OrganizerService {
 	public void sendScheduleChange(int eventId, String message) {
 		notificationService.sendEventNotification(eventId, message, "SCHEDULE_CHANGE");
 	}
+	
+	public List<OrganizerEventSummary> getOrganizerEventSummary(int organizerId) {
+	    try {
+			return eventDao.getEventSummaryByOrganizer(organizerId);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return new ArrayList<>();
+	}
+
 }

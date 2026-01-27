@@ -58,7 +58,7 @@ public class FeedbackDaoImpl implements FeedbackDao {
 		    }
 		    
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while submitting rating: " + e.getMessage());
+			throw new DataAccessException("Error while submitting rating");
 		}
 	}
 }

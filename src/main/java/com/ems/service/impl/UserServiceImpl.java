@@ -99,7 +99,7 @@ public class UserServiceImpl implements UserService {
 
 	        userDao.resetFailedAttempts(user.getUserId());
 
-	        System.out.println("Logged in as: " + emailId);
+	        System.out.println("\nWelcome, " + user.getFullName());
 	        return user;
 
 	    } catch (DataAccessException e) {

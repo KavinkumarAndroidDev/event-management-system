@@ -41,7 +41,7 @@ public class TicketDaoImpl implements TicketDao {
 			}
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error fetching available tickets: " + e.getMessage());
+			throw new DataAccessException("Error fetching available tickets");
 		}
 		
 		return 0;
@@ -71,7 +71,7 @@ public class TicketDaoImpl implements TicketDao {
 			}
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error fetching ticket types: " + e.getMessage());
+			throw new DataAccessException("Error fetching ticket types");
 		}
 		
 		return tickets;
@@ -100,7 +100,7 @@ public class TicketDaoImpl implements TicketDao {
 			}
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error fetching ticket by ID: " + e.getMessage());
+			throw new DataAccessException("Error fetching ticket by ID");
 		}
 		
 		return null;
@@ -123,14 +123,14 @@ public class TicketDaoImpl implements TicketDao {
 			return rowsAffected > 0;
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error updating ticket quantity: " + e.getMessage());
+			throw new DataAccessException("Error updating ticket quantity");
 		}
 	}
 	
 	
 	//Organizer functions:
 
-    public boolean createTicket(Ticket ticket) {
+    public boolean createTicket(Ticket ticket) throws DataAccessException {
         String sql = "insert into tickets (event_id,ticket_type,price,total_quantity,available_quantity) values (?,?,?,?,?)";
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -142,11 +142,11 @@ public class TicketDaoImpl implements TicketDao {
             ps.setInt(5, ticket.getAvailableQuantity());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+        	throw new DataAccessException("Error creating ticket!");
         }
     }
 
-    public boolean updateTicketPrice(int ticketId, double price) {
+    public boolean updateTicketPrice(int ticketId, double price) throws DataAccessException {
         String sql = "update tickets set price=? where ticket_id=?";
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -155,11 +155,11 @@ public class TicketDaoImpl implements TicketDao {
             ps.setInt(2, ticketId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+        	throw new DataAccessException("Error updating ticket price!");
         }
     }
 
-    public boolean updateTicketQuantity(int ticketId, int quantity) {
+    public boolean updateTicketQuantity(int ticketId, int quantity) throws DataAccessException {
         String sql = "update tickets set total_quantity=?, available_quantity=? where ticket_id=?";
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -169,11 +169,11 @@ public class TicketDaoImpl implements TicketDao {
             ps.setInt(3, ticketId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+        	throw new DataAccessException("Error updating ticket quantity!");
         }
     }
 
-    public List<Ticket> getTicketsByEvent(int eventId) {
+    public List<Ticket> getTicketsByEvent(int eventId) throws DataAccessException {
         List<Ticket> list = new ArrayList<>();
         String sql = "select * from tickets where event_id=?";
         try (Connection con = DBConnectionUtil.getConnection();
@@ -192,7 +192,7 @@ public class TicketDaoImpl implements TicketDao {
                 list.add(t);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+        	throw new DataAccessException("Error getting tickets by event!");
         }
         return list;
     }

@@ -52,7 +52,7 @@ public class UserDaoImpl implements UserDao {
 			ps.executeUpdate();
 
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while creating user account: " + e.getMessage());
+			throw new DataAccessException("Error while creating user account");
 		}
 	}
 	
@@ -93,7 +93,7 @@ public class UserDaoImpl implements UserDao {
 	        }
 	        
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching user: " + e.getMessage());
+			throw new DataAccessException("Error while fetching user");
 		}
 		
 		return user;
@@ -128,7 +128,7 @@ public class UserDaoImpl implements UserDao {
 	        return rowsUpdated > 0;
 	        
 	    } catch (SQLException e) {
-			throw new DataAccessException("Error while updating the user status: " + e.getMessage());
+			throw new DataAccessException("Error while updating the user status");
 		}
 	}
 
@@ -171,7 +171,7 @@ public class UserDaoImpl implements UserDao {
 			rs.close();
             
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching users: " + e.getMessage());
+			throw new DataAccessException("Error while fetching users:");
 		}
 		
 		return users;
@@ -194,7 +194,7 @@ public class UserDaoImpl implements UserDao {
 	        }
 	        
 	    } catch (SQLException e) {
-			throw new DataAccessException("Error while fetching role of user: " + e.getMessage());
+			throw new DataAccessException("Error while fetching role of user");
 		}
 	    
 	    if (roleName.equals("ADMIN")) {
@@ -245,7 +245,7 @@ public class UserDaoImpl implements UserDao {
 			rs.close();
             
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching users: " + e.getMessage());
+			throw new DataAccessException("Error while fetching users");
 		}
 		
 		return users;
@@ -263,7 +263,7 @@ public class UserDaoImpl implements UserDao {
 			}
 		}
 		catch (SQLException e) {
-			throw new DataAccessException("Error while fetching users: " + e.getMessage());
+			throw new DataAccessException("Error while fetching users");
 		}
 		return false;
 	}
@@ -277,7 +277,7 @@ public class UserDaoImpl implements UserDao {
 	        ps.setInt(1, userId);
 	        ps.executeUpdate();
 	    } catch (SQLException e) {
-	        throw new DataAccessException(e.getMessage());
+	        throw new DataAccessException("Error while updating the failed attempts");
 	    }
 	}
 
@@ -289,7 +289,7 @@ public class UserDaoImpl implements UserDao {
 	        ps.setInt(1, userId);
 	        ps.executeUpdate();
 	    } catch (SQLException e) {
-	        throw new DataAccessException(e.getMessage());
+	        throw new DataAccessException("Error while updating the failed attempts");
 	    }
 	}
 

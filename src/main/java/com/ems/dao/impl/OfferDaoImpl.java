@@ -188,7 +188,7 @@ public class OfferDaoImpl implements OfferDao {
 	        }
 	
 	    } catch (SQLException e) {
-	        throw new DataAccessException("Failed to fetch offer for the event", e);
+	        throw new DataAccessException("Failed to fetch offer for the event");
 	    }
 	
 	    return null;
@@ -216,7 +216,7 @@ public class OfferDaoImpl implements OfferDao {
 	        ps.executeUpdate();
 
 	    } catch (SQLException e) {
-	        throw new DataAccessException("Failed to record offer usage", e);
+	        throw new DataAccessException("Failed to record offer usage");
 	    }
 	}
 

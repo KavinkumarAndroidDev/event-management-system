@@ -47,7 +47,7 @@ public class SystemLogDaoImpl implements SystemLogDao {
 
 		} catch (SQLException e) {
 			throw new DataAccessException(
-				"Error while inserting system log: " + e.getMessage()
+				"Error while inserting system log"
 			);
 		}
 	}

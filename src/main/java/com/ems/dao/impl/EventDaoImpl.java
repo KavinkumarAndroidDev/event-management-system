@@ -19,6 +19,7 @@ import com.ems.enums.EventStatus;
 import com.ems.exception.DataAccessException;
 import com.ems.model.BookingDetail;
 import com.ems.model.Event;
+import com.ems.model.OrganizerEventSummary;
 import com.ems.model.UserEventRegistration;
 import com.ems.util.DBConnectionUtil;
 import com.ems.util.DateTimeUtil;
@@ -47,7 +48,7 @@ public class EventDaoImpl implements EventDao {
 			events = getEventList(rs);
 			rs.close();
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching available events: " + e.getMessage());
+			throw new DataAccessException("Error while fetching available events");
 		}
 		return events;
 	}
@@ -67,7 +68,7 @@ public class EventDaoImpl implements EventDao {
 			events = getEventList(rs);
 			rs.close();
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching available and draft events: " + e.getMessage());
+			throw new DataAccessException("Error while fetching available and draft events");
 		}
 		return events;
 	}
@@ -83,7 +84,7 @@ public class EventDaoImpl implements EventDao {
 			events = getEventList(rs);
 			rs.close();
 		} catch (SQLException e) {
-			throw new DataAccessException("Error fetching events: " + e.getMessage());
+			throw new DataAccessException("Error fetching events");
 		}
 		return events;
 	}
@@ -103,7 +104,7 @@ public class EventDaoImpl implements EventDao {
 			events = getEventList(rs);
 			rs.close();
 		} catch (SQLException e) {
-			throw new DataAccessException("Error fetching yet to approve events" + e.getMessage());
+			throw new DataAccessException("Error fetching yet to approve events");
 		}
 		return events;
 	}
@@ -118,7 +119,7 @@ public class EventDaoImpl implements EventDao {
 				return rs.getInt("organizer_id");
 			}
 		} catch (SQLException e) {
-			throw new DataAccessException("Error fetching the event organiszer" + e.getMessage());
+			throw new DataAccessException("Error fetching the event organiszer");
 		}
 		throw new DataAccessException("Organizer not found");
 	}
@@ -185,7 +186,7 @@ public class EventDaoImpl implements EventDao {
 				return eventName;
 			}
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching event details: " + e.getMessage());
+			throw new DataAccessException("Error while fetching event details");
 		}
 		return null;
 	}
@@ -240,7 +241,7 @@ public class EventDaoImpl implements EventDao {
 	        }
 	
 	    } catch (SQLException e) {
-	        throw new DataAccessException("Error fetching user registrations: " + e.getMessage());
+	        throw new DataAccessException("Error fetching user registrations");
 	    }
 	
 	    return list;
@@ -269,7 +270,7 @@ public class EventDaoImpl implements EventDao {
 			}
 			rs.close();
 		} catch (SQLException e) {
-			throw new DataAccessException("Error fetching booking details", e);
+			throw new DataAccessException("Error fetching booking details");
 		}
 
 		return bookings;
@@ -292,7 +293,7 @@ public class EventDaoImpl implements EventDao {
 			return rowsUpdated > 0;
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while updating events" + e.getMessage());
+			throw new DataAccessException("Error while updating events");
 		}
 	}
 
@@ -312,7 +313,7 @@ public class EventDaoImpl implements EventDao {
 			return rowsUpdated > 0;
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while updating events" + e.getMessage());
+			throw new DataAccessException("Error while updating events");
 		}
 	}
 
@@ -324,7 +325,7 @@ public class EventDaoImpl implements EventDao {
 			ps.setString(2, EventStatus.COMPLETED.toString());
 			ps.executeUpdate();
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while updating events: " + e.getMessage());
+			throw new DataAccessException("Error while updating events");
 		}
 	}
 
@@ -371,7 +372,7 @@ public class EventDaoImpl implements EventDao {
 			}
 			rs.close();
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while fetching event list: " + e.getMessage());
+			throw new DataAccessException("Error while fetching event list");
 		}
 
 		return events;
@@ -391,7 +392,7 @@ public class EventDaoImpl implements EventDao {
 				revenueMap.put(rs.getString("title"), rs.getDouble("revenue"));
 			}
 		} catch (Exception e) {
-			throw new DataAccessException("Failed to fetch revenue report", e);
+			throw new DataAccessException("Failed to fetch revenue report");
 		}
 
 		return revenueMap;
@@ -409,7 +410,7 @@ public class EventDaoImpl implements EventDao {
 				result.put(rs.getString("full_name"), rs.getInt("total_events"));
 			}
 		} catch (Exception e) {
-			throw new DataAccessException("Failed to fetch organizer performance", e);
+			throw new DataAccessException("Failed to fetch organizer performance");
 		}
 
 		return result;
@@ -520,5 +521,39 @@ public class EventDaoImpl implements EventDao {
 		}
         return list;
     }
+
+	@Override
+	public List<OrganizerEventSummary> getEventSummaryByOrganizer(int organizerId) throws DataAccessException {
+		String sql = "SELECT  "
+				+ "    e.event_id, "
+				+ "    e.title, "
+				+ "    e.status, "
+				+ "    COALESCE(SUM(t.total_quantity), 0) AS total_tickets, "
+				+ "    COALESCE(SUM(t.total_quantity - t.available_quantity), 0) AS booked_tickets "
+				+ "FROM events e "
+				+ "LEFT JOIN tickets t ON e.event_id = t.event_id "
+				+ "WHERE e.organizer_id = ? "
+				+ "GROUP BY e.event_id, e.title, e.status "
+				+ "ORDER BY e.status, e.start_datetime; ";
+		List<OrganizerEventSummary> eventSummaries = new ArrayList<>();
+		try (Connection con = DBConnectionUtil.getConnection();
+	             PreparedStatement ps = con.prepareStatement(sql)) {
+
+	            ps.setInt(1, organizerId);
+	            ResultSet rs = ps.executeQuery();
+	            while (rs.next()) {
+	            	OrganizerEventSummary eventSummary = new OrganizerEventSummary();
+	            	eventSummary.setBookedTickets(rs.getInt("booked_tickets"));
+	            	eventSummary.setEventId(rs.getInt("event_id"));
+	            	eventSummary.setStatus(rs.getString("status"));
+	            	eventSummary.setTitle(rs.getString("title"));
+	            	eventSummary.setTotalTickets(rs.getInt("total_ticekts"));
+	            	eventSummaries.add(eventSummary);
+	            }
+	        } catch (SQLException e) {
+				throw new DataAccessException("Failed to fetch organizer events");
+			}
+		return eventSummaries;
+	}
 
 }

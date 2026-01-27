@@ -2,9 +2,6 @@ package com.ems.model;
 
 import java.time.LocalDateTime;
 
-// TODO: Implement the Comparable<Event> interface to enable natural sorting of events.
-// The compareTo method should be implemented to sort events based on their StartDateTime.
-// This will allow lists of events to be easily sorted using Collections.sort().
 public class Event {
 	private int eventId;
 	private int organizerId;

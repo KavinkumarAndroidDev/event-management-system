@@ -34,7 +34,7 @@ public class CategoryDaoImpl implements CategoryDao {
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Error while fetching category: " + e.getMessage());
+            throw new DataAccessException("Error while fetching category");
         }
         return null;
     } 
@@ -51,7 +51,7 @@ public class CategoryDaoImpl implements CategoryDao {
                 categories.add(category);
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Error while fetching categories: " + e.getMessage());
+            throw new DataAccessException("Error while fetching categories");
         }
         return categories;
     }
@@ -68,7 +68,7 @@ public class CategoryDaoImpl implements CategoryDao {
             ps.executeUpdate();
 
         } catch (Exception e) {
-            throw new DataAccessException("Unable to add category", e);
+            throw new DataAccessException("Unable to add category");
         }
     }
 
@@ -87,7 +87,7 @@ public class CategoryDaoImpl implements CategoryDao {
             ps.executeUpdate();
 
         } catch (Exception e) {
-            throw new DataAccessException("Unable to update category", e);
+            throw new DataAccessException("Unable to update category");
         }
     }
 
@@ -105,7 +105,7 @@ public class CategoryDaoImpl implements CategoryDao {
             ps.executeUpdate();
 
         } catch (Exception e) {
-            throw new DataAccessException("Unable to delete category", e);
+            throw new DataAccessException("Unable to delete category");
         }
     }
 

@@ -63,7 +63,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	
 	    } catch (SQLException e) {
 	        throw new DataAccessException(
-	            "Error while fetching event wise registration: " + e.getMessage()
+	            "Error while fetching event wise registration"
 	        );
 	    }
 
@@ -91,7 +91,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 			}
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while creating registration: " + e.getMessage());
+			throw new DataAccessException("Error while creating registration");
 		}
 		
 		return 0;
@@ -112,7 +112,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 			ps.executeUpdate();
 			
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while adding registration tickets: " + e.getMessage());
+			throw new DataAccessException("Error while adding registration tickets");
 		}
 	}
 
@@ -127,7 +127,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 			ps.executeUpdate();
 
 		} catch (SQLException e) {
-			throw new DataAccessException("Error while removing registration: " + e.getMessage());
+			throw new DataAccessException("Error while removing registration");
 		}
 	}
 

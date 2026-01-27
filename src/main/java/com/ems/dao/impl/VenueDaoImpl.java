@@ -43,7 +43,7 @@ public class VenueDaoImpl implements VenueDao {
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Error fetching venue name", e);
+            throw new DataAccessException("Error fetching venue name");
         }
         return null;
     }
@@ -112,7 +112,7 @@ public class VenueDaoImpl implements VenueDao {
         		venues.add(venue);
         	}
         } catch (SQLException e) {
-            throw new DataAccessException("Error fetching venues", e);
+            throw new DataAccessException("Error fetching venues");
         }
         return venues;
 	}
@@ -141,7 +141,7 @@ public class VenueDaoImpl implements VenueDao {
 		        }
 
 		    } catch (SQLException e) {
-	            throw new DataAccessException("Error fetching venues", e);
+	            throw new DataAccessException("Error fetching venues");
 	        }
 
 		    return false;
@@ -166,7 +166,7 @@ public class VenueDaoImpl implements VenueDao {
         		venue.setUpdateAt(DateTimeUtil.convertUtcToLocal(rs.getTimestamp("updated_at").toInstant()).toLocalDateTime());
         	}
         } catch (SQLException e) {
-            throw new DataAccessException("Error fetching venues", e);
+            throw new DataAccessException("Error fetching venues");
         }
         return venue;
 	}
