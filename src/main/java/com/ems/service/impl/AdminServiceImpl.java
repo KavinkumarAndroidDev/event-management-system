@@ -27,7 +27,7 @@ import com.ems.service.SystemLogService;
  * - Send system and targeted notifications
  */
 public class AdminServiceImpl implements AdminService {
-	public final UserDao userDao;
+	private final UserDao userDao;
 	private final EventDao eventDao;
 	private final NotificationDao notificationDao;
 	private final RegistrationDao registrationDao;
