@@ -384,18 +384,22 @@ public class EventDaoImpl implements EventDao {
 	}
 
 	@Override
-	public Map<String, Double> getEventWiseRevenue() throws DataAccessException {
-		Map<String, Double> revenueMap = new HashMap<>();
+	public Map<Integer, Double> getEventWiseRevenue() throws DataAccessException {
+		Map<Integer, Double> revenueMap = new HashMap<>();
 		String sql = "select e.title, sum(p.amount) as revenue " + "from payments p "
 				+ "join registrations r on p.registration_id = r.registration_id "
-				+ "join events e on r.event_id = e.event_id " + "where r.status = 'CONFIRMED' " + "group by e.title";
+				+ "join events e on r.event_id = e.event_id " + "where r.status = 'CONFIRMED' " + "group by e.event_id, e.title"
+						+ "";
 
 		try (Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql);
 				ResultSet rs = ps.executeQuery()) {
 			while (rs.next()) {
-				revenueMap.put(rs.getString("title"), rs.getDouble("revenue"));
+				revenueMap.put(rs.getInt("event_id"), rs.getDouble("revenue"));
 			}
+			
+			
+
 		} catch (Exception e) {
 			throw new DataAccessException("Failed to fetch revenue report");
 		}

@@ -24,6 +24,7 @@ public final class InputValidationUtil {
             if (scanner.hasNextInt()) {
                 int value = scanner.nextInt();
                 scanner.nextLine();
+                
                 return value;
             } else {
                 System.out.println("Invalid input. Please enter an integer.");
@@ -33,6 +34,7 @@ public final class InputValidationUtil {
     }
     //Int cannot be null, Integer can be nullable..
     //few datas in the db can be nullable for that condition Integer is used over int
+    //understanding required....
     public static Integer readInteger(Scanner scanner, String message) {
         while (true) {
             System.out.print(message);

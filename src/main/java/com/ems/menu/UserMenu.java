@@ -172,7 +172,6 @@ public class UserMenu extends BaseMenu {
         System.out.println("\nAvailable payment methods:");
 
         PaymentMethod[] methods = PaymentMethod.values();
-
         for (int i = 0; i < methods.length; i++) {
             System.out.println(
                 (i + 1) + ". " + methods[i].name().replace("_", " ")
@@ -195,12 +194,10 @@ public class UserMenu extends BaseMenu {
         PaymentMethod selectedMethod = methods[paymentChoice - 1];
         
         String offerCode = InputValidationUtil.readString(
-        	    ScannerUtil.getScanner(),
-        	    "Enter offer code (press Enter to skip): "
-        	);
+        	    ScannerUtil.getScanner(),"Enter offer code (press Enter to skip): ");
 
         	if (offerCode.isBlank()) {
-        	    offerCode = null;
+        	    offerCode = "";
         	}else {
         		offerCode = offerCode.trim().toUpperCase();
         	}
@@ -401,7 +398,12 @@ public class UserMenu extends BaseMenu {
         		    "Select a registration number (1-" + upcoming.size() + "): ");
         }
         UserEventRegistration registration = upcoming.get(choice-1);
-        eventService.cancelRegistration(loggedInUser.getUserId(), registration.getRegistrationId());
+        char cancelChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(), "Enter Y to confirm cancellation");
+		if(cancelChoice == 'Y' || cancelChoice == 'y'){
+			eventService.cancelRegistration(loggedInUser.getUserId(), registration.getRegistrationId());
+		}else{
+			System.out.println("Registration cancellation cancelled.");
+		}
 	}
 
 	private void feedbackMenu() {
@@ -592,7 +594,7 @@ public class UserMenu extends BaseMenu {
 		LocalDate localDate = DateTimeUtil.getLocalDate("Enter the date to get available event from the given date:");
 		List<Event> filteredEvents = eventService.searchByDate(localDate);
 		if(filteredEvents.isEmpty()) {
-			System.out.println("There is no available events in selected date!");
+			System.out.println("There is no available events in or after selected date!");
 			return;
 		}
 		MenuHelper.printEventDetails(filteredEvents);

@@ -142,15 +142,17 @@ public class EventServiceImpl implements EventService {
 	}
 
 	/*
-	 * Searches events occurring before the given date.
+	 * Searches events occurring after the given date.
 	 */
 	@Override
 	public List<Event> searchByDate(LocalDate localDate) {
 		List<Event> filteredEvents = new ArrayList<>();
 		try {
 			List<Event> allEvents = eventDao.listAvailableEvents();
-			filteredEvents = allEvents.stream().filter(e -> e.getStartDateTime().toLocalDate().isBefore(localDate))
-					.collect(Collectors.toList());
+			filteredEvents = allEvents.stream()
+			.filter(e -> !e.getStartDateTime().toLocalDate().isBefore(localDate))
+			.collect(Collectors.toList());
+
 		} catch (DataAccessException e) {
 			System.out.println("Database error: " + e.getMessage());
 		}

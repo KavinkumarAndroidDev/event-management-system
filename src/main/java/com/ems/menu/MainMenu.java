@@ -38,6 +38,7 @@ public class MainMenu {
 			switch(input) {
 				case 1:
 					login();
+//					System.out.println(userService.checkUserExists("user@gmail.com"));
 					break;
 				case 2:
 					createAccount(UserRole.ATTENDEE);

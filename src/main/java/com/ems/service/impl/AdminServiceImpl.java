@@ -27,8 +27,7 @@ import com.ems.service.SystemLogService;
  * - Send system and targeted notifications
  */
 public class AdminServiceImpl implements AdminService {
-
-	private final UserDao userDao;
+	public final UserDao userDao;
 	private final EventDao eventDao;
 	private final NotificationDao notificationDao;
 	private final RegistrationDao registrationDao;
@@ -195,18 +194,22 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	public void getRevenueReport() {
 		try {
-			Map<String, Double> revenueMap = eventDao.getEventWiseRevenue();
+			Map<Integer, Double> revenueMap = eventDao.getEventWiseRevenue();
 
 			if (revenueMap.isEmpty()) {
 				System.out.println("No revenue data available.");
 				return;
 			}
-
+			
 			System.out.println("\nEvent Wise Revenue Report");
 			System.out.println("-----------------------------------");
 
 			revenueMap.forEach((event, revenue) -> {
-				System.out.println("Event : " + event + " | Revenue : ₹" + revenue);
+				try {
+					System.out.println("Event : " + eventDao.getEventById(event).getTitle() + " | Revenue : ₹" + revenue);
+				} catch (DataAccessException e) {
+					System.out.println(e);
+				}
 			});
 
 			System.out.println("-----------------------------------");

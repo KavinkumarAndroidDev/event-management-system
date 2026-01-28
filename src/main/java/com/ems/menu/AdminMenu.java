@@ -343,7 +343,7 @@ public class AdminMenu extends BaseMenu {
 						organizerChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the valid choice (1 - " + user.size() +")");
 					}
 					List<OrganizerEventSummary> list =
-				            organizerService.getOrganizerEventSummary(user.get(organizerChoice).getUserId());
+				            organizerService.getOrganizerEventSummary(user.get(organizerChoice - 1).getUserId());
 
 				    if (list.isEmpty()) {
 				        System.out.println("No event conducted by the organizer!");

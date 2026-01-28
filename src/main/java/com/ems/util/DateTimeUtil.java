@@ -24,17 +24,14 @@ import java.util.List;
  */
 public final class DateTimeUtil {
 
-	private DateTimeUtil() {
-		
-	}
 	public static String formatDateTime(LocalDateTime localDateTime) {
 		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 		return "Date: " + localDateTime.toLocalDate().format(dateTimeFormatter).toString() + " Time: "+ localDateTime.toLocalTime();
 	}
-	public static LocalDate formatDate(String date) {
-		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-		return LocalDate.parse(date, dateTimeFormatter);
-	}
+//	public static LocalDate formatDate(String date) {
+//		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+//		return LocalDate.parse(date, dateTimeFormatter);
+//	}
 	public static Instant getCurrentUtc() {
         return Instant.now();
     }
@@ -64,7 +61,7 @@ public final class DateTimeUtil {
                 } catch (DateTimeParseException ignored) {
 
                 }
-            }
+            } // map usage logic..
 
             if (localDate == null) {
                 System.out.println("Invalid date. Please use one of: " + formats);

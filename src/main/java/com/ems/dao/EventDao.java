@@ -35,7 +35,7 @@ public interface EventDao {
 
 	 List<BookingDetail> viewBookingDetails(int userId) throws DataAccessException;
 	
-	 Map<String, Double> getEventWiseRevenue() throws DataAccessException;
+	 Map<Integer, Double> getEventWiseRevenue() throws DataAccessException;
 
 	 Map<String, Integer> getOrganizerWiseEventCount() throws DataAccessException;
 	 
