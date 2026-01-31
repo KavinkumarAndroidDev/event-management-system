@@ -39,11 +39,16 @@ public class EventDaoImpl implements EventDao {
 	@Override
 	public List<Event> listAvailableEvents() throws DataAccessException {
 		List<Event> events = new ArrayList<>();
-		String sql = "select distinct e.* " + "from events e " + "inner join tickets t on e.event_id = t.event_id "
-				+ "where e.status = ? " + "and t.available_quantity > 0" + " and e.start_datetime > UTC_TIMESTAMP()";
+		String sql = "select * from events e " +
+	             "where e.status = ? " +
+	             "and e.start_datetime > UTC_TIMESTAMP() " +
+	             "and exists (select 1 from tickets t " +
+	                         "where t.event_id = e.event_id " +
+	                         "and t.available_quantity > 0)";
+
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-			ps.setString(1, "PUBLISHED");
+			ps.setString(1, EventStatus.PUBLISHED.toString());
 			ResultSet rs = ps.executeQuery();
 			events = getEventList(rs);
 			rs.close();
@@ -98,13 +103,12 @@ public class EventDaoImpl implements EventDao {
 		String sql =
 		        "SELECT e.* " +
 		        "FROM events e " +
-		        "WHERE e.status in (?, ?)" +
+		        "WHERE e.status in (?) " +
 		        "AND e.approved_at IS NULL " +
 		        "AND e.start_datetime > UTC_TIMESTAMP()";
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 			ps.setString(1, "DRAFT");
-			ps.setString(2, "CANCELLED");
 			ResultSet rs = ps.executeQuery();
 			events = getEventList(rs);
 			rs.close();
@@ -140,7 +144,7 @@ public class EventDaoImpl implements EventDao {
 				event.setEventId(rs.getInt("event_id"));
 				event.setOrganizerId(rs.getInt("organizer_id"));
 				event.setTitle(rs.getString("title"));
-				if (rs.getString("description").isEmpty() || rs.getString("description") == null) {
+				if ( rs.getString("description") == null || rs.getString("description").isEmpty()) {
 					event.setDescription(rs.getString("description"));
 				}
 				event.setCategoryId(rs.getInt("category_id"));
@@ -153,7 +157,7 @@ public class EventDaoImpl implements EventDao {
 				event.setCapacity(rs.getInt("capacity"));
 				event.setStatus(rs.getString("status"));
 				Integer approvedBy = rs.getInt("approved_by");
-				if (approvedBy != null) {
+				if (approvedBy != 0) {
 					event.setApprovedBy(approvedBy);
 				}
 
@@ -202,26 +206,47 @@ public class EventDaoImpl implements EventDao {
 
 	    List<UserEventRegistration> list = new ArrayList<>();
 	
-	    String sql = "select "
-	    		+ "  r.registration_id, "
-	    		+ "  r.registration_date, "
-	    		+ "  r.status as registration_status, "
-	    		+ "  e.event_id, "
-	    		+ "  e.title, "
-	    		+ "  e.start_datetime, "
-	    		+ "  e.end_datetime, "
-	    		+ "  c.name as category_name, "
-	    		+ "  (select coalesce(sum(rt.quantity), 0) "
-	            + "     from registration_tickets rt "
-	            + "     where rt.registration_id = r.registration_id) as tickets_purchased, "
-	            + "  (select coalesce(sum(p.amount), 0) "
-	            + "     from payments p "
-	            + "     where p.registration_id = r.registration_id) as amount_paid "
-	    		+ "from registrations r "
-	    		+ "join events e on r.event_id = e.event_id "
-	    		+ "join categories c on e.category_id = c.category_id "
-	    		+ "where r.user_id = ? ";
-	
+	    String sql =
+	            "SELECT " +
+	            "    r.registration_id, " +
+	            "    r.registration_date, " +
+	            "    r.status AS registration_status, " +
+	            "    e.event_id, " +
+	            "    e.title, " +
+	            "    e.start_datetime, " +
+	            "    e.end_datetime, " +
+	            "    c.name AS category_name, " +
+	            "    t.ticket_type, " +
+	            "    " +
+	            "    COALESCE(SUM(rt.quantity), 0) AS tickets_purchased, " +
+	            "    " +
+	            "    COALESCE(SUM( " +
+	            "        CASE " +
+	            "            WHEN p.payment_status = 'SUCCESS' THEN p.amount " +
+	            "            WHEN p.payment_status = 'REFUNDED' THEN -p.amount " +
+	            "            ELSE 0 " +
+	            "        END " +
+	            "    ), 0) AS amount_paid " +
+	            " " +
+	            "FROM registrations r " +
+	            "JOIN events e ON r.event_id = e.event_id " +
+	            "JOIN categories c ON e.category_id = c.category_id " +
+	            "JOIN registration_tickets rt ON rt.registration_id = r.registration_id " +
+	            "JOIN tickets t ON rt.ticket_id = t.ticket_id " +
+	            "LEFT JOIN payments p ON p.registration_id = r.registration_id " +
+	            " " +
+	            "WHERE r.user_id = ? " +
+	            " " +
+	            "GROUP BY " +
+	            "    r.registration_id, " +
+	            "    r.registration_date, " +
+	            "    r.status, " +
+	            "    e.event_id, " +
+	            "    e.title, " +
+	            "    e.start_datetime, " +
+	            "    e.end_datetime, " +
+	            "    c.name, " +
+	            "    t.ticket_type";
 	    try (Connection con = DBConnectionUtil.getConnection();
 	         PreparedStatement ps = con.prepareStatement(sql)) {
 	
@@ -241,11 +266,13 @@ public class EventDaoImpl implements EventDao {
 	            uer.setEndDateTime(rs.getTimestamp("end_datetime").toLocalDateTime());
 	            uer.setTicketsPurchased(rs.getInt("tickets_purchased"));
 	            uer.setAmountPaid(rs.getDouble("amount_paid"));
+	            uer.setTicketType(rs.getString("ticket_type"));
 	
 	            list.add(uer);
 	        }
 	
 	    } catch (SQLException e) {
+	    	e.printStackTrace();
 	        throw new DataAccessException("Error fetching user registrations");
 	    }
 	
@@ -257,11 +284,18 @@ public class EventDaoImpl implements EventDao {
 
 		List<BookingDetail> bookings = new ArrayList<>();
 
-		String sql = "select e.title, e.start_datetime, v.name, v.city, "
-				+ "t.ticket_type, rt.quantity, (rt.quantity * t.price) as total_cost " + "from registrations r "
-				+ "join events e ON r.event_id = e.event_id " + "join venues v on e.venue_id = v.venue_id "
-				+ "join registration_tickets rt on r.registration_id = rt.registration_id "
-				+ "join tickets t on rt.ticket_id = t.ticket_id " + "where r.user_id = ? and r.status = 'CONFIRMED'";
+		String sql = "SELECT e.title, e.start_datetime, v.name, v.city, "
+		        + "t.ticket_type, rt.quantity, "
+				//get total cost of the ticket
+		        + "(SELECT COALESCE(SUM(p.amount), 0) FROM payments p "
+		        + " WHERE p.registration_id = r.registration_id) AS total_cost "
+		        + "FROM registrations r "
+		        + "JOIN events e ON r.event_id = e.event_id "
+		        + "JOIN venues v ON e.venue_id = v.venue_id "
+		        + "JOIN registration_tickets rt ON r.registration_id = rt.registration_id "
+		        + "JOIN tickets t ON rt.ticket_id = t.ticket_id "
+		        + "WHERE r.user_id = ? AND r.status = 'CONFIRMED'";
+
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -282,12 +316,16 @@ public class EventDaoImpl implements EventDao {
 	}
 
 	// approves an event
+	//TODO: LOGIC CHANGE 
+	//OLD LOGIC - APPROVE EVENT SET THE STATUS TO DRAFT AND ONLY UPDATE THE APPROVED_AT AND APPROVED_BY
+	//NEW LOGIC - APPROVE EVENT MUST SET THE STATUS TO APPROVED AND OTHER STATES TO NEED TO BE UPDATED
+	//THIS LOGIC SHIFT MUST CHANGE THE APPROVE EVENT, CANCEL EVENT IN ADMIN MENU. PUBLISH EVENT IN ORGANIZR MENU
 	@Override
 	public boolean approveEvent(int eventId, int userId) throws DataAccessException {
 		String sql = "update events set status = ? ,approved_by = ?, updated_at = ?, approved_at = ? where event_id = ? and start_datetime > ?";
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-			ps.setString(1, "draft");
+			ps.setString(1, EventStatus.APPROVED.toString());
 			ps.setInt(2, userId);
 			ps.setTimestamp(3, Timestamp.from(DateTimeUtil.getCurrentUtc()));
 			ps.setTimestamp(4, Timestamp.from(DateTimeUtil.getCurrentUtc()));
@@ -305,7 +343,7 @@ public class EventDaoImpl implements EventDao {
 	@Override
 	public boolean cancelEvent(int eventId) throws DataAccessException {
 
-		String sql = "update events set status = ? , approved_by = null, updated_at = ?, approved_at = null where event_id = ? and start_datetime > ?";
+		String sql = "update events set status = ? ,updated_at = ? where event_id = ? and start_datetime > ?";
 
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -324,10 +362,11 @@ public class EventDaoImpl implements EventDao {
 
 	@Override
 	public void completeEvents() throws DataAccessException {
-		String sql = "update events set status = ? where status = ? " + "and end_datetime <= CURRENT_TIMESTAMP";
+		String sql = "update events set status = ? where status = ? or status = ? " + "and end_datetime <= CURRENT_TIMESTAMP";
 		try (Connection con = DBConnectionUtil.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-			ps.setString(1, EventStatus.PUBLISHED.toString());
-			ps.setString(2, EventStatus.COMPLETED.toString());
+			ps.setString(1, EventStatus.COMPLETED.toString());
+			ps.setString(2, EventStatus.APPROVED.toString());
+			ps.setString(3, EventStatus.PUBLISHED.toString());
 			ps.executeUpdate();
 		} catch (SQLException e) {
 			throw new DataAccessException("Error while updating events");
@@ -356,7 +395,7 @@ public class EventDaoImpl implements EventDao {
 				event.setCapacity(rs.getInt("capacity"));
 				event.setStatus(rs.getString("status"));
 				Integer approvedBy = rs.getInt("approved_by");
-				if (approvedBy != null) {
+				if (approvedBy != 0) {
 					event.setApprovedBy(approvedBy);
 				}
 
@@ -386,7 +425,7 @@ public class EventDaoImpl implements EventDao {
 	@Override
 	public Map<Integer, Double> getEventWiseRevenue() throws DataAccessException {
 		Map<Integer, Double> revenueMap = new HashMap<>();
-		String sql = "select e.title, sum(p.amount) as revenue " + "from payments p "
+		String sql = "select e.event_id as event_id, sum(p.amount) as revenue " + "from payments p "
 				+ "join registrations r on p.registration_id = r.registration_id "
 				+ "join events e on r.event_id = e.event_id " + "where r.status = 'CONFIRMED' " + "group by e.event_id, e.title"
 						+ "";
@@ -411,14 +450,14 @@ public class EventDaoImpl implements EventDao {
 	public Map<String, Integer> getOrganizerWiseEventCount() throws DataAccessException {
 		Map<String, Integer> result = new HashMap<>();
 		String sql = "select u.full_name, count(e.event_id) as total_events " + "from events e "
-				+ "join users u on e.organizer_id = u.user_id " + "group by u.full_name";
+				+ "join users u on e.organizer_id = u.user_id " + "group by u.user_id";
 		try (Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql);
 				ResultSet rs = ps.executeQuery()) {
 			while (rs.next()) {
 				result.put(rs.getString("full_name"), rs.getInt("total_events"));
 			}
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			throw new DataAccessException("Failed to fetch organizer performance");
 		}
 
@@ -515,20 +554,16 @@ public class EventDaoImpl implements EventDao {
     }
 
     public List<Event> getEventsByOrganizer(int organizerId) throws DataAccessException {
-        List<Event> list = new ArrayList<>();
         String sql = "select * from events where organizer_id=?";
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, organizerId);
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                return getEventList(rs);
-            }
+            return getEventList(rs);
         } catch (SQLException e) {
 			throw new DataAccessException("Failed to fetch organizer events");
 		}
-        return list;
     }
 
 	@Override

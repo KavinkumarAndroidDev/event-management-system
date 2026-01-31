@@ -13,7 +13,7 @@ import com.ems.model.UserEventRegistration;
 public interface EventDao {
 	List<Event> listAvailableEvents() throws DataAccessException;
 
-	 List<Event> listAllEvents() throws DataAccessException;
+	List<Event> listAllEvents() throws DataAccessException;
 
 	 List<Event> listEventsYetToApprove() throws DataAccessException;
 

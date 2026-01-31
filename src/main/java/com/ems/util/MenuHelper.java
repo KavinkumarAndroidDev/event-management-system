@@ -1,13 +1,15 @@
 package com.ems.util;
 
-import java.util.Comparator;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import com.ems.model.BookingDetail;
 import com.ems.model.Category;
 import com.ems.model.Event;
 import com.ems.model.Offer;
 import com.ems.model.Ticket;
 import com.ems.model.User;
+import com.ems.model.UserEventRegistration;
 import com.ems.model.Venue;
 import com.ems.service.EventService;
 
@@ -84,12 +86,13 @@ public class MenuHelper {
     			int totalAvailable = eventService.getAvailableTickets(event.getEventId());
 
     			System.out.println(
-    			    displayIndex + " | " +
-    			    event.getTitle() + " | " +
-    			    category + " | " +
-    			    DateTimeUtil.formatDateTime(event.getStartDateTime()) +
-    			    " | Tickets: " + totalAvailable
+    					displayIndex + " | Title: " +
+    						    event.getTitle() + " | Category: " +
+    						    category + " | " +
+    						    DateTimeUtil.formatDateTime(event.getStartDateTime()) +
+    						    " | Tickets: " + totalAvailable 
     			);
+    			
 
     			displayIndex++;
             }
@@ -99,15 +102,18 @@ public class MenuHelper {
     }
     
     public static void displayUsers(List<User> users) {
+    	if (users == null || users.isEmpty()) {
+    	    System.out.println("No users found.");
+    	    return;
+    	}
+
     	if(!users.isEmpty()) {
-            users.sort(Comparator.comparing(User::getFullName));
             System.out.println("\n==============================================================");
             System.out.printf(
                 "%-5s %-5s %-20s %-10s %-25s %-15s %-10s%n",
                 "NO" ,"ID", "Name", "Gender", "Email", "Phone", "Status"
             );
             System.out.println("==============================================================");
-
             int displayIndex = 1;
             for(User user: users) {
                 System.out.printf(
@@ -214,6 +220,79 @@ public class MenuHelper {
 	    }
 	}
 
+	public static void printTicketSummaries(List<Ticket> tickets) {
+		if(!tickets.isEmpty()) {
+			System.out.println("\nAvailable ticket types: ");			
+			
+			int displayIndex = 1;
+	        for (Ticket ticket: tickets) {
+	        	System.out.println(
+	                    displayIndex + " | " +
+	                    ticket.getTicketType() + " | ₹" +
+	                    ticket.getPrice() + " | " +
+	                    "Tickets: " + ticket.getAvailableQuantity() +"/" + ticket.getTotalQuantity()
+	                );
 
+	                displayIndex++;
+	        }
+		}else {
+			System.out.println("No ticket types for the given event id");
+			return;
+		}
+		
+	}
+	
+    public static void printBookingDetails(List<BookingDetail> bookingDetails) {
+        System.out.println("Booking Details\n");
+        for (BookingDetail b : bookingDetails) {
+            System.out.println("------------------------------------------");
+            System.out.println("Event  : " + b.getEventName());
+            System.out.println("Venue : " + b.getVenueName() + " (" + b.getCity() + ")");
+            System.out.println("Tickets: " + b.getTicketType() + " x " + b.getQuantity() + " tickets");
+            System.out.println("Total : ₹" + b.getTotalCost());
+        }
+        System.out.println("------------------------------------------");
+    }
     
+    
+    public static void printEventsList(List<UserEventRegistration> events) {
+        System.out.println("\n--------------------------------------------------------------------------------------");
+        System.out.printf(
+            "%-3s %-22s %-12s %-12s %-18s %-7s%n",
+            "No", "Title", "Category", "Ticket Type", "Date & Time", "Tickets"
+        );
+        System.out.println("--------------------------------------------------------------------------------------");
+
+        int i = 1;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+        for (UserEventRegistration r : events) {
+            String title = r.getTitle();
+            String displayTitle = (title != null && title.length() > 22) 
+                ? title.substring(0, 22 - 3) + "..." 
+                : title;
+
+            String category = r.getCategory();
+            String displayCategory = (category != null && category.length() > 12) 
+                ? category.substring(0, 12 - 3) + "..." 
+                : category;
+            
+            String ticketType = r.getTicketType();
+            String displayTicketType =
+                (ticketType != null && ticketType.length() > 12)
+                    ? ticketType.substring(0, 9) + "..."
+                    : ticketType;
+
+            System.out.printf(
+                "%-3d %-22s %-12s %-12s %-18s %-7d%n",
+                i++,
+                displayTitle,
+                displayCategory,
+                displayTicketType,
+                r.getStartDateTime().format(formatter),
+                r.getTicketsPurchased()
+            );
+        }
+        System.out.println("--------------------------------------------------------------------------------------");
+    }
+
 }

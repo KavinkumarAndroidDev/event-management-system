@@ -1,11 +1,15 @@
 package com.ems.dao.impl;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import com.ems.dao.PaymentDao;
+import com.ems.enums.PaymentMethod;
 import com.ems.exception.DataAccessException;
+import com.ems.model.RegistrationResult;
 import com.ems.util.DBConnectionUtil;
 
 /*
@@ -16,6 +20,34 @@ import com.ems.util.DBConnectionUtil;
  * - Record payment method, amount, and status
  */
 public class PaymentDaoImpl implements PaymentDao {
+	@Override
+	public boolean processPayment(int regId, double totalAmount, String paymentMethod) 
+			throws DataAccessException {
+		
+		String sql = "insert into payments (registration_id, amount, payment_method, payment_status, created_at) " +
+		             "values(?, ?, ?, 'SUCCESS', utc_timestamp())";
+		
+		try (Connection con = DBConnectionUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)) {
+			
+			ps.setInt(1, regId);
+			ps.setDouble(2, totalAmount);
+			ps.setString(3, paymentMethod);
+		
+			
+			int updatedRows = ps.executeUpdate();
+			
+			if (updatedRows == 0) {
+				throw new DataAccessException("Error while updating payment!");
+			}
+			
+			return true;
+			
+		} catch (SQLException e) {
+			throw new DataAccessException("Database error while processing payment");
+		}
+	}
+	
 	@Override
 	public boolean processPayment(int regId, double totalAmount, String paymentMethod, int offerId) 
 			throws DataAccessException {
@@ -43,7 +75,55 @@ public class PaymentDaoImpl implements PaymentDao {
 			throw new DataAccessException("Database error while processing payment");
 		}
 	}
+	
+	@Override
+	public RegistrationResult registerForEvent(
+	        int userId,
+	        int eventId,
+	        int ticketId,
+	        int quantity,
+	        double price,
+	        PaymentMethod paymentMethod,
+	        String offerCode
+	) throws DataAccessException {
 
+	    String sql = "{ CALL sp_register_for_event(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }";
+
+	    RegistrationResult result = new RegistrationResult();
+
+	    try (Connection con = DBConnectionUtil.getConnection();
+	         CallableStatement cs = con.prepareCall(sql)) {
+
+	        // IN params
+	        cs.setInt(1, userId);
+	        cs.setInt(2, eventId);
+	        cs.setInt(3, ticketId);
+	        cs.setInt(4, quantity);
+	        cs.setDouble(5, price);
+	        cs.setString(6, paymentMethod.name());
+	        cs.setString(7, offerCode);
+
+	        // OUT params
+	        cs.registerOutParameter(8, Types.BOOLEAN);     // o_success
+	        cs.registerOutParameter(9, Types.VARCHAR);     // o_message
+	        cs.registerOutParameter(10, Types.INTEGER);    // o_registration_id
+	        cs.registerOutParameter(11, Types.DECIMAL);    // o_final_amount
+
+	        cs.execute();
+
+	        result.setSuccess(cs.getBoolean(8));
+	        result.setMessage(cs.getString(9));
+	        result.setRegistrationId(cs.getInt(10));
+	        result.setFinalAmount(cs.getDouble(11));
+
+	        return result;
+
+	    } catch (SQLException e) {
+	        throw new DataAccessException("Failed to execute registration procedure", e);
+	    }
+	}
+
+	
 	@Override
 	public void updatePaymentStatus(int registrationId) throws DataAccessException {
 

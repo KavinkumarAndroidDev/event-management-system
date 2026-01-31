@@ -13,6 +13,7 @@ public class UserEventRegistration {
     private LocalDateTime endDateTime;
     private int ticketsPurchased;
     private double amountPaid;
+    private String ticketType;
     
     
 	public int getRegistrationId() {
@@ -75,7 +76,11 @@ public class UserEventRegistration {
 	public void setAmountPaid(double amountPaid) {
 		this.amountPaid = amountPaid;
 	}
-    
-    
-
+	public String getTicketType() {
+		return ticketType;
+	}
+	public void setTicketType(String ticketType) {
+		this.ticketType = ticketType;
+	}
+	
 }

@@ -23,5 +23,7 @@ public interface OfferDao {
 
     void recordOfferUsage(int offerId, int userId, int registrationId) throws DataAccessException;
 
+	boolean hasUserUsedOfferCode(int userId, int offerId)  throws DataAccessException ;
+
 }
 

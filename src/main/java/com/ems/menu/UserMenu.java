@@ -5,6 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.ems.actions.EventBrowsingAction;
+import com.ems.actions.EventRegistrationAction;
+import com.ems.actions.EventSearchAction;
+import com.ems.actions.FeedbackAction;
+import com.ems.actions.NotificationAction;
+import com.ems.actions.UserRegistrationAction;
 import com.ems.enums.PaymentMethod;
 import com.ems.model.BookingDetail;
 import com.ems.model.Category;
@@ -12,9 +18,6 @@ import com.ems.model.Event;
 import com.ems.model.Ticket;
 import com.ems.model.User;
 import com.ems.model.UserEventRegistration;
-import com.ems.service.EventService;
-import com.ems.service.NotificationService;
-import com.ems.util.ApplicationUtil;
 import com.ems.util.DateTimeUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.MenuHelper;
@@ -30,18 +33,26 @@ import com.ems.util.ScannerUtil;
  */
 public class UserMenu extends BaseMenu {
 
-	private final NotificationService notificationService;
-	private final EventService eventService;
+	private final NotificationAction notificationAction;
+	private final EventBrowsingAction eventBrowsingAction;
+	private final EventRegistrationAction eventRegistrationAction;
+	private final UserRegistrationAction userRegistrationAction;
+	private final EventSearchAction eventSearchAction;
+	private final FeedbackAction feedbackAction;
 
 	public UserMenu(User user) {
 		super(user);
-		this.notificationService = ApplicationUtil.notificationService();
-		this.eventService = ApplicationUtil.eventService();
+		this.notificationAction = new NotificationAction();
+		this.eventBrowsingAction = new EventBrowsingAction();
+		this.eventRegistrationAction = new EventRegistrationAction();
+		this.userRegistrationAction = new UserRegistrationAction();
+		this.eventSearchAction = new EventSearchAction();
+		this.feedbackAction = new FeedbackAction();
 	}
 
 	public void start() {
 
-		notificationService.displayUnreadNotifications(loggedInUser.getUserId());
+		notificationAction.displayUnreadNotifications(loggedInUser.getUserId());
 
 		while (true) {
 			System.out.println("\nUser Menu\n\n" + "1. Browse Events\n" + "2. Search & Filter Events\n"
@@ -60,7 +71,7 @@ public class UserMenu extends BaseMenu {
 				registrationMenu();
 				break;
 			case 4:
-				notificationService.displayAllNotifications(loggedInUser.getUserId());
+				notificationAction.displayAllNotifications(loggedInUser.getUserId());
 				break;
 			case 5:
 				feedbackMenu();
@@ -87,16 +98,16 @@ public class UserMenu extends BaseMenu {
 
 			switch (choice) {
 			case 1:
-				printAllAvailableEvents();
+				eventBrowsingAction.printAllAvailableEvents();
 				break;
 			case 2:
-				viewEventDetails();
+				eventBrowsingAction.viewEventDetails();
 				break;
 			case 3:
-				viewTicketOptions();
+				eventBrowsingAction.viewTicketOptions();
 				break;
 			case 4:
-				registerForEvent();
+				eventRegistrationAction.registerForEvent(loggedInUser.getUserId());
 				break;
 			case 5:
 				return;
@@ -106,178 +117,6 @@ public class UserMenu extends BaseMenu {
 		}
 	}
 
-	private void registerForEvent() {
-		List<Event> events = eventService.listAvailableEvents();
-        if (events == null || events.isEmpty()) {
-            System.out.println("No events available at the moment.");
-            return;
-        }
-
-        MenuHelper.printEventSummaries(events);
-        int choice = InputValidationUtil.readInt(
-        		ScannerUtil.getScanner(),
-        		"Select an event number (1-" + events.size() + "): "
-        );
-        while (choice < 1 || choice > events.size()) {
-        	choice = InputValidationUtil.readInt(
-        			ScannerUtil.getScanner(),
-        	        "Enter a valid choice: "
-        	    );
-        }
-
-        Event selectedEvent = events.get(choice - 1);
-        int eventId = selectedEvent.getEventId();
-
-        List<Ticket> tickets = eventService.getTicketTypes(eventId);
-        if (tickets == null ||tickets.isEmpty()) {
-            System.out.println("No ticket types available for this event.");
-            return;
-        }
-
-        System.out.println("\nAvailable Ticket Types:");
-        int displayIndex = 1;
-        for (Ticket ticket: tickets) {
-        	System.out.println(
-                    displayIndex + " | " +
-                    ticket.getTicketType() + " | ₹" +
-                    ticket.getPrice() + " | " +
-                    "Tickets: " + ticket.getAvailableQuantity() +"/" + ticket.getTotalQuantity()
-                );
-
-                displayIndex++;
-        }
-        int ticketChoice = InputValidationUtil.readInt(
-        		ScannerUtil.getScanner(),
-        		"Select a ticket (1-" + tickets.size() + "): "
-        );
-        while (ticketChoice < 1 || ticketChoice > tickets.size()) {
-        	ticketChoice = InputValidationUtil.readInt(
-        			ScannerUtil.getScanner(),
-        	        "Enter a valid choice: "
-        	    );
-        }
-        Ticket selectedTicket = tickets.get(ticketChoice - 1);
-        int ticketId = selectedTicket.getTicketId();
-
-        int quantity = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter number of tickets: ");
-        while (quantity <= 0 || quantity > selectedTicket.getAvailableQuantity()) {
-            quantity = InputValidationUtil.readInt(
-                ScannerUtil.getScanner(),
-                "Enter quantity (1-" + selectedTicket.getAvailableQuantity() + "): "
-            );
-        }
-
-        
-        
-        System.out.println("\nAvailable payment methods:");
-
-        PaymentMethod[] methods = PaymentMethod.values();
-        for (int i = 0; i < methods.length; i++) {
-            System.out.println(
-                (i + 1) + ". " + methods[i].name().replace("_", " ")
-            );
-        }
-
-        int paymentChoice = InputValidationUtil.readInt(
-            ScannerUtil.getScanner(),
-            "Enter choice (1-" + methods.length + "): "
-        );
-
-        while (paymentChoice < 1 || paymentChoice > methods.length) {
-            System.out.println("Please select a valid payment method.");
-            paymentChoice = InputValidationUtil.readInt(
-                ScannerUtil.getScanner(),
-                "Enter choice (1-" + methods.length + "): "
-            );
-        }
-
-        PaymentMethod selectedMethod = methods[paymentChoice - 1];
-        
-        String offerCode = InputValidationUtil.readString(
-        	    ScannerUtil.getScanner(),"Enter offer code (press Enter to skip): ");
-
-        	if (offerCode.isBlank()) {
-        	    offerCode = "";
-        	}else {
-        		offerCode = offerCode.trim().toUpperCase();
-        	}
-
-        
-        boolean success = eventService.registerForEvent(loggedInUser.getUserId(), eventId, ticketId, quantity, selectedTicket.getPrice(), selectedMethod, offerCode);
-        if (success) {
-            System.out.println("Registration successful. Your tickets are confirmed.");
-        } else {
-            System.out.println("Registration failed. Please check availability or try again.\n");
-        }
-	}
-
-
-	private void viewTicketOptions() {
-		List<Event> events = eventService.listAvailableEvents();
-		if (events.isEmpty()) {
-		    System.out.println("No events available at the moment.");
-		    return;
-		}
-		
-    	MenuHelper.printEventSummaries(events);
-    	int choice = InputValidationUtil.readInt(
-	    	    ScannerUtil.getScanner(),
-	    	    "Select an event number (1-" + events.size() + "): "
-    	);
-    	while (choice < 1 || choice > events.size()) {
-    	    choice = InputValidationUtil.readInt(
-    	        ScannerUtil.getScanner(),
-    	        "Enter a valid choice: "
-    	    );
-    	}
-    	Event selectedEvent = events.get(choice - 1);
-		int eventId = selectedEvent.getEventId();
-
-		List<Ticket> tickets = eventService.getTicketTypes(eventId);
-		
-		if(!tickets.isEmpty()) {
-			System.out.println("\nAvailable ticket types: ");			
-			
-			int displayIndex = 1;
-	        for (Ticket ticket: tickets) {
-	        	System.out.println(
-	                    displayIndex + " | " +
-	                    ticket.getTicketType() + " | ₹" +
-	                    ticket.getPrice() + " | " +
-	                    "Tickets: " + ticket.getAvailableQuantity() +"/" + ticket.getTotalQuantity()
-	                );
-
-	                displayIndex++;
-	        }
-		}else {
-			System.out.println("No ticket types available for this event.\n");
-			return;
-		}
-		
-	}
-
-	private void viewEventDetails() {
-    	List<Event> events = eventService.listAvailableEvents();
-    	if (events.isEmpty()) {
-		    System.out.println("No events available at the moment.");
-		    return;
-		}
-		
-    	MenuHelper.printEventSummaries(events);
-    	int choice = InputValidationUtil.readInt(
-	    	    ScannerUtil.getScanner(),
-	    	    "Select an event number (1-" + events.size() + "): "
-    	);
-    	while (choice < 1 || choice > events.size()) {
-    	    choice = InputValidationUtil.readInt(
-    	        ScannerUtil.getScanner(),
-    	        "Enter a valid choice: "
-    	    );
-    	}
-    	Event selectedEvent = events.get(choice - 1);
-    	MenuHelper.printEventDetails(selectedEvent);
-		
-	}
 
 	private void registrationMenu() {
 		while (true) {
@@ -287,14 +126,14 @@ public class UserMenu extends BaseMenu {
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
 			switch (choice) {
-			case 1:
-				viewUpcomingEvents();
+			case 1: 
+				userRegistrationAction.listUpcomingEvents(loggedInUser.getUserId());
 				break;
 			case 2:
-				viewPastEvents();
+				userRegistrationAction.listPastEvents(loggedInUser.getUserId());
 				break;
 			case 3:
-				viewBookingDetails();
+				userRegistrationAction.viewBookingDetails(loggedInUser.getUserId());
 				break;
 			case 4:
 				cancelRegistration();
@@ -307,90 +146,15 @@ public class UserMenu extends BaseMenu {
 		}
 	}
 
-	private void viewBookingDetails() {
-		List<BookingDetail> bookingDetails = eventService.viewBookingDetails(loggedInUser.getUserId());
-		if (bookingDetails.isEmpty()) {
-            System.out.println("You have no bookings yet.");
-            return;
-        }
-		System.out.println("Booking Details\n");
-
-        for (BookingDetail b : bookingDetails) {
-            System.out.println("------------------------------------------");
-            System.out.println("Event  : " + b.getEventName());
-            System.out.println("Venue : " + b.getVenueName() + " (" + b.getCity() + ")");
-            System.out.println("Tickets: " + b.getTicketType() + " x" + b.getQuantity());
-            System.out.println("Total : ₹" + b.getTotalCost());
-            System.out.println("------------------------------------------");
-        }
-		
-	}
-
-	private void viewUpcomingEvents() {
-		List<UserEventRegistration> upcoming = eventService.viewUpcomingEvents(loggedInUser.getUserId());
-		if (upcoming.isEmpty()) {
-            System.out.println("You have no upcoming events.");
-            return;
-        }
-
-        System.out.println("--- Upcoming Events: " + upcoming.size() + " ---");
-        int displayIndex = 1;
-        for (UserEventRegistration r : upcoming) {
-        	System.out.println(
-                    displayIndex + " | " +
-                    r.getTitle() + " | " +
-                    r.getCategory() + " | " +
-                    DateTimeUtil.formatDateTime(r.getStartDateTime()) +
-                    " | Tickets booked: " + r.getTicketsPurchased() +
-                    " | Status: " + r.getRegistrationStatus()
-                );
-
-                displayIndex++;
-        }
-	}
-
-	private void viewPastEvents() {
-		List<UserEventRegistration> past = eventService.viewPastEvents(loggedInUser.getUserId());
-		if (past.isEmpty()) {
-            System.out.println("You have no past events.");
-            return;
-        }
-
-        System.out.println("--- Past Events: " + past.size() + " ---");
-        int displayIndex = 1;
-        for (UserEventRegistration r : past) {
-        	System.out.println(
-                    displayIndex + " | " +
-                    r.getTitle() + " | " +
-                    r.getCategory() + " | " +
-                    DateTimeUtil.formatDateTime(r.getStartDateTime()) +
-                    " | Tickets booked: " + r.getTicketsPurchased() +
-                    " | Status: " + r.getRegistrationStatus()
-                );
-        	displayIndex++;
-        }
-	}
 	private void cancelRegistration() {
-		List<UserEventRegistration> upcoming = eventService.viewUpcomingEvents(loggedInUser.getUserId());
+		List<UserEventRegistration> upcoming = userRegistrationAction.getUpcomingEvents(loggedInUser.getUserId());
 		if (upcoming.isEmpty()) {
             System.out.println("You have no upcoming events.");
             return;
         }
 
-        System.out.println("--- Upcoming Events: " + upcoming.size() + " ---");
-        int displayIndex = 1;
-        for (UserEventRegistration r : upcoming) {
-        	System.out.println(
-                    displayIndex + " | " +
-                    r.getTitle() + " | " +
-                    r.getCategory() + " | " +
-                    DateTimeUtil.formatDateTime(r.getStartDateTime()) +
-                    " | Tickets booked: " + r.getTicketsPurchased() +
-                    " | Status: " + r.getRegistrationStatus()
-                );
-
-                displayIndex++;
-        }
+        MenuHelper.printEventsList(upcoming);
+        
         int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),
     		    "Select a registration number (1-" + upcoming.size() + "): ");
         while(choice < 1 || choice > upcoming.size()) {
@@ -400,7 +164,7 @@ public class UserMenu extends BaseMenu {
         UserEventRegistration registration = upcoming.get(choice-1);
         char cancelChoice = InputValidationUtil.readChar(ScannerUtil.getScanner(), "Enter Y to confirm cancellation");
 		if(cancelChoice == 'Y' || cancelChoice == 'y'){
-			eventService.cancelRegistration(loggedInUser.getUserId(), registration.getRegistrationId());
+			eventRegistrationAction.cancelRegistration(loggedInUser.getUserId(), registration.getRegistrationId());
 		}else{
 			System.out.println("Registration cancellation cancelled.");
 		}
@@ -426,31 +190,14 @@ public class UserMenu extends BaseMenu {
 	}
 
 	private void submitRating() {
-		List<UserEventRegistration> past = eventService.viewPastEvents(loggedInUser.getUserId());
+		List<UserEventRegistration> past = userRegistrationAction.getPastEvents(loggedInUser.getUserId());
 		
 		if (past.isEmpty()) {
             System.out.println("No past events!");
             return;
         }
-        System.out.println("--- Past Events: " + past.size() + " ---");
-        int displayIndex = 1;
-        for (UserEventRegistration r : past) {
-            try {
-                System.out.println(
-                    displayIndex + " | " +
-                    r.getTitle() + " | " +
-                    r.getCategory() + " | " +
-                    DateTimeUtil.formatDateTime(r.getStartDateTime()) +
-                    " | Tickets booked: " + r.getTicketsPurchased() +
-                    " | Status: " + r.getRegistrationStatus() +
-                    " | Attended at: " + r.getStartDateTime()
-                );
-
-                displayIndex++;
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
-        }
+        
+        MenuHelper.printEventsList(past);
 
 		int choice = InputValidationUtil.readInt(
 		    ScannerUtil.getScanner(),
@@ -477,7 +224,7 @@ public class UserMenu extends BaseMenu {
 		if(comments.trim().isBlank()) {
 			comments = null;
 		}
-		eventService.submitRating(loggedInUser.getUserId(), eventId, rating, comments);
+		feedbackAction.submitRating(loggedInUser.getUserId(), eventId, rating, comments);
 		System.out.println("Thank you for your feedback.\n");
 	}
 
@@ -506,7 +253,7 @@ public class UserMenu extends BaseMenu {
 				filterByPrice();
 				break;
 			case 6:
-				printAllAvailableEvents();
+				eventBrowsingAction.printAllAvailableEvents();
 				break;
 			case 7:
 				return;
@@ -517,16 +264,12 @@ public class UserMenu extends BaseMenu {
 	}
 
 	private void searchBycategory() {
-		List<Category> categories = eventService.getAllCategory();
+		List<Category> categories = eventSearchAction.getAllCategories();
 		if(categories.isEmpty()) {
 			System.out.println("No categories available.");
 			return;
 		}
-		int defaultIndex = 1;
-		for(Category category: categories) {
-			System.out.println(defaultIndex +". " +category.getName());
-			defaultIndex++;
-		}
+		MenuHelper.displayCategories(categories);
 		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Select category number: ");
 		while (choice < 1 || choice > categories.size()) {
 		    choice = InputValidationUtil.readInt(
@@ -536,7 +279,7 @@ public class UserMenu extends BaseMenu {
 		}
 		Category selectedCategory = categories.get(choice - 1);
 		int categoryId = selectedCategory.getCategoryId();
-		List<Event> events = eventService.searchBycategory(categoryId);
+		List<Event> events = eventSearchAction.searchByCategory(categoryId);
 		if(events.isEmpty()) {
 			System.out.println("No events found in this category.: " + selectedCategory.getName());
 			return;
@@ -544,19 +287,12 @@ public class UserMenu extends BaseMenu {
 		MenuHelper.printEventSummaries(events);
 	}
 
-	private void printAllAvailableEvents() {
-		List<Event> filteredEvents = eventService.listAvailableEvents();
-		if(filteredEvents.isEmpty()) {
-			System.out.println("There is no available events!");
-			return;
-		}
-		MenuHelper.printEventSummaries(filteredEvents);
-	}
-
 	private void searchByDateRange() {
-		LocalDate startDate = DateTimeUtil.getLocalDate("Enter start date (dd-mm-yyyy):");
-	    LocalDate endDate = DateTimeUtil.getLocalDate("Enter end date (dd-mm-yyyy):");
-	    List<Event> filteredEvents = eventService.searchByDateRange(startDate, endDate);
+		String startDateInput = InputValidationUtil.readString(ScannerUtil.getScanner(),"Enter start date (dd-mm-yyyy): " );
+		LocalDate startDate = DateTimeUtil.parseLocalDate(startDateInput);
+		String endDateInput = InputValidationUtil.readString(ScannerUtil.getScanner(),"Enter end date (dd-mm-yyyy): " );
+		LocalDate endDate = DateTimeUtil.parseLocalDate(endDateInput);
+	    List<Event> filteredEvents = eventSearchAction.searchByDateRange(startDate, endDate);
 	    if(filteredEvents.isEmpty()) {
 			System.out.println("No events found in the selected date range.");
 			return;
@@ -565,7 +301,7 @@ public class UserMenu extends BaseMenu {
 	}
 
 	private void searchByCity() {
-		Map<Integer, String> cities = eventService.getAllCities();
+		Map<Integer, String> cities = eventSearchAction.getAllCities();
 		if(cities.isEmpty()) {
 			System.out.println("No cities available.");
 			return;
@@ -583,26 +319,29 @@ public class UserMenu extends BaseMenu {
 
 	    final int selectedCityId = dbKeys.get(choice - 1);
 
-		List<Event> filteredEvents = eventService.searchByCity(selectedCityId);
+		List<Event> filteredEvents = eventSearchAction.searchByCity(selectedCityId);
 		if(filteredEvents.isEmpty()) {
 			System.out.println("No events found in the selected city.");
 			return;
 		}
 		MenuHelper.printEventDetails(filteredEvents);
 	}
+	
 	private void searchByDate() {
-		LocalDate localDate = DateTimeUtil.getLocalDate("Enter the date to get available event from the given date:");
-		List<Event> filteredEvents = eventService.searchByDate(localDate);
+		String dateInput = InputValidationUtil.readString(ScannerUtil.getScanner(),"Enter the date to get available event from the given date (dd-mm-yyyy): " );
+		LocalDate localDate = DateTimeUtil.parseLocalDate(dateInput);
+		List<Event> filteredEvents = eventSearchAction.searchByDate(localDate);
 		if(filteredEvents.isEmpty()) {
 			System.out.println("There is no available events in or after selected date!");
 			return;
 		}
 		MenuHelper.printEventDetails(filteredEvents);
 	}
+	
 	private void filterByPrice() {
 		double minPrice = InputValidationUtil.readDouble(ScannerUtil.getScanner(), "Enter the minimum price: ");
 		double maxPrice = InputValidationUtil.readDouble(ScannerUtil.getScanner(), "Enter the maximum price: ");
-		List<Event> filteredEvents = eventService.filterByPrice(minPrice, maxPrice);
+		List<Event> filteredEvents = eventSearchAction.filterByPrice(minPrice, maxPrice);
 		if(filteredEvents.isEmpty()) {
 			System.out.println("No events found in the selected price range.");
 			return;

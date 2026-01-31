@@ -150,8 +150,8 @@ public class EventServiceImpl implements EventService {
 		try {
 			List<Event> allEvents = eventDao.listAvailableEvents();
 			filteredEvents = allEvents.stream()
-			.filter(e -> !e.getStartDateTime().toLocalDate().isBefore(localDate))
-			.collect(Collectors.toList());
+			.filter(e -> e.getStartDateTime().toLocalDate().isEqual(localDate))
+            .collect(Collectors.toList());
 
 		} catch (DataAccessException e) {
 			System.out.println("Database error: " + e.getMessage());
@@ -212,7 +212,7 @@ public class EventServiceImpl implements EventService {
 	 * Rule: - Registration succeeds only if payment is successful
 	 */
 	@Override
-	public boolean registerForEvent(
+	public boolean  registerForEvent(
 	        int userId,
 	        int eventId,
 	        int ticketId,
@@ -220,35 +220,16 @@ public class EventServiceImpl implements EventService {
 	        double price,
 	        PaymentMethod paymentMethod,
 	        String offerCode) {
-
-	    try {
-	    	boolean success = paymentService.processRegistration(
-	    		    userId,
-	    		    eventId,
-	    		    ticketId,
-	    		    quantity,
-	    		    price,
-	    		    paymentMethod,
-	    		    offerCode
-	    		);
-
-	    		if (success) {
-	    		    systemLogService.log(
-	    		        userId,
-	    		        "REGISTER",
-	    		        "EVENT",
-	    		        eventId,
-	    		        "User registered for event using ticket " + ticketId +
-	    		        (offerCode != null ? " with offer code " + offerCode : "")
-	    		    );
-	    		}
-
-	    		return success;
-
-	    } catch (Exception e) {
-	        System.out.println("Error during registration: " + e.getMessage());
-	        return false;
-	    }
+		return paymentService.processRegistration(
+    		    userId,
+    		    eventId,
+    		    ticketId,
+    		    quantity,
+    		    price,
+    		    paymentMethod,
+    		    offerCode
+    		);
+		
 	}
 
 	/*
@@ -260,7 +241,12 @@ public class EventServiceImpl implements EventService {
 		try {
 			List<UserEventRegistration> registrations = eventDao.getUserRegistrations(userId);
 
-			upcoming = registrations.stream().filter(r -> r.getStartDateTime().isAfter(LocalDateTime.now())).toList();
+			upcoming = registrations.stream()
+				    .filter(r -> r.getStartDateTime().isAfter(LocalDateTime.now()) 
+				              && "CONFIRMED".equals(r.getRegistrationStatus()))
+				    .toList();
+
+			
 
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
@@ -276,7 +262,9 @@ public class EventServiceImpl implements EventService {
 		List<UserEventRegistration> past = new ArrayList<>();
 		try {
 			List<UserEventRegistration> registrations = eventDao.getUserRegistrations(userId);
-			past = registrations.stream().filter(r -> r.getStartDateTime().isBefore(LocalDateTime.now())).toList();
+			past = registrations.stream()
+					.filter(r -> r.getStartDateTime().isBefore(LocalDateTime.now()) && "CONFIRMED".equals(r.getRegistrationStatus()))
+					.toList();
 
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
@@ -403,7 +391,7 @@ public class EventServiceImpl implements EventService {
 	public List<Category> getAllCategory() {
 		List<Category> categories = new ArrayList<>();
 		try {
-			categories = categoryDao.getAllCategories();
+			categories = categoryDao.getActiveCategories();
 			return categories;
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());

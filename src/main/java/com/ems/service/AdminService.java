@@ -27,7 +27,7 @@ public interface AdminService {
 	// event management
 	void approveEvents(int userId, int eventId);
 
-	void cancelEvents(int eventId);
+	void cancelEvent(int eventId);
 
 	void markCompletedEvents();
 
@@ -44,6 +44,8 @@ public interface AdminService {
 	void addCategory(String name);
 
 	void updateCategory(int categoryId, String name);
+	
+	void updateCategory(int categoryId);
 
 	void deleteCategory(int categoryId);
 

@@ -72,82 +72,6 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	    return reports;
 	}
 
-	@Override
-	public int createRegistration(int userId, int eventId) throws DataAccessException {
-		String sql = "insert into registrations (user_id, event_id, registration_date, status) " +
-		             "values (?, ?, utc_timestamp(), 'CONFIRMED')";
-		
-		try (Connection con = DBConnectionUtil.getConnection();
-		     PreparedStatement ps = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-			
-			ps.setInt(1, userId);
-			ps.setInt(2, eventId);
-			int affectedRows = ps.executeUpdate();
-			
-			if (affectedRows > 0) {
-				try (ResultSet rs = ps.getGeneratedKeys()) {
-					if (rs.next()) {
-						return rs.getInt(1);
-					}
-				}
-			}
-			
-		} catch (SQLException e) {
-			throw new DataAccessException("Error while creating registration");
-		}
-		
-		return 0;
-	}
-
-	@Override
-	public void addRegistrationTickets(int regId, int ticketId, int quantity) 
-			throws DataAccessException {
-		String sql = "insert into registration_tickets (registration_id, ticket_id, quantity) " +
-		             "values (?, ?, ?)";
-		
-		try (Connection con = DBConnectionUtil.getConnection();
-		     PreparedStatement ps = con.prepareStatement(sql)) {
-			
-			ps.setInt(1, regId);
-			ps.setInt(2, ticketId);
-			ps.setInt(3, quantity);
-			ps.executeUpdate();
-			
-		} catch (SQLException e) {
-			throw new DataAccessException("Error while adding registration tickets");
-		}
-	}
-
-	@Override
-	public void removeRegistrations(int regId) throws DataAccessException {
-		String sql = "delete from registrations where registration_id = ?";
-		
-		try (Connection con = DBConnectionUtil.getConnection();
-		     PreparedStatement ps = con.prepareStatement(sql)) {
-			
-			ps.setInt(1, regId);
-			ps.executeUpdate();
-
-		} catch (SQLException e) {
-			throw new DataAccessException("Error while removing registration");
-		}
-	}
-
-	@Override
-	public void removeRegistrationTickets(int regId, int ticketId) throws DataAccessException {
-		String sql = "delete from registration_tickets where registration_id = ? and ticket_id = ?";
-		
-		try (Connection con = DBConnectionUtil.getConnection();
-		     PreparedStatement ps = con.prepareStatement(sql)) {
-			
-			ps.setInt(1, regId);
-			ps.setInt(2, ticketId);
-			ps.executeUpdate();
-
-		} catch (SQLException e) {
-			throw new DataAccessException("Error while removing registration tickets: " + e.getMessage());
-		}
-	}
 	
 	@Override
 	public List<Integer> getRegisteredUserIdsByEvent(int eventId) throws DataAccessException {
@@ -343,4 +267,7 @@ public class RegistrationDaoImpl implements RegistrationDao {
 	    return tickets;
 	}
 
+
+
+   
 }

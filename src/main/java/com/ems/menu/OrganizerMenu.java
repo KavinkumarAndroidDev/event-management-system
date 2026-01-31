@@ -6,6 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ems.actions.OrganizerEventManagementAction;
+import com.ems.actions.OrganizerTicketManagementAction;
+import com.ems.actions.OrganizerRegistrationAction;
+import com.ems.actions.OrganizerReportAction;
+import com.ems.actions.NotificationAction;
 import com.ems.enums.EventStatus;
 import com.ems.model.Category;
 import com.ems.model.Event;
@@ -13,10 +18,6 @@ import com.ems.model.OrganizerEventSummary;
 import com.ems.model.Ticket;
 import com.ems.model.User;
 import com.ems.model.Venue;
-import com.ems.service.EventService;
-import com.ems.service.NotificationService;
-import com.ems.service.OrganizerService;
-import com.ems.util.ApplicationUtil;
 import com.ems.util.DateTimeUtil;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.MenuHelper;
@@ -24,20 +25,24 @@ import com.ems.util.ScannerUtil;
 
 public class OrganizerMenu extends BaseMenu {
 
-	private final OrganizerService organizerService;
-	private final NotificationService notificationService;
-	private final EventService eventService;
+	private final OrganizerEventManagementAction eventManagementAction;
+	private final OrganizerTicketManagementAction ticketManagementAction;
+	private final OrganizerRegistrationAction registrationAction;
+	private final OrganizerReportAction reportAction;
+	private final NotificationAction notificationAction;
 
 	public OrganizerMenu(User user) {
 		super(user);
-		this.organizerService = ApplicationUtil.organizerService();
-		this.notificationService = ApplicationUtil.notificationService();
-		this.eventService = ApplicationUtil.eventService();
+		this.eventManagementAction = new OrganizerEventManagementAction();
+		this.ticketManagementAction = new OrganizerTicketManagementAction();
+		this.registrationAction = new OrganizerRegistrationAction();
+		this.reportAction = new OrganizerReportAction();
+		this.notificationAction = new NotificationAction();
 	}
 
 	public void start() {
 
-		notificationService.displayUnreadNotifications(loggedInUser.getUserId());
+		notificationAction.displayUnreadNotifications(loggedInUser.getUserId());
 
 		while (true) {
 			System.out.println("\nOrganizer Menu\n\n" + "1. Event Management\n" + "2. Ticket Management\n"
@@ -81,8 +86,8 @@ public class OrganizerMenu extends BaseMenu {
 					"2. View my events\n"+
 					"3. Update event details\n" +
 					"4. Update event capacity\n" + 
-					"5. Publish event\n"
-					+ "6. Cancel event\n" + 
+					"5. Publish event\n" +
+					"6. Cancel event\n" + 
 					"7. Back\n\n>");
 
 			int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
@@ -116,7 +121,7 @@ public class OrganizerMenu extends BaseMenu {
 	}
 	private void viewMyEventDetails() {
 
-	    List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+	    List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 	    if (events.isEmpty()) {
 	        System.out.println("You have not created any events yet.");
@@ -140,7 +145,7 @@ public class OrganizerMenu extends BaseMenu {
 	    Event selectedEvent = events.get(choice - 1);
 
 	    Event event =
-	        organizerService.getOrganizerEventById(
+	        eventManagementAction.getOrganizerEventById(
 	            loggedInUser.getUserId(),
 	            selectedEvent.getEventId()
 	        );
@@ -157,7 +162,7 @@ public class OrganizerMenu extends BaseMenu {
 		String title = InputValidationUtil.readNonEmptyString(ScannerUtil.getScanner(), "Enter the event title: ");
 		String description = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the event description: ");
 
-		List<Category> categories = eventService.getAllCategory();
+		List<Category> categories = eventManagementAction.getAllCategory();
 		if (categories.isEmpty()) {
 			System.out.println("There are no available category!");
 			return;
@@ -174,7 +179,7 @@ public class OrganizerMenu extends BaseMenu {
 		Category selectedCategory = categories.get(choice - 1);
 		int categoryId = selectedCategory.getCategoryId();
 
-		List<Venue> venues = eventService.getAllVenues();
+		List<Venue> venues = eventManagementAction.getAllVenues();
 		if (venues.isEmpty()) {
 			System.out.println("No venues available at the moment.");
 			return;
@@ -182,7 +187,7 @@ public class OrganizerMenu extends BaseMenu {
 		defaultIndex = 1;
 		for (Venue venue : venues) {
 			System.out
-					.println(defaultIndex + ". " + venue.getName() +", \n"+ eventService.getVenueAddress(venue.getVenueId()) +"\n");
+					.println(defaultIndex + ". " + venue.getName() +", \n"+ eventManagementAction.getVenueAddress(venue.getVenueId()) +"\n");
 			defaultIndex++;
 		}
 		int venueChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Select venue number: ");
@@ -191,10 +196,38 @@ public class OrganizerMenu extends BaseMenu {
 		}
 		Venue selectedVenue = venues.get(venueChoice - 1);
 		int venueId = selectedVenue.getVenueId();
-		LocalDateTime startTime = DateTimeUtil.getLocalDateTime("Enter the event Start Date Time (dd-MM-yyyy HH:mm): ");
-		LocalDateTime endTime = DateTimeUtil.getLocalDateTime("Enter the event End Date Time (dd-MM-yyyy HH:mm): ");
+		LocalDateTime startTime = null;
 
-		while (!eventService.isVenueAvailable(venueId, startTime, endTime)) {
+		while (startTime == null) {
+		    String input = InputValidationUtil.readString(
+		            ScannerUtil.getScanner(),
+		            "Enter the event Start Date Time (dd-MM-yyyy HH:mm): "
+		    );
+
+		    startTime = DateTimeUtil.parseLocalDateTime(input);
+
+		    if (startTime == null) {
+		        System.out.println("Invalid start date time. Please try again.");
+		    }
+		}
+
+		LocalDateTime endTime = null;
+
+		while (endTime == null) {
+		    String input = InputValidationUtil.readString(
+		            ScannerUtil.getScanner(),
+		            "Enter the event End Date Time (dd-MM-yyyy HH:mm): "
+		    );
+
+		    endTime = DateTimeUtil.parseLocalDateTime(input);
+
+		    if (endTime == null || endTime.isBefore(startTime)) {
+		        System.out.println("Invalid end date time. End must be after start.");
+		        endTime = null;
+		    }
+		}
+
+		while (!eventManagementAction.isVenueAvailable(venueId, startTime, endTime)) {
 			System.out.println("Selected venue is not available for this time.\n"
 					+ "\n"
 					+ "1. Choose a different venue\n"
@@ -205,7 +238,7 @@ public class OrganizerMenu extends BaseMenu {
 			int c = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 			switch (c) {
 			case 1:
-				venues = eventService.getAllVenues();
+				venues = eventManagementAction.getAllVenues();
 				if (venues.isEmpty()) {
 					System.out.println("No venues available at the moment.");
 					return;
@@ -213,7 +246,7 @@ public class OrganizerMenu extends BaseMenu {
 				defaultIndex = 1;
 				for (Venue venue : venues) {
 					System.out.println(
-							defaultIndex + ". " + venue.getName() + eventService.getVenueAddress(venue.getVenueId()));
+							defaultIndex + ". " + venue.getName() + eventManagementAction.getVenueAddress(venue.getVenueId()));
 					defaultIndex++;
 				}
 				venueChoice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Select venue number: ");
@@ -223,10 +256,33 @@ public class OrganizerMenu extends BaseMenu {
 				selectedVenue = venues.get(venueChoice - 1);
 				venueId = selectedVenue.getVenueId();
 				break;
-			case 2:
-				startTime = DateTimeUtil.getLocalDateTime("Enter the event Start Date Time (dd-MM-yyyy HH:mm): ");
-				endTime = DateTimeUtil.getLocalDateTime("Enter the event End Date Time (dd-MM-yyyy HH:mm): ");
+			case 2:{
+				LocalDateTime eventStartTime = null;
+				LocalDateTime eventEndTime = null;
+
+				while (eventStartTime == null || eventEndTime == null || eventEndTime.isBefore(eventStartTime)) {
+
+				    String startInput = InputValidationUtil.readString(
+				            ScannerUtil.getScanner(),
+				            "Enter the event Start Date Time (dd-MM-yyyy HH:mm): "
+				    );
+				    eventStartTime = DateTimeUtil.parseLocalDateTime(startInput);
+
+				    String endInput = InputValidationUtil.readString(
+				            ScannerUtil.getScanner(),
+				            "Enter the event End Date Time (dd-MM-yyyy HH:mm): "
+				    );
+				    eventEndTime = DateTimeUtil.parseLocalDateTime(endInput);
+
+				    if (eventStartTime == null || eventEndTime == null || eventEndTime.isBefore(eventStartTime)) {
+				        System.out.println("Invalid date time range. Please re-enter both values.");
+				        eventStartTime = null;
+				        eventEndTime = null;
+				    }
+				}
+
 				break;
+			}
 			case 3:
 				return;
 			default:
@@ -250,113 +306,112 @@ public class OrganizerMenu extends BaseMenu {
 		event.setCapacity(eventCapacity);
 		event.setCategoryId(categoryId);
 
-		int id = organizerService.createEvent(event);
+		int id = eventManagementAction.createEvent(event);
 		System.out.println("Event created with ID: " + id);
 	}
 
 	// Logic implemented - venue change is not permitted
-private void updateEventDetails() {
-
-    List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
-    if (events.isEmpty()) {
-        System.out.println("The organizer hasn't hosted any events");
-        return;
-    }
-
-    List<Event> sortedEvents = events.stream()
-        .filter(e ->
-            (EventStatus.PUBLISHED.toString().equals(e.getStatus())
-             || EventStatus.DRAFT.toString().equals(e.getStatus()))
-            && e.getStartDateTime().isAfter(LocalDateTime.now())
-        )
-        .sorted(Comparator.comparing(Event::getStartDateTime))
-        .toList();
-
-    if (sortedEvents.isEmpty()) {
-        System.out.println("No upcoming events available for editing.");
-        return;
-    }
-
-    MenuHelper.printEventSummaries(sortedEvents);
-
-    int choice = InputValidationUtil.readInt(
-        ScannerUtil.getScanner(),
-        "Select an event number (1-" + sortedEvents.size() + "): "
-    );
-    while (choice < 1 || choice > sortedEvents.size()) {
-        choice = InputValidationUtil.readInt(
-            ScannerUtil.getScanner(),
-            "Please enter a valid number from the list.: "
-        );
-    }
-
-    Event selectedEvent = sortedEvents.get(choice - 1);
-
-    System.out.println("Press Enter to keep the current value.");
-
-    String title = InputValidationUtil.readString(
-        ScannerUtil.getScanner(),
-        "Title (" + selectedEvent.getTitle() + "): "
-    );
-    if (title.isBlank()) {
-        title = selectedEvent.getTitle();
-    }
-
-    String description = InputValidationUtil.readString(
-        ScannerUtil.getScanner(),
-        "Description (" + selectedEvent.getDescription() + "): "
-    );
-    if (description.isBlank()) {
-        description = selectedEvent.getDescription();
-    }
-
-    List<Category> categories = eventService.getAllCategory();
-    if (categories.isEmpty()) {
-        System.out.println("No categories available");
-        return;
-    }
-
-    System.out.println("Categories (enter 0 to keep current category)");
-    int index = 1;
-    for (Category category : categories) {
-        System.out.println(index + ". " + category.getName());
-        index++;
-    }
-
-    int categoryChoice = InputValidationUtil.readInt(
-        ScannerUtil.getScanner(),
-        "Category (" + selectedEvent.getCategoryId() + "): "
-    );
-
-    int categoryId;
-    if (categoryChoice == 0) {
-        categoryId = selectedEvent.getCategoryId();
-    } else {
-        while (categoryChoice < 1 || categoryChoice > categories.size()) {
-            categoryChoice = InputValidationUtil.readInt(
-                ScannerUtil.getScanner(),
-                "Please enter a valid number from the list.: "
-            );
-        }
-        categoryId = categories.get(categoryChoice - 1).getCategoryId();
-    }
-
-    boolean result = organizerService.updateEventDetails(
-        selectedEvent.getEventId(),
-        title,
-        description,
-        categoryId,
-        selectedEvent.getVenueId()
-    );
-
-    System.out.println(result ? "Event details updated successfully.\n" : "Failed to update event details.\n");
-}
+	private void updateEventDetails() {
+	
+	    List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
+	    if (events.isEmpty()) {
+	        System.out.println("The organizer hasn't hosted any events");
+	        return;
+	    }
+	
+	    List<Event> sortedEvents = events.stream()
+	        .filter(e ->
+	            EventStatus.DRAFT.toString().equals(e.getStatus())
+	            && e.getStartDateTime().isAfter(LocalDateTime.now())
+	        )
+	        .sorted(Comparator.comparing(Event::getStartDateTime))
+	        .toList();
+	
+	    if (sortedEvents.isEmpty()) {
+	        System.out.println("No upcoming events available for editing.");
+	        return;
+	    }
+	
+	    MenuHelper.printEventSummaries(sortedEvents);
+	
+	    int choice = InputValidationUtil.readInt(
+	        ScannerUtil.getScanner(),
+	        "Select an event number (1-" + sortedEvents.size() + "): "
+	    );
+	    while (choice < 1 || choice > sortedEvents.size()) {
+	        choice = InputValidationUtil.readInt(
+	            ScannerUtil.getScanner(),
+	            "Please enter a valid number from the list.: "
+	        );
+	    }
+	
+	    Event selectedEvent = sortedEvents.get(choice - 1);
+	
+	    System.out.println("Press Enter to keep the current value.");
+	
+	    String title = InputValidationUtil.readString(
+	        ScannerUtil.getScanner(),
+	        "Title (" + selectedEvent.getTitle() + "): "
+	    );
+	    if (title.isBlank()) {
+	        title = selectedEvent.getTitle();
+	    }
+	
+	    String description = InputValidationUtil.readString(
+	        ScannerUtil.getScanner(),
+	        "Description (" + selectedEvent.getDescription() + "): "
+	    );
+	    if (description.isBlank()) {
+	        description = selectedEvent.getDescription();
+	    }
+	
+	    List<Category> categories = eventManagementAction.getAllCategory();
+	    if (categories.isEmpty()) {
+	        System.out.println("No categories available");
+	        return;
+	    }
+	
+	    System.out.println("Categories (enter 0 to keep current category)");
+	    int index = 1;
+	    for (Category category : categories) {
+	        System.out.println(index + ". " + category.getName());
+	        index++;
+	    }
+	
+	    int categoryChoice = InputValidationUtil.readInt(
+	        ScannerUtil.getScanner(),
+	        "Category (" + selectedEvent.getCategoryId() + "): "
+	    );
+	
+	    int categoryId;
+	    if (categoryChoice == 0) {
+	        categoryId = selectedEvent.getCategoryId();
+	    } else {
+	        while (categoryChoice < 1 || categoryChoice > categories.size()) {
+	            categoryChoice = InputValidationUtil.readInt(
+	                ScannerUtil.getScanner(),
+	                "Please enter a valid number from the list.: "
+	            );
+	        }
+	        categoryId = categories.get(categoryChoice - 1).getCategoryId();
+	    }
+	
+	    boolean result = eventManagementAction.updateEventDetails(
+	        selectedEvent.getEventId(),
+	        title,
+	        description,
+	        categoryId,
+	        selectedEvent.getVenueId()
+	    );
+	
+	    System.out.println(result ? "Event details updated successfully.\n" : "Failed to update event details.\n");
+	}
 
 
 
 	// Logic implemented
 	private void updateEventCapacity() {
-		List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+		List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 		if (events.isEmpty()) {
 			System.out.println("You have not created any events yet.");
 			return;
@@ -381,14 +436,14 @@ private void updateEventDetails() {
 		Event selectedEvent = sortedEvents.get(choice - 1);
 		int eventId = selectedEvent.getEventId();
 		
-		int booked = organizerService.viewEventRegistrations(eventId);
+		int booked = registrationAction.viewEventRegistrations(eventId);
 
 		System.out.println(
 		    "Current capacity: " + selectedEvent.getCapacity() +
 		    " | Tickets already booked: " + booked
 		);
 		
-		Venue venue = eventService.getVenueById(selectedEvent.getVenueId());
+		Venue venue = eventManagementAction.getVenueById(selectedEvent.getVenueId());
 		System.out.println("The maximum capacity of venue is: " + venue.getMaxCapacity());
 		int capacity = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the new capacity: ");
 		while (capacity < booked || capacity > venue.getMaxCapacity()) {
@@ -399,13 +454,13 @@ private void updateEventDetails() {
 		}
 
 
-		boolean result = organizerService.updateEventCapacity(eventId, capacity);
+		boolean result = eventManagementAction.updateEventCapacity(eventId, capacity);
 		System.out.println(result ? "Capacity updated" : "Update failed");
 	}
 
 	private void publishEvent() {
 
-		List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+		List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 		if (events.isEmpty()) {
 			System.out.println("No events found.");
@@ -413,7 +468,7 @@ private void updateEventDetails() {
 		}
 
 		List<Event> eligibleEvents = events.stream()
-				.filter(e -> EventStatus.DRAFT.toString().equals(e.getStatus())
+				.filter(e -> EventStatus.APPROVED.toString().equals(e.getStatus())
 						&& e.getStartDateTime().isAfter(LocalDateTime.now()) && e.getUpdatedAt() != null)
 				.sorted(Comparator.comparing(Event::getStartDateTime)).collect(Collectors.toList());
 
@@ -471,19 +526,19 @@ private void updateEventDetails() {
 
 			ticket.setTotalQuantity(qty);
 
-			organizerService.createTicket(ticket);
+			ticketManagementAction.createTicket(ticket);
 
 			remainingCapacity -= qty;
 		}
 
-		boolean published = organizerService.publishEvent(eventId);
+		boolean published = eventManagementAction.publishEvent(eventId);
 
 		System.out.println(published ? "Event published successfully" : "Publish failed");
 	}
 
 	private void cancelEvent() {
 
-		List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+		List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 		if (events.isEmpty()) {
 			System.out.println("No events found.");
@@ -519,7 +574,7 @@ private void updateEventDetails() {
 			return;
 		}
 
-		boolean result = organizerService.cancelEvent(selectedEvent.getEventId());
+		boolean result = eventManagementAction.cancelEvent(selectedEvent.getEventId());
 
 		if (!result) {
 			System.out.println("Cancel failed");
@@ -562,7 +617,7 @@ private void updateEventDetails() {
 
 	private void updateTicketPrice() {
 
-		List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+		List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 		if (events.isEmpty()) {
 			System.out.println("No events found.");
@@ -590,7 +645,7 @@ private void updateEventDetails() {
 
 		Event selectedEvent = validEvents.get(eventChoice - 1);
 
-		List<Ticket> tickets = organizerService.viewTicketAvailability(selectedEvent.getEventId());
+		List<Ticket> tickets = ticketManagementAction.viewTicketAvailability(selectedEvent.getEventId());
 
 		if (tickets.isEmpty()) {
 			System.out.println("No tickets available for this event");
@@ -620,14 +675,14 @@ private void updateEventDetails() {
 			newPrice = InputValidationUtil.readDouble(ScannerUtil.getScanner(), "Enter a valid price: ");
 		}
 
-		boolean result = organizerService.updateTicketPrice(selectedTicket.getTicketId(), newPrice);
+		boolean result = ticketManagementAction.updateTicketPrice(selectedTicket.getTicketId(), newPrice);
 
 		System.out.println(result ? "Ticket price updated successfully" : "Unable to update ticket. Please try again.\n");
 	}
 
 	private void updateTicketQuantity() {
 
-		List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+		List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 		if (events.isEmpty()) {
 			System.out.println("No events found.");
@@ -656,7 +711,7 @@ private void updateEventDetails() {
 		Event selectedEvent = validEvents.get(eventChoice - 1);
 		int capacity = selectedEvent.getCapacity();
 
-		List<Ticket> tickets = organizerService.viewTicketAvailability(selectedEvent.getEventId());
+		List<Ticket> tickets = ticketManagementAction.viewTicketAvailability(selectedEvent.getEventId());
 
 		int totalTickets = tickets.stream().mapToInt(Ticket::getTotalQuantity).sum();
 
@@ -713,14 +768,14 @@ private void updateEventDetails() {
 			newQty = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter valid quantity: ");
 		}
 
-		boolean result = organizerService.updateTicketQuantity(selectedTicket.getTicketId(), newQty);
+		boolean result = ticketManagementAction.updateTicketQuantity(selectedTicket.getTicketId(), newQty);
 
 		System.out.println(result ? "Ticket quantity updated successfully" : "Update failed");
 	}
 
 	private void viewTicketAvailability() {
 
-		List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+		List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 		if (events.isEmpty()) {
 			System.out.println("No events found.");
@@ -748,7 +803,7 @@ private void updateEventDetails() {
 
 		Event selectedEvent = validEvents.get(eventChoice - 1);
 
-		List<Ticket> tickets = organizerService.viewTicketAvailability(selectedEvent.getEventId());
+		List<Ticket> tickets = ticketManagementAction.viewTicketAvailability(selectedEvent.getEventId());
 
 		if (tickets.isEmpty()) {
 			System.out.println("No tickets available for this event");
@@ -776,7 +831,7 @@ private void updateEventDetails() {
 			switch (choice) {
 
 			case 1: {
-				List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+				List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 				if (events.isEmpty()) {
 					System.out.println("No events found.");
@@ -795,14 +850,14 @@ private void updateEventDetails() {
 				if (selectedEvent == null)
 					return;
 
-				int count = organizerService.viewEventRegistrations(selectedEvent.getEventId());
+				int count = registrationAction.viewEventRegistrations(selectedEvent.getEventId());
 
 				System.out.println("Total Registrations: " + count);
 				break;
 			}
 
 			case 2: {
-				List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+				List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 				if (events.isEmpty()) {
 					System.out.println("No events found.");
@@ -821,7 +876,7 @@ private void updateEventDetails() {
 				if (selectedEvent == null)
 					return;
 
-				List<Map<String, Object>> users = organizerService.viewRegisteredUsers(selectedEvent.getEventId());
+				List<Map<String, Object>> users = registrationAction.viewRegisteredUsers(selectedEvent.getEventId());
 				if(users != null && !users.isEmpty()) {
 					System.out.println("Registered Users\n");
 				}
@@ -851,7 +906,7 @@ private void updateEventDetails() {
 
 			switch (choice) {
 			case 1: {
-				List<Map<String, Object>> list = organizerService.getEventWiseRegistrations(loggedInUser.getUserId());
+				List<Map<String, Object>> list = reportAction.getEventWiseRegistrations(loggedInUser.getUserId());
 				System.out.println("\nEvent Registrations Summary\n");
 
 				list.forEach(r -> {
@@ -867,7 +922,7 @@ private void updateEventDetails() {
 				break;
 			}
 			case 2: {
-				List<Map<String, Object>> list = organizerService.getTicketSales(loggedInUser.getUserId());
+				List<Map<String, Object>> list = reportAction.getTicketSales(loggedInUser.getUserId());
 				if(list != null) {
 					System.out.println("\nTicket Sales Summary\n");
 
@@ -887,7 +942,7 @@ private void updateEventDetails() {
 				break;
 			}
 			case 3: {
-				double revenue = organizerService.getRevenueSummary(loggedInUser.getUserId());
+				double revenue = reportAction.getRevenueSummary(loggedInUser.getUserId());
 				System.out.println("\nRevenue Overview\n");
 				System.out.println("Total Revenue Generated Across All Events: ₹" + revenue);
 				break;
@@ -908,7 +963,7 @@ private void updateEventDetails() {
 	private void viewMyEventsSummary() {
 
 	    List<OrganizerEventSummary> list =
-	            organizerService.getOrganizerEventSummary(loggedInUser.getUserId());
+	            reportAction.getOrganizerEventSummary(loggedInUser.getUserId());
 
 	    if (list.isEmpty()) {
 	        System.out.println("You have not created any events yet.");
@@ -945,7 +1000,7 @@ private void updateEventDetails() {
 
 			switch (choice) {
 			case 1: {
-				List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+				List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 				if (events.isEmpty()) {
 					System.out.println("No events found.");
@@ -962,11 +1017,11 @@ private void updateEventDetails() {
 				}
 				Event selectedEvent = events.get(choice1 - 1);
 				String msg = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter message to send:\n");
-				organizerService.sendEventUpdate(selectedEvent.getEventId(), msg);
+				notificationAction.sendEventUpdate(selectedEvent.getEventId(), msg);
 				break;
 			}
 			case 2: {
-				List<Event> events = organizerService.getOrganizerEvents(loggedInUser.getUserId());
+				List<Event> events = eventManagementAction.getOrganizerEvents(loggedInUser.getUserId());
 
 				if (events.isEmpty()) {
 					System.out.println("No events found.");
@@ -983,11 +1038,11 @@ private void updateEventDetails() {
 				}
 				Event selectedEvent = events.get(choice1 - 1);
 				String msg = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter message to send:\n");
-				organizerService.sendScheduleChange(selectedEvent.getEventId(), msg);
+				notificationAction.sendScheduleChange(selectedEvent.getEventId(), msg);
 				break;
 			}
 			case 3:
-				notificationService.displayAllNotifications(loggedInUser.getUserId());
+				notificationAction.displayAllNotifications(loggedInUser.getUserId());
 				break;
 			case 4: {
 				return;
@@ -1021,7 +1076,7 @@ private void updateEventDetails() {
 
 		ticket.setTotalQuantity(qty);
 
-		organizerService.createTicket(ticket);
+		ticketManagementAction.createTicket(ticket);
 
 		System.out.println("Ticket added successfully");
 	}

@@ -2,7 +2,7 @@ package com.ems.model;
 
 import java.time.LocalDateTime;
 
-public class User {
+public class User implements Comparable<User>{
 
 	private final int userId;
 	private final String fullName;
@@ -86,5 +86,11 @@ public class User {
 	public String toString() {
 		return "User{" + "id=" + userId + ", name='" + fullName + '\'' + ", gender='" + gender + '\'' + ", email='"
 				+ email + '\'' + ", phone='" + phone + '\'' + ", status='" + status + '\'' + '}';
+	}
+
+	@Override
+	public int compareTo(User o) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

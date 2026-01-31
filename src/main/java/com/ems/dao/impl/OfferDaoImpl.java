@@ -203,9 +203,8 @@ public class OfferDaoImpl implements OfferDao {
 	) throws DataAccessException {
 
 	    String sql =
-	        "INSERT INTO offer_usage (offer_id, user_id, registration_id, used_at) " +
-	        "VALUES (?, ?, ?, NOW())";
-
+	        "INSERT INTO offer_usages (offer_id, user_id, registration_id, used_at) " +
+	        "VALUES (?, ?, ?, utc_timestamp())";
 	    try (Connection con = DBConnectionUtil.getConnection();
 	         PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -218,6 +217,24 @@ public class OfferDaoImpl implements OfferDao {
 	    } catch (SQLException e) {
 	        throw new DataAccessException("Failed to record offer usage");
 	    }
+	}
+
+	@Override
+	public boolean hasUserUsedOfferCode(int userId, int offerId) throws DataAccessException {
+		String sql = "select * from offer_usages where user_id = ? and offer_id = ?";
+		try(Connection con = DBConnectionUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)){
+			ps.setInt(1, userId);
+			ps.setInt(2, offerId);
+			ResultSet rs = ps.executeQuery();
+			if(rs.next()) {
+				return false;
+			}else {
+				return true;
+			}
+		}catch(SQLException e) {
+			throw new DataAccessException("Failed to fetch offer code usage");
+		}
 	}
 
 }

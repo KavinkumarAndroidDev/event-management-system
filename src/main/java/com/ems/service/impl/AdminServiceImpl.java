@@ -143,7 +143,7 @@ public class AdminServiceImpl implements AdminService {
 	 * Rule: - Organizer is notified after cancellation
 	 */
 	@Override
-	public void cancelEvents(int eventId) {
+	public void cancelEvent(int eventId) {
 		try {
 			boolean isCancelled = eventDao.cancelEvent(eventId);
 			if (isCancelled) {
@@ -370,6 +370,24 @@ public class AdminServiceImpl implements AdminService {
 					"CATEGORY",
 					categoryId,
 					"Category deactivated"
+				);
+
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	@Override
+	public void updateCategory(int categoryId) {
+		try {
+			categoryDao.activateCategory(categoryId);
+			
+			systemLogService.log(
+					null,
+					"ACTIVATE",
+					"CATEGORY",
+					categoryId,
+					"Category activated"
 				);
 
 		} catch (DataAccessException e) {

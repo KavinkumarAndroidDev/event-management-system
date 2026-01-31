@@ -24,7 +24,7 @@ public class CategoryDaoImpl implements CategoryDao {
 
     @Override
     public Category getCategory(int categoryId) throws DataAccessException {
-        String sql = "select * from categories where category_id=?";
+        String sql = "select category_id, name from categories where category_id=? and is_active = 1";
         try (Connection con = DBConnectionUtil.getConnection(); 
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, categoryId);
@@ -34,13 +34,15 @@ public class CategoryDaoImpl implements CategoryDao {
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Error while fetching category");
+            throw new DataAccessException("Error while fetching category", e);
         }
-        return null;
+        throw new DataAccessException("Category not found");
     } 
+
+   
     @Override
-    public List<Category> getAllCategories() throws DataAccessException {
-        String sql = "select * from categories where is_active = 1 order by name";
+    public List<Category> getActiveCategories() throws DataAccessException {
+        String sql = "select category_id, name from categories where is_active = 1 order by name, category_id";
         List<Category> categories = new ArrayList<>();
         
         try (Connection con = DBConnectionUtil.getConnection();
@@ -51,24 +53,43 @@ public class CategoryDaoImpl implements CategoryDao {
                 categories.add(category);
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Error while fetching categories");
+            throw new DataAccessException("Error while fetching categories", e);
         }
         return categories;
     }
+    
+    
+    @Override
+    public List<Category> getAllCategories() throws DataAccessException {
+        String sql = "select category_id, name, is_active from categories order by name, category_id";
+        List<Category> categories = new ArrayList<>();
+        
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Category category = new Category(rs.getInt("category_id"), rs.getString("name"), rs.getInt("is_active"));
+                categories.add(category);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error while fetching categories", e);
+        }
+        return categories;
+    }
+    
     @Override
     public void addCategory(String name) throws DataAccessException {
         String sql =
-            "insert into categories (name,is_active) values (?,?)";
+            "insert into categories (name) values (?)";
 
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, name);
-            ps.setInt(2, 1);
+            ps.setString(1, name.trim());
             ps.executeUpdate();
 
-        } catch (Exception e) {
-            throw new DataAccessException("Unable to add category");
+        } catch (SQLException e) {
+            throw new DataAccessException("Unable to add category", e);
         }
     }
 
@@ -77,17 +98,20 @@ public class CategoryDaoImpl implements CategoryDao {
             throws DataAccessException {
 
         String sql =
-            "update categories set name=? where category_id=?";
+            "update categories set name=? where category_id=? and is_active = 1";
 
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, name);
             ps.setInt(2, categoryId);
-            ps.executeUpdate();
-
-        } catch (Exception e) {
-            throw new DataAccessException("Unable to update category");
+            
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new DataAccessException("Category not found");
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Unable to update category", e);
         }
     }
 
@@ -96,16 +120,39 @@ public class CategoryDaoImpl implements CategoryDao {
             throws DataAccessException {
 
         String sql =
-            "update categories set is_active=0 where category_id=?";
+            "update categories set is_active=0 where category_id=? and is_active = 1";
 
         try (Connection con = DBConnectionUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, categoryId);
-            ps.executeUpdate();
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new DataAccessException("Failed to deactivate the category");
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Unable to deactivate category", e);
+        }
+    }
+    
+    @Override
+    public void activateCategory(int categoryId)
+            throws DataAccessException {
 
-        } catch (Exception e) {
-            throw new DataAccessException("Unable to delete category");
+        String sql =
+            "update categories set is_active=1 where category_id=? and is_active = 0";
+
+        try (Connection con = DBConnectionUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, categoryId);
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new DataAccessException("Failed to activate the category");
+            }
+
+        } catch (SQLException e) {
+            throw new DataAccessException("Unable to activate category with ID: " + categoryId, e);
         }
     }
 

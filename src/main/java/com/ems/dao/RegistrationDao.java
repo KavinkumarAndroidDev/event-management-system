@@ -12,14 +12,6 @@ public interface RegistrationDao {
 
 	List<EventRegistrationReport> getEventWiseRegistrations(int eventId)  throws DataAccessException;
 
-	int createRegistration(int userId, int eventId) throws DataAccessException;
-
-	void addRegistrationTickets(int regId, int ticketId, int quantity) throws DataAccessException;
-
-	void removeRegistrations(int regId) throws DataAccessException;
-
-	void removeRegistrationTickets(int regId, int ticketId) throws DataAccessException;
-	
 	//Organizer functions:
     int getEventRegistrationCount(int eventId) throws DataAccessException;
 
@@ -38,7 +30,5 @@ public interface RegistrationDao {
 	void updateStatus(int registrationId, String string)  throws DataAccessException;
 
 	List<RegistrationTicket> getRegistrationTickets(int registrationId)  throws DataAccessException;
-
-
 
 }

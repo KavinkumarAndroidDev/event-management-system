@@ -66,12 +66,9 @@ public final class ApplicationUtil {
 
         paymentService =
             new PaymentServiceImpl(
-                registrationDao,
-                ticketDao,
                 paymentDao,
                 notificationDao,
                 eventDao,
-                offerDao,
                 systemLogService
             );
 
