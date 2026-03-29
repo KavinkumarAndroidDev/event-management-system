@@ -33,7 +33,8 @@ public class PaymentDaoImpl implements PaymentDao {
 			int quantity,
 			double price,
 			PaymentMethod paymentMethod,
-			String offerCode) throws DataAccessException {
+			String offerCode
+			) throws DataAccessException {
 		RegistrationResult result = new RegistrationResult();
 		result.setSuccess(false);
 
